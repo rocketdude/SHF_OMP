@@ -1,8 +1,8 @@
 !--------------------------------------------------------!
-!    Initialize Filter subroutine                        !
+!    Get Filter subroutine                               !
 !--------------------------------------------------------!
 
-      SUBROUTINE InitializeFilter(& 
+      SUBROUTINE GetFilter(& 
 & M, Mr, NP, Lmax,&
 & eps,&
 & F)
@@ -51,4 +51,4 @@
         PRINT *, 'DONE!'
 
         RETURN
-      END SUBROUTINE InitializeFilter
+      END SUBROUTINE GetFilter

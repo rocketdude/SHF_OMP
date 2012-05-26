@@ -1,6 +1,7 @@
 !-----------------------------------------------------------!
 ! This file consists of six subroutines                     !
 ! to write and read .dat data for 1,2 and 3-D arrays        !
+! (in double precision real number or complex numbers)      !
 !-----------------------------------------------------------!
 
 ! For reading : the file has to be a long array of 1-D temp array,
@@ -33,7 +34,7 @@
          integer*4   i, j, k
          integer*4   dummy
          integer*4, parameter :: lu = 20 !I/O Unit for Disk I/O
-         real*8	   temp(nx*ny*nz)
+         real*8    temp(nx*ny*nz)
 
          integer*4 ierror
 
@@ -43,22 +44,22 @@
 
          write(*,1200) FileName
 1200     format (' ', 'Reading: ', A, 'now')
-		
+
          open( UNIT=lu, FILE = FileName, STATUS='OLD', ACTION='READ', &
               &IOSTAT=ierror)
-         		
+
          ! Check to see if OPEN failed
          errorcheck: if (ierror == 6) then
          
             write (*,1020) FileName
 1020        format (1X, 'ERROR: File ', A,' does not exist!')
-         	
+            
          else
                            
             ! File opened successfully, so start reading a 1-D array 'temp'
             readloop: do
-               read(lu, *, iostat = ierror) temp	!Get the value
-               if ( ierror /= 0 ) exit			!Exit if not valid
+               read(lu, *, iostat = ierror) temp        !Get the value
+               if ( ierror /= 0 ) exit                  !Exit if not valid
             end do readloop
 
          end if errorcheck
@@ -103,7 +104,7 @@
          integer*4   i, j, k
          integer*4   dummy
          integer*4, parameter :: lu = 20 !I/O Unit for Disk I/O
-         real*8	   temp(nx*ny)
+         real*8     temp(nx*ny)
 
          integer*4 ierror
 
@@ -113,22 +114,22 @@
 
          write(*,1200) FileName
 1200     format (' ', 'Reading: ', A, 'now')
-		
+
          open( UNIT=lu, FILE = FileName, STATUS='OLD', ACTION='READ', &
               &IOSTAT=ierror)
-         		
+
          ! Check to see if OPEN failed
          errorcheck: if (ierror == 6) then
          
             write (*,1020) FileName
 1020        format (1X, 'ERROR: File ', A,' does not exist!')
-         	
+            
          else
                            
          ! File opened successfully, so start reading a 1-D array 'temp'
             readloop: do
-               read(lu, *, iostat = ierror) temp	!Get the value
-               if ( ierror /= 0 ) exit			!Exit if not valid
+               read(lu, *, iostat = ierror) temp        !Get the value
+               if ( ierror /= 0 ) exit                  !Exit if not valid
             end do readloop
                                             
          end if errorcheck
@@ -171,7 +172,7 @@
         integer*4   i, j, k
         integer*4   dummy
         integer*4, parameter :: lu = 20 !I/O Unit for Disk I/O
-        real*8	   temp(nx)
+        real*8     temp(nx)
 
         integer*4 ierror
 
@@ -184,7 +185,7 @@
 
         open( UNIT=lu, FILE = FileName, STATUS='OLD', ACTION='READ', &
              &IOSTAT=ierror)
-         		
+
         ! Check to see if OPEN failed
         errorcheck: if (ierror == 6) then
 
@@ -195,8 +196,8 @@
                            
            ! File opened successfully, so start reading a 1-D array 'temp'
            readloop: do
-              read(lu, *, iostat = ierror) temp	!Get the value
-              if ( ierror /= 0 ) exit		!Exit if not valid
+              read(lu, *, iostat = ierror) temp !Get the value
+              if ( ierror /= 0 ) exit           !Exit if not valid
            end do readloop
 
         end if errorcheck
@@ -238,9 +239,9 @@
         integer*4   rank
         integer*4, parameter :: lu = 20 ! I/O unit for disk I/O
 
-        integer*4 ierror		!Iostat variable
-        logical :: lexist	!True if file exists
-        integer*4 :: lopen	!1 if file is open
+        integer*4 ierror        !Iostat variable
+        logical :: lexist       !True if file exists
+        integer*4 :: lopen      !1 if file is open
 
 !-------------------------------------------------------------!
 !      Write                                                  !
@@ -248,7 +249,7 @@
 
         write(*,1200) FileName
 1200    format (' ', 'Writing: ', A, 'now')
-		
+    
         !Does the file already exist?
         lopen = 0
 
@@ -258,7 +259,7 @@
 
            open( UNIT=lu, FILE=FileName, STATUS='NEW', ACTION='WRITE', &
                 &IOSTAT=ierror)
-           lopen = 1	
+           lopen = 1
 
         else
 
@@ -281,17 +282,16 @@
               do j = 1, ny
                  do k = 1, nz
                     write(lu, *, iostat=ierror) Array(i,j,k)
-                    if( ierror /= 0 ) return		!exit if not valid
+                    if( ierror /= 0 ) return            !exit if not valid
                  end do
               end do
            end do
-			
-			
+
         end if errorcheck
 
         write(*,1100) FileName
 1100    FORMAT(' ', 'Writing ', A, ' successful!')
-			
+    
         return
       end subroutine Write3d
 
@@ -319,9 +319,9 @@
         integer*4   rank
         integer*4, parameter :: lu = 20 ! I/O unit for disk I/O
 
-        integer*4 ierror		!Iostat variable
-        logical :: lexist	!True if file exists
-        integer*4 :: lopen	!1 if file is open
+        integer*4 ierror        !Iostat variable
+        logical :: lexist       !True if file exists
+        integer*4 :: lopen      !1 if file is open
 
 !-------------------------------------------------------------!
 !      Write                                                  !
@@ -339,10 +339,10 @@
 
            open( UNIT=lu, FILE=FileName, STATUS='NEW', ACTION='WRITE', &
                 &IOSTAT=ierror)
-           lopen = 1	
+           lopen = 1
 
         else
-		
+
            !File exists but still replace the file
            open( UNIT=lu, FILE=FileName, STATUS='REPLACE', ACTION='WRITE', &
                 &IOSTAT=ierror)
@@ -361,7 +361,7 @@
            do i = 1, nx
               do j = 1, ny
                  write(lu, *, iostat=ierror) Array(i,j)
-                 if( ierror /= 0 ) return		!exit if not valid
+                 if( ierror /= 0 ) return               !exit if not valid
               end do
            end do
 
@@ -387,7 +387,7 @@
 !-----------------------------------------------------------!
 
         integer*4, intent(in) :: nx
-        real*8, intent(in)	::  Array(nx)
+        real*8, intent(in)      ::  Array(nx)
         character*32, intent(in) :: FileName
 
 !-------------------------------------------------------------!
@@ -398,9 +398,9 @@
         integer*4   rank
         integer*4, parameter :: lu = 20 ! I/O unit for disk I/O
 
-        integer*4 ierror		!Iostat variable
-        logical :: lexist	!True if file exists
-        integer*4 :: lopen	!1 if file is open
+        integer*4 ierror        !Iostat variable
+        logical :: lexist       !True if file exists
+        integer*4 :: lopen      !1 if file is open
 
 !-------------------------------------------------------------!
 !      Write                                                  !
@@ -408,7 +408,7 @@
 
         write(*,1200) FileName
 1200    format (' ', 'Writing: ', A, 'now')
-	
+
         !Does the file already exist?
         lopen = 0
 
@@ -418,8 +418,8 @@
 
            open( UNIT=lu, FILE=FileName, STATUS='NEW', ACTION='WRITE', &
                 &IOSTAT=ierror)
-           lopen = 1	
-			
+           lopen = 1
+
         else
 
            !File exists but still replace the file
@@ -439,10 +439,9 @@
 
            do i = 1, nx
               write(lu, *, iostat=ierror) Array(i)
-              if( ierror /= 0 ) return		!exit if not valid
+              if( ierror /= 0 ) return          !exit if not valid
            end do
-			
-			
+    
         end if errorcheck
 
         write(*,1100) FileName
@@ -475,9 +474,9 @@
         integer*4   rank
         integer*4, parameter :: lu = 20 ! I/O unit for disk I/O
 
-        integer*4 ierror		!Iostat variable
-        logical :: lexist	!True if file exists
-        integer*4 :: lopen	!1 if file is open
+        integer*4 ierror        !Iostat variable
+        logical :: lexist       !True if file exists
+        integer*4 :: lopen      !1 if file is open
 
 !-------------------------------------------------------------!
 !      Write                                                  !
@@ -485,7 +484,7 @@
 
         write(*,1200) FileName
 1200    format (' ', 'Writing: ', A, 'now')
-		
+
         !Does the file already exist?
         lopen = 0
 
@@ -495,7 +494,7 @@
 
            open( UNIT=lu, FILE=FileName, STATUS='NEW', ACTION='WRITE', &
                 &IOSTAT=ierror)
-           lopen = 1	
+           lopen = 1
 
         else
 
@@ -518,17 +517,17 @@
               do j = 1, ny
                  do k = 1, nz
                     write(lu, *, iostat=ierror) Array(i,j,k)
-                    if( ierror /= 0 ) return		!exit if not valid
+                    if( ierror /= 0 ) return            !exit if not valid
                  end do
               end do
            end do
-			
-			
+    
+    
         end if errorcheck
 
         write(*,1100) FileName
 1100    FORMAT(' ', 'Writing ', A, ' successful!')
-			
+    
         return
       end subroutine Write3dC
 
@@ -556,9 +555,9 @@
         integer*4   rank
         integer*4, parameter :: lu = 20 ! I/O unit for disk I/O
 
-        integer*4 ierror		!Iostat variable
-        logical :: lexist	!True if file exists
-        integer*4 :: lopen	!1 if file is open
+        integer*4 ierror        !Iostat variable
+        logical :: lexist       !True if file exists
+        integer*4 :: lopen      !1 if file is open
 
 !-------------------------------------------------------------!
 !      Write                                                  !
@@ -576,10 +575,10 @@
 
            open( UNIT=lu, FILE=FileName, STATUS='NEW', ACTION='WRITE', &
                 &IOSTAT=ierror)
-           lopen = 1	
+           lopen = 1
 
         else
-		
+    
            !File exists but still replace the file
            open( UNIT=lu, FILE=FileName, STATUS='REPLACE', ACTION='WRITE', &
                 &IOSTAT=ierror)
@@ -598,7 +597,7 @@
            do i = 1, nx
               do j = 1, ny
                  write(lu, *, iostat=ierror) Array(i,j)
-                 if( ierror /= 0 ) return		!exit if not valid
+                 if( ierror /= 0 ) return               !exit if not valid
               end do
            end do
 
@@ -623,8 +622,8 @@
 !      Declare passed variables                             !
 !-----------------------------------------------------------!
 
-        integer*4, intent(in) :: nx
-        complex*16, intent(in)	::  Array(nx)
+        integer*4, intent(in)    :: nx
+        complex*16, intent(in)   :: Array(nx)
         character*32, intent(in) :: FileName
 
 !-------------------------------------------------------------!
@@ -635,9 +634,9 @@
         integer*4   rank
         integer*4, parameter :: lu = 20 ! I/O unit for disk I/O
 
-        integer*4 ierror		!Iostat variable
-        logical :: lexist	!True if file exists
-        integer*4 :: lopen	!1 if file is open
+        integer*4 ierror        !Iostat variable
+        logical :: lexist       !True if file exists
+        integer*4 :: lopen      !1 if file is open
 
 !-------------------------------------------------------------!
 !      Write                                                  !
@@ -645,7 +644,7 @@
 
         write(*,1200) FileName
 1200    format (' ', 'Writing: ', A, 'now')
-	
+
         !Does the file already exist?
         lopen = 0
 
@@ -655,8 +654,8 @@
 
            open( UNIT=lu, FILE=FileName, STATUS='NEW', ACTION='WRITE', &
                 &IOSTAT=ierror)
-           lopen = 1	
-			
+           lopen = 1
+
         else
 
            !File exists but still replace the file
@@ -676,9 +675,9 @@
 
            do i = 1, nx
               write(lu, *, iostat=ierror) Array(i)
-              if( ierror /= 0 ) return		!exit if not valid
+              if( ierror /= 0 ) return          !exit if not valid
            end do
-			
+
         end if errorcheck
 
         write(*,1100) FileName
@@ -719,22 +718,22 @@
 
          write(*,1200) FileName
 1200     format (' ', 'Reading: ', A, 'now')
-		
+
          open( UNIT=lu, FILE = FileName, STATUS='OLD', ACTION='READ', &
               &IOSTAT=ierror)
-         		
+        
          ! Check to see if OPEN failed
          errorcheck: if (ierror == 6) then
          
             write (*,1020) FileName
 1020        format (1X, 'ERROR: File ', A,' does not exist!')
-         	
+        
          else
                            
          ! File opened successfully, so start reading a 1-D array 'temp'
             readloop: do
-               read(lu, *, iostat = ierror) temp	!Get the value
-               if ( ierror /= 0 ) exit			!Exit if not valid
+               read(lu, *, iostat = ierror) temp        !Get the value
+               if ( ierror /= 0 ) exit                  !Exit if not valid
             end do readloop
                                             
          end if errorcheck
@@ -789,7 +788,7 @@
 
         open( UNIT=lu, FILE = FileName, STATUS='OLD', ACTION='READ', &
              &IOSTAT=ierror)
-         		
+
         ! Check to see if OPEN failed
         errorcheck: if (ierror == 6) then
 
@@ -800,8 +799,8 @@
                            
            ! File opened successfully, so start reading a 1-D array 'temp'
            readloop: do
-              read(lu, *, iostat = ierror) temp	!Get the value
-              if ( ierror /= 0 ) exit		!Exit if not valid
+              read(lu, *, iostat = ierror) temp !Get the value
+              if ( ierror /= 0 ) exit           !Exit if not valid
            end do readloop
 
         end if errorcheck
@@ -858,7 +857,7 @@
            format_string = '(A1,I5,A4)'
         END IF
 
-        WRITE(TestFile, format_string) 'S',i,'.dat'		 
+        WRITE(TestFile, format_string) 'S',i,'.dat'
 
         CALL WRITE1d(nx, Array, TestFile)
 
@@ -904,7 +903,7 @@
            format_string = '(A1,I5,A4)'
         END IF
 
-        WRITE(TestFile, format_string) 'U',i,'.dat'		 		 
+        WRITE(TestFile, format_string) 'U',i,'.dat'
 
         CALL WRITE2d(nx, ny, Array, TestFile)
 
@@ -949,7 +948,7 @@
            format_string = '(A1,I5,A4)'
         END IF
 
-        WRITE(TestFile, format_string) 'a',i,'.dat'		 		 
+        WRITE(TestFile, format_string) 'a',i,'.dat'
 
         CALL WRITE1dC(nx, Array, TestFile)
 

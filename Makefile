@@ -3,7 +3,7 @@
 
 PROG = SHF
 
-OBJS = IO.o main.o CalculateSchwarzschildMetric.o CalculateInitialData.o EvaluatedSdr.o EvaluateF.o EvaluateG.o EvolveData.o FindU.o Functions.o InitializeFilter.o InitializeMatrices.o ReinitializeData.o ReadHDFMetric.o SphHarmonicY.o Spline.o
+OBJS = IO.o main.o CalculateSchwarzschildMetric.o CalculateInitialData.o EvaluatedSdr.o EvaluateF.o EvaluateG.o EvolveData.o FindU.o Functions.o InitializeFilter.o InitializeMatrices.o ReinitializeData.o SphHarmonicY.o Spline.o
 
 F90 = mpif90
 CC = mpicc
@@ -27,7 +27,7 @@ all: $(PROG)
 $(PROG) : $(OBJS)
 	$(F90) -o $(PROG) $(SWITCH) $(OBJS) $(LIBS)
 
-main.o: IO.o CalculateSchwarzschildMetric.o CalculateInitialData.o EvaluatedSdr.o EvaluateF.o EvaluateG.o EvolveData.o FindU.o Functions.o InitializeFilter.o InitializeMatrices.o ReadHDFMetric.o ReinitializeData.o SphHarmonicY.o Spline.o
+main.o: IO.o CalculateSchwarzschildMetric.o CalculateInitialData.o EvaluatedSdr.o EvaluateF.o EvaluateG.o EvolveData.o FindU.o Functions.o InitializeFilter.o InitializeMatrices.o ReinitializeData.o SphHarmonicY.o Spline.o
 
 %.o: %.f90
 	$(F90) -c $(FLAGS) $(SWITCH) $<

@@ -1,8 +1,8 @@
 !--------------------------------------------------------!
-!    CalculateInitialData subroutine                     !
+!    GetInitialData subroutine                           !
 !--------------------------------------------------------!
 
-      SUBROUTINE CalculateInitialData(& 
+      SUBROUTINE GetInitialData(& 
 & M, Mr, NP,&
 & c,&
 & R0,&
@@ -62,4 +62,4 @@
         PRINT *, 'DONE!'
 
         RETURN
-      END SUBROUTINE CalculateInitialData
+      END SUBROUTINE GetInitialData

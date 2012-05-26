@@ -1,8 +1,8 @@
 !----------------------------------------------------------!
-!     InterpolateMetricLM  subroutine                      !
+!     TricubicInterpolation  subroutine                    !
 !----------------------------------------------------------!
 
-        SUBROUTINE InterpolateMetricLM(&
+        SUBROUTINE TricubicInterpolation(&
 &LM, cube,&
 &dx, dy, dz,&
 &x, y, z,&

@@ -1,8 +1,8 @@
 !--------------------------------------------------------!
-!    Initialize Matrices subroutine                      !
+!    Get Matrices subroutine                             !
 !--------------------------------------------------------!
 
-      SUBROUTINE InitializeMatrices(& 
+      SUBROUTINE GetMatrices(& 
 & M, Mr, NP, Lmax, LWORK, IFLAG,&
 & r, rho, theta, phi,&
 & AF, AFinv, B, Dth, Dphi)
@@ -167,4 +167,4 @@
         END IF
            
         RETURN
-      END SUBROUTINE InitializeMatrices
+      END SUBROUTINE GetMatrices

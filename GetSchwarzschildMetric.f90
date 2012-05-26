@@ -1,8 +1,8 @@
 !----------------------------------------------------------!
-!     CalculateSchwarzschildMetric  subroutine             !
+!     GetSchwarzschildMetric  subroutine                   !
 !----------------------------------------------------------!
 
-      SUBROUTINE CalculateSchwarzschildMetric(&
+      SUBROUTINE GetSchwarzschildMetric(&
 &Mass,&
 &M, Mr, NP,&
 &r, theta, phi,&
@@ -85,4 +85,4 @@
         PRINT *, 'DONE!'
 
         RETURN
-      END SUBROUTINE CalculateSchwarzschildMetric
+      END SUBROUTINE GetSchwarzschildMetric

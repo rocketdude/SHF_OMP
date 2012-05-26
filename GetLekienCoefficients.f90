@@ -1,8 +1,8 @@
 !--------------------------------------------------------!
-!    Initialize Lekien Coefficients subroutine           !
+!    Get Lekien Coefficients subroutine                  !
 !--------------------------------------------------------!
 
-      SUBROUTINE InitializeLekienCoefficients(& 
+      SUBROUTINE GetLekienCoefficients(& 
 & LM)
 
         !This subroutine initializes the inverse of the array B
@@ -96,4 +96,4 @@
         LM = TRANSPOSE( RESHAPE(Temp), SHAPE(LM) )
 
         RETURN
-      END SUBROUTINE InitializeLekienCoefficients
+      END SUBROUTINE GetLekienCoefficients

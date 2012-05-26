@@ -9,6 +9,8 @@
 
   PROGRAM              SHF
     USE                omp_lib
+    USE                HDF5
+    USE                h5lt
 
     IMPLICIT           none
 
@@ -47,7 +49,7 @@
     INTEGER*4           Startit!Starting iteration
     INTEGER*4           Maxit  !Maximum iteration
 
-    INTEGER*4           CFLAG  !If CFLAG = 1, then we are continuing previous run
+    INTEGER*4           SFLAG  !If SFLAG = 1, then we are continuing previous run
     INTEGER*4           LWORK  !Size of the WORK matrix, used for inverting matrices
     INTEGER*4           IFLAG  !IFLAG is inverse flag. IFLAG = 1, AFinv.dat is available
 
@@ -99,8 +101,6 @@
     COMPLEX*16        Dphi(4*NP, NP)!Matrix used to take derivative of S w.r.t phi
     REAL*8            F(NP)       !Exponential filter for the Chebyshev polynomials
 
-    COMPLEX*16        S(4*NP)     !Eikonal data for all the coordinate locations (vectorized)
-
     INTEGER*4           Lmax        !Maximum degree of l of the spherical harmonics
     INTEGER*4           n           !Degree of Chebyshev polynomial
     INTEGER*4           l, ml       !Degree of spherical harmonics
@@ -130,21 +130,11 @@
     ! Schwarzschild metric parameters
     REAL*8            Mass   !Mass of Schwarzschild black hole located at the center
 
-    ! Parameters for metric read from EinsteinToolkit
-    INTEGER*4     nx10, ny10, nz10     !Number of points in x,y,z directions for rl=10
-    INTEGER*4     nx9, ny9, nz9        !Number of points in x,y,z directions for rl=9
-
-    INTEGER*4     Ox10, Oy10, Oz10     !Indices for the midpoints of x,y,z for rl=10
-    INTEGER*4     Ox9, Oy9, Oz9     !Indices for the midpoints of x,y,z for rl=9
-
-    REAL*8        h10                  !Spatial discretization size for rl=10
-    REAL*8        h9                   !Spatial discretization size for rl=9
-
-    REAL*8        Xmax10, Ymax10, Zmax10 !Maximum x,y,z for rl=10
-    REAL*8        Xmax9, Ymax9, Zmax9    !Maximum x,y,z for rl=9
-
-    ! Parameters to interpolate metric
-    INTEGER*4         LM(64,64)   !Lekien-Marsden coefficients
+    ! Parameters to read metric from HDF5 files
+    INTEGER(HSIZE_T)  bufsize(3)  !Buffer size to read the metric from HDF5 files
+    INTEGER*4         iterratio   !Ratio of the iteration values in the EinsteinToolkit compared to this code's iteration
+    INTEGER*4         iter        !Iteration values in the EinsteinToolkit
+    INTEGER*4         nchunks     !Number of chunks that the metric is divided into
 
 !--------------------------------------------------------!
 !     Declare Local Parameters                           !
@@ -164,17 +154,17 @@
 !--------------------------------------------------------!
     
     !Parameters related to initial conditions
-    CFLAG = 0                       !If CFLAG = 1, we are continuing previous run: change t, Startit and aFile!
+    SFLAG = 0                       !If SFLAG = 1, we are continuing previous run: change t, Startit and aFile
     t = -8.1617491479814266D0       !Last time from previous run
     Startit = 6751                  !Startit = last iteration + 1
     Maxit = 3000
     aFile = 'a10.dat'
 
-    IF( CFLAG .EQ. 0 ) THEN
-       t  = 0.0D0       !Initial time
-       Startit = 1      !Starting from iteration 1
+    IF( SFLAG .EQ. 0 ) THEN
+       t  = 0.0D0                   !Initial time
+       Startit = 1                  !Starting from iteration 1
     END IF
-    R0 = 0.55D0
+    R0 = 0.55D0                     !Initial radius of the null surface
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, and negative tdir give EH finder
@@ -193,18 +183,15 @@
     LWORK = 42617152                !Optimized size of the WORK matrix, Put LWORK = -1 to query for the optimal size
 
     !Spherical grid parameters
-    rmax = 0.6D0
-    rmin = 0.0D0
-    !Parameters for metric from EinsteinToolkit
-    nx10 = 27
-    ny10 = 27
-    nz10 = 27
-    h10 = 2.5D-2
+    rmax = 0.8D0                    !maximum value of r
+    rmin = 0.0D0                    !minimum value of r
 
-    nx9 = 27
-    ny9 = 27
-    nz9 = 27
-    h9 = 2.0D0*h10
+    !Parameters related to reading HDF5 files--do h5dump to check these
+    iterratio = 2
+    nchunks = 12
+    bufsize(1) = 50                 !Buffer size; has to be bigger than the size of each dataset
+    bufsize(2) = 50
+    bufsize(3) = 50
 
     !Schwarzschild metric parameter (preliminary tests only)
 !!$    Mass = 0.45D0                   !Only used with Schwarzschild metric
@@ -266,27 +253,6 @@
     !$OMP END DO
     !$OMP END PARALLEL
 
-    Xmax10 = DBLE((nx10-1)/2) * h10
-    Ymax10 = DBLE((ny10-1)/2) * h10
-    Zmax10 = DBLE((nz10-1)/2) * h10
-
-    Xmax9 = DBLE((nx9-1)/2) * h9
-    Ymax9 = DBLE((ny9-1)/2) * h9
-    Zmax9 = DBLE((nz9-1)/2) * h9
-
-    !Get the indices for the origin (0,0,0)
-    Ox10 = (nx10+1)/2
-    Oy10 = (ny10+1)/2
-    Oz10 = (nz10+1)/2
-
-    Ox9 = (nx9+1)/2
-    Oy9 = (ny9+1)/2
-    Oz9 = (nz9+1)/2
-
-    !Output the x,y,z max for each resolution
-    PRINT *, '[XYZ]max for rl=10 :', Xmax10, Ymax10, Zmax10
-    PRINT *, '[XYZ]max for rl=9 :', Xmax9, Ymax9, Zmax9
-    
 !--------------------------------------------------------!
 !     Find smallest spatial increment                    !
 !--------------------------------------------------------!
@@ -319,14 +285,12 @@
     PRINT *, '==============================='
     PRINT *, 'INITIALIZING PROGRAM'
 
-    CALL InitializeLekienCoefficients(LM)
-
-    CALL InitializeMatrices(& 
+    CALL GetMatrices(& 
          & M, Mr, NP, Lmax, LWORK, IFLAG,&
          & r, rho, theta, phi,&
          & AF, AFinv, B, Dth, Dphi)
 
-    IF( CFLAG .EQ. 1 ) THEN
+    IF( SFLAG .EQ. 1 ) THEN
        PRINT *, 'Continuing run'
        PRINT *, 'Previous iteration=' ,(Startit-1)
 
@@ -334,7 +298,7 @@
 
     ELSE
 
-       CALL CalculateInitialData(& 
+       CALL GetInitialData(& 
             & M, Mr, NP,&
             & c,&
             & R0,&
@@ -344,7 +308,7 @@
 
     END IF
 
-    CALL InitializeFilter(& 
+    CALL GetFilter(& 
          & M, Mr, NP, Lmax,&
          & eps,&
          & F)
@@ -354,7 +318,7 @@
 !--------------------------------------------------------!
     !This Schwarzschild metric is only for preliminary calculations
     !purposes only
-!!$    CALL CalculateSchwarzschildMetric(&
+!!$    CALL GetSchwarzschildMetric(&
 !!$         &Mass,&
 !!$         &M, Mr, NP,&
 !!$         &r, theta, phi,&
@@ -389,6 +353,14 @@
        
        t = t+dt
        
+       !--------------------------------------------------------!
+       !     Read Metric and Evolve Data                        !
+       !--------------------------------------------------------!
+
+      !CALL READMETRIC HERE!
+       iter = iterratio * it
+
+
        CALL EvolveData(&
             &M, Mr, NP, Lmax,&
             &rootsign, rmin, rmax,&
