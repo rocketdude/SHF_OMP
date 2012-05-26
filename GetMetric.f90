@@ -4,7 +4,6 @@
 
       SUBROUTINE GetMetric(&
 &M, Mr, NP,&
-&h10, h9,&
 &iter, nchunks,&
 &bufsize,&
 &r, theta, phi,&
@@ -26,7 +25,6 @@
 
         INTEGER(HSIZE_T), INTENT(in):: bufsize(3)        
 
-        REAL*8, INTENT(in)   :: h10, h9
         REAL*8, INTENT(in)   :: r(Mr+1)
         REAL*8, INTENT(in)   :: theta(2*M)
         REAL*8, INTENT(in)   :: phi(2*M)
@@ -55,7 +53,7 @@
         CHARACTER*32            Filename10
         CHARACTER*32            Filename9
 
-        REAL*8                  Calpha(4*NP)
+        REAL*8                  alphaXYZ(4*NP)
         REAL*8                  betaX(4*NP)
         REAL*8                  betaY(4*NP)
         REAL*8                  betaZ(4*NP)
@@ -69,6 +67,9 @@
         REAL*8                  TMatrix(4,4)
         REAL*8                  gcart(4,4)
         REAL*8                  gsph(4,4)
+
+        INTEGER*4               i, j, k
+        INTEGER*4               error
 
 !----------------------------------------------------------!
 !      Main                                                !
@@ -110,7 +111,7 @@
             &0,&
             &Filename10, Filename9,&
             &r, theta, phi,&
-            &Calpha)
+            &alphaXYZ)
 
         !BETA1
         WRITE(Filename9, format_string9) 'beta1.it=',iter,'rl=9.h5'
@@ -248,19 +249,50 @@
             &gYZ)
 
         !Now we need to perform coordinate transformation from (t,x,y,z) to (t,r,th,phi)
+        !Both g_sph and g_cart are of down indices
 
         DO j = 1, (2*M)
             DO k = 1, (2*M)
-
-                !Build the transformation matrix: TMatrix (independent of coordinate r)
-                CALL EvaluateTransformationMatrix(theta(j),phi(k),TMatrix)
-
                 DO i = 1, (Mr+1)
             
-                    crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
+                    !Build the Jacobian matrix JMatrix
+                    CALL EvaluateJacobian(r(i), theta(j),phi(k),JMatrix)
 
-                    
-                    
+                    crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
+                   
+                    !!!!! BUILD g_cart !!!!!
+
+                    !  g_sph = (J^T) * g_cart * J
+                    gsph = MATMUL(TRANSPOSE(JMatrix), MATMUL(gcart,JMatrix))
+
+                    ! Get the 3-metric by inverting the 3-matric part of g_sph
+                    CALL Invert3Metric(gsph(2,2), gsph(3,3), gsph(4,4),&
+                                      &gsph(2,3), gsph(2,4), gsph(3,4),&
+                                      &gRR(crow), gThTh(crow), gPhiPhi(crow),&
+                                      &gRTh(crow), gRPhi(crow), gThPhi(crow),&
+                                      &error)
+
+                    IF( error .NE. 0 ) THEN
+                        PRINT *, 'Determinant is zero, error in inverting metric'
+                        PRINT *, 'i=',i,',j=',j,',k=',k
+                        STOP
+                    END IF
+
+                    ! Get beta^r, beta^th, beta^phi
+                    ! gsph(1,2) = g_01 = beta_r, gsph(1,3) = g_02 = beta_th, gsph(1,4) = g_03 = beta_phi
+                    betaR(crow) = gRR(crow)*gsph(1,2) + gRTh(crow)*gsph(1,3) + gRPhi(crow)*gsph(1,4)
+                    betaTh(crow) = gRTh(crow)*gsph(1,2) + gThTh(crow)*gsph(1,3) + gThPhi(crow)*gsph(1,4)
+                    betaPhi(crow) = gRPhi(crow)*gsph(1,2) + gThPhi(crow)*gsph(1,3) + gPhiPhi(crow)*gsph(1,4)
+
+                    ! Get alpha
+                    ! alpha = sqrt( beta^i beta_i - g_00 )
+                    ! beta^r = betaR, beta^th = betaTh, beta^phi = betaPhi, gsph(1,1) = g_00
+                    alpha(crow) = SQRT( gsph(1,2) * betaR(crow) + gsph(1,3) * betaTh(crow) + gsph(1,4) * betaPhi(crow) )&
+                                & - gsph(1,1)
+
+                END DO
+            END DO
+        END DO            
 
         PRINT *, 'DONE!'
 
