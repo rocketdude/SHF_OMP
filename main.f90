@@ -11,7 +11,7 @@
   PROGRAM              SHF
     USE                omp_lib
     USE                HDF5
-    USE                H5LT
+    !USE                H5LT
 
     IMPLICIT           none
 

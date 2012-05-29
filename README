@@ -15,4 +15,12 @@ Event Horizon Finder using Pseudospectral methods.
 
 04/30/2012
 -	Uses LAPACK calls to calculate the Moore-Penrose pseudoinverse.
--	Uses the pseudoinverse to calculate evolve the data.
+-	Uses the pseudoinverse to evolve the data.
+
+05/29/2012
+-       Added routines to read HDF5 metric outputted by CactusCode
+        2 versions: ReadHDF5Metric.f90 --> uses generic HDF5 calls (USE HDF5)
+                    ReadHDF5MetricLite.f90 --> Uses HDF5Lite calls which are easier (USE H5LT as well)
+                    The former is more robust because it is compatible with
+                    HDF5 version 1.6.x (on Ranger)
+
