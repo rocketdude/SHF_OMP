@@ -7,15 +7,16 @@
 ! of Chebyshev polynomials & spherical harmonics.
 ! In other words, we are approximating S(t, r, theta, phi) ~= a_nlm(t) T_n (rho) Y_lm (theta, phi).
 
+
   PROGRAM              SHF
     USE                omp_lib
     USE                HDF5
-    USE                h5lt
+    USE                H5LT
 
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Mr = 100
-    INTEGER*4, PARAMETER ::        M = 8
+    INTEGER*4, PARAMETER ::        M = 2
     INTEGER*4, PARAMETER ::        NP = (Mr+1)*(M*M)
 
     ! Mr is the degree of the radial Chebyshev polynomial
@@ -231,7 +232,7 @@
 !--------------------------------------------------------!
 
     !Set the number of MKL threads (dynamic is automatic)
-    CALL MKL_SET_DYNAMIC(.TRUE.)
+    !CALL MKL_SET_DYNAMIC(.TRUE.)
 
     !Inquire number of threads
     nthreads = omp_get_max_threads()
@@ -358,7 +359,17 @@
        !--------------------------------------------------------!
 
       !CALL READMETRIC HERE!
-       iter = iterratio * it
+       iter = iterratio * (it-1)
+
+       CALL GetMetric(&
+            &M, Mr, NP,&
+            &iter, nchunks,&
+            &bufsize,&
+            &r, theta, phi,&
+            &alpha,&
+            &betaR, betaTh, betaPhi,&
+            &gRR, gThTh, gPhiPhi,&
+            &gRTh, gRPhi, gThPhi)
 
 
        CALL EvolveData(&

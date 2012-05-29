@@ -9,8 +9,8 @@
 
         !This subroutine calculates f_{nlm} at a specific collocation point
 
-        USE            omp_lib
-        IMPLICIT       none
+        USE             omp_lib
+        IMPLICIT        none
 
 !--------------------------------------------------------!
 !     Declare calling variables                          !

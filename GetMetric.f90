@@ -13,6 +13,8 @@
 &gRTh, gRPhi, gThPhi)
 
         USE       omp_lib
+        USE       HDF5
+        USE       H5LT
         IMPLICIT  none
 
 !-----------------------------------------------------------!
@@ -46,8 +48,6 @@
 !       Declare local variables                             !
 !-----------------------------------------------------------!
 
-        INTEGER*4               LM(64, 64)
-
         CHARACTER*32            format_string10
         CHARACTER*32            format_string9
         CHARACTER*32            Filename10
@@ -64,11 +64,14 @@
         REAL*8                  gXZ(4*NP)
         REAL*8                  gYZ(4*NP)
 
-        REAL*8                  TMatrix(4,4)
+        REAL*8                  JMatrix(4,4)
         REAL*8                  gcart(4,4)
         REAL*8                  gsph(4,4)
 
         INTEGER*4               i, j, k
+        INTEGER*4               CFLEN10
+        INTEGER*4               CFLEN9
+        INTEGER*4               crow
         INTEGER*4               error
 
 !----------------------------------------------------------!
@@ -77,35 +80,41 @@
 
         PRINT *, 'Getting Metric Data'
 
-        CALL GetLekienCoefficients(LM)
-
         !The filenames for the metric correspond to the ones defined in the
         !shell program: process-hdf-metric.sh
         
         SELECT CASE(iter)
             CASE( 0:9 )
-                format_string9 = '(A9,I1,A7)'
-                format_string10 = '(A9,I1,A8)'
+                CFLEN9 = 9+1+8
+                CFLEN10 = 9+1+9
+                format_string9 = '(A9,I1,A8)'
+                format_string10 = '(A9,I1,A9)'
             CASE( 10:99 )
-                format_string9 = '(A9,I2,A7)'
-                format_string10 = '(A9,I2,A8)'
+                CFLEN9 = 9+2+8
+                CFLEN10 = 9+2+9
+                format_string9 = '(A9,I2,A8)'
+                format_string10 = '(A9,I2,A9)'
             CASE( 100:999 )
-                format_string9 = '(A9,I3,A7)'
-                format_string10 = '(A9,I3,A8)'
+                CFLEN9 = 9+3+8
+                CFLEN10 = 9+3+9
+                format_string9 = '(A9,I3,A8)'
+                format_string10 = '(A9,I3,A9)'
             CASE( 1000:9999 )
-                format_string9 = '(A9,I3,A7)'
-                format_string10 = '(A9,I3,A8)'
+                CFLEN9 = 9+4+8
+                CFLEN10 = 9+4+9
+                format_string9 = '(A9,I4,A8)'
+                format_string10 = '(A9,I4,A9)'
             CASE DEFAULT
                 PRINT *, 'Iteration number is too large'
                 STOP
         END SELECT
 
         !ALPHA
-        WRITE(Filename9, format_string9) 'alpha.it=',iter,'rl=9.h5'
-        WRITE(Filename10, format_string10) 'alpha.it=',iter,'rl=10.h5' 
+        WRITE(Filename9, format_string9) 'alpha.it=',iter,'.rl=9.h5'
+        WRITE(Filename10, format_string10) 'alpha.it=',iter,'.rl=10.h5' 
         CALL ReadNInterpolateMetric(&
             &M, Mr, NP,&
-            &LM,&
+            &CFLEN10, CFLEN9,&
             &bufsize,&
             &iter, nchunks,&
             &0,&
@@ -114,11 +123,11 @@
             &alphaXYZ)
 
         !BETA1
-        WRITE(Filename9, format_string9) 'beta1.it=',iter,'rl=9.h5'
-        WRITE(Filename10, format_string10) 'beta1.it=',iter,'rl=10.h5' 
+        WRITE(Filename9, format_string9) 'beta1.it=',iter,'.rl=9.h5'
+        WRITE(Filename10, format_string10) 'beta1.it=',iter,'.rl=10.h5' 
         CALL ReadNInterpolateMetric(&
             &M, Mr, NP,&
-            &LM,&
+            &CFLEN10, CFLEN9,&
             &bufsize,&
             &iter, nchunks,&
             &1,&
@@ -127,11 +136,11 @@
             &betaX)
 
         !BETA2
-        WRITE(Filename9, format_string9) 'beta2.it=',iter,'rl=9.h5'
-        WRITE(Filename10, format_string10) 'beta2.it=',iter,'rl=10.h5' 
+        WRITE(Filename9, format_string9) 'beta2.it=',iter,'.rl=9.h5'
+        WRITE(Filename10, format_string10) 'beta2.it=',iter,'.rl=10.h5' 
         CALL ReadNInterpolateMetric(&
             &M, Mr, NP,&
-            &LM,&
+            &CFLEN10, CFLEN9,&
             &bufsize,&
             &iter, nchunks,&
             &2,&
@@ -140,11 +149,11 @@
             &betaY)
 
         !BETA3
-        WRITE(Filename9, format_string9) 'beta3.it=',iter,'rl=9.h5'
-        WRITE(Filename10, format_string10) 'beta3.it=',iter,'rl=10.h5' 
+        WRITE(Filename9, format_string9) 'beta3.it=',iter,'.rl=9.h5'
+        WRITE(Filename10, format_string10) 'beta3.it=',iter,'.rl=10.h5' 
         CALL ReadNInterpolateMetric(&
             &M, Mr, NP,&
-            &LM,&
+            &CFLEN10, CFLEN9,&
             &bufsize,&
             &iter, nchunks,&
             &3,&
@@ -154,28 +163,36 @@
 
         SELECT CASE(iter)
             CASE( 0:9 )
-                format_string9 = '(A7,I1,A7)'
-                format_string10 = '(A7,I1,A8)'
+                CFLEN9 = 7+1+8
+                CFLEN10 = 7+1+9
+                format_string9 = '(A7,I1,A8)'
+                format_string10 = '(A7,I1,A9)'
             CASE( 10:99 )
-                format_string9 = '(A7,I2,A7)'
-                format_string10 = '(A7,I2,A8)'
+                CFLEN9 = 7+2+8
+                CFLEN10 = 7+2+9
+                format_string9 = '(A7,I2,A8)'
+                format_string10 = '(A7,I2,A9)'
             CASE( 100:999 )
-                format_string9 = '(A7,I3,A7)'
-                format_string10 = '(A7,I3,A8)'
+                CFLEN9 = 7+3+8
+                CFLEN10 = 7+3+9
+                format_string9 = '(A7,I3,A8)'
+                format_string10 = '(A7,I3,A9)'
             CASE( 1000:9999 )
-                format_string9 = '(A7,I3,A7)'
-                format_string10 = '(A7,I3,A8)'
+                CFLEN9 = 7+4+8
+                CFLEN10 = 7+4+9
+                format_string9 = '(A7,I4,A8)'
+                format_string10 = '(A7,I4,A9)'
             CASE DEFAULT
                 PRINT *, 'Iteration number is too large'
                 STOP
         END SELECT
 
         !GXX
-        WRITE(Filename9, format_string9) 'gxx.it=',iter,'rl=9.h5'
-        WRITE(Filename10, format_string10) 'gxx.it=',iter,'rl=10.h5' 
+        WRITE(Filename9, format_string9) 'gxx.it=',iter,'.rl=9.h5'
+        WRITE(Filename10, format_string10) 'gxx.it=',iter,'.rl=10.h5' 
         CALL ReadNInterpolateMetric(&
             &M, Mr, NP,&
-            &LM,&
+            &CFLEN10, CFLEN9,&
             &bufsize,&
             &iter, nchunks,&
             &4,&
@@ -184,11 +201,11 @@
             &gXX)
 
         !GYY
-        WRITE(Filename9, format_string9) 'gyy.it=',iter,'rl=9.h5'
-        WRITE(Filename10, format_string10) 'gyy.it=',iter,'rl=10.h5' 
+        WRITE(Filename9, format_string9) 'gyy.it=',iter,'.rl=9.h5'
+        WRITE(Filename10, format_string10) 'gyy.it=',iter,'.rl=10.h5' 
         CALL ReadNInterpolateMetric(&
             &M, Mr, NP,&
-            &LM,&
+            &CFLEN10, CFLEN9,&
             &bufsize,&
             &iter, nchunks,&
             &5,&
@@ -197,11 +214,11 @@
             &gYY)
 
         !GZZ
-        WRITE(Filename9, format_string9) 'gzz.it=',iter,'rl=9.h5'
-        WRITE(Filename10, format_string10) 'gzz.it=',iter,'rl=10.h5' 
+        WRITE(Filename9, format_string9) 'gzz.it=',iter,'.rl=9.h5'
+        WRITE(Filename10, format_string10) 'gzz.it=',iter,'.rl=10.h5' 
         CALL ReadNInterpolateMetric(&
             &M, Mr, NP,&
-            &LM,&
+            &CFLEN10, CFLEN9,&
             &bufsize,&
             &iter, nchunks,&
             &6,&
@@ -210,11 +227,11 @@
             &gZZ)
 
         !GXY
-        WRITE(Filename9, format_string9) 'gxy.it=',iter,'rl=9.h5'
-        WRITE(Filename10, format_string10) 'gxy.it=',iter,'rl=10.h5' 
+        WRITE(Filename9, format_string9) 'gxy.it=',iter,'.rl=9.h5'
+        WRITE(Filename10, format_string10) 'gxy.it=',iter,'.rl=10.h5' 
         CALL ReadNInterpolateMetric(&
             &M, Mr, NP,&
-            &LM,&
+            &CFLEN10, CFLEN9,&
             &bufsize,&
             &iter, nchunks,&
             &7,&
@@ -223,11 +240,11 @@
             &gXY)
 
         !GXZ
-        WRITE(Filename9, format_string9) 'gxz.it=',iter,'rl=9.h5'
-        WRITE(Filename10, format_string10) 'gxz.it=',iter,'rl=10.h5' 
+        WRITE(Filename9, format_string9) 'gxz.it=',iter,'.rl=9.h5'
+        WRITE(Filename10, format_string10) 'gxz.it=',iter,'.rl=10.h5' 
         CALL ReadNInterpolateMetric(&
             &M, Mr, NP,&
-            &LM,&
+            &CFLEN10, CFLEN9,&
             &bufsize,&
             &iter, nchunks,&
             &8,&
@@ -236,11 +253,11 @@
             &gXZ)
 
         !GYZ
-        WRITE(Filename9, format_string9) 'gyz.it=',iter,'rl=9.h5'
-        WRITE(Filename10, format_string10) 'gyz.it=',iter,'rl=10.h5' 
+        WRITE(Filename9, format_string9) 'gyz.it=',iter,'.rl=9.h5'
+        WRITE(Filename10, format_string10) 'gyz.it=',iter,'.rl=10.h5' 
         CALL ReadNInterpolateMetric(&
             &M, Mr, NP,&
-            &LM,&
+            &CFLEN10, CFLEN9,&
             &bufsize,&
             &iter, nchunks,&
             &9,&

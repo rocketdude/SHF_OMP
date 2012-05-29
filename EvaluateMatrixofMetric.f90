@@ -11,8 +11,8 @@
         !This subroutine builds the matrix g_{A,B} given
         !alpha, beta^i, g_{ij}
 
-        USE            omp_lib
-        IMPLICIT       none
+        USE             omp_lib
+        IMPLICIT        none
 
 !--------------------------------------------------------!
 !     Declare calling variables                          !

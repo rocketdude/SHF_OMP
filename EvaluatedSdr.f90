@@ -12,8 +12,8 @@
         !The routine to calculate the derivative of the Chebyshev polynomials can be
         !found in Numerical Recipes in Fortran77.
 
-        USE            omp_lib
-        IMPLICIT       none
+        USE             omp_lib
+        IMPLICIT        none
 
 !--------------------------------------------------------!
 !     Declare calling variables                          !

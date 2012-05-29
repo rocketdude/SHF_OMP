@@ -22,8 +22,8 @@
         !a(t+dt) = u^(3) = (1/3)u^(0) + (2/3)u^(2) + (2/3)dt * L( u^(2) )
         !with CFL coefficient of 1
         
-        USE            omp_lib
-        IMPLICIT       none
+        USE             omp_lib
+        IMPLICIT        none
 
 !--------------------------------------------------------!
 !     Declare calling variables                          !

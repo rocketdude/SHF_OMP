@@ -3,7 +3,9 @@
 
 PROG = SHF
 
-OBJS = IO.o main.o CalculateSchwarzschildMetric.o CalculateInitialData.o EvaluatedSdr.o EvaluateF.o EvaluateG.o EvolveData.o FindU.o Functions.o InitializeFilter.o InitializeMatrices.o ReinitializeData.o SphHarmonicY.o Spline.o
+MODS = DynMetricArray.mod
+#Place objects related to modules first
+OBJS = DynMetricArray.o IO.o main.o EvaluatedSdr.o EvaluateF.o EvaluateG.o EvaluateJacobian.o EvolveData.o FindU.o Functions.o GetFilter.o GetInitialData.o GetMatrices.o GetMetric.o GetSchwarzschildMetric.o Invert3Metric.o progress.o ReadHDF5Metric.o ReadNInterpolateMetric.o ReinitializeData.o SphHarmonicY.o Spline.o TricubicInterpolation.o
 
 F90 = mpif90
 CC = mpicc
@@ -27,8 +29,8 @@ all: $(PROG)
 $(PROG) : $(OBJS)
 	$(F90) -o $(PROG) $(SWITCH) $(OBJS) $(LIBS)
 
-main.o: IO.o CalculateSchwarzschildMetric.o CalculateInitialData.o EvaluatedSdr.o EvaluateF.o EvaluateG.o EvolveData.o FindU.o Functions.o InitializeFilter.o InitializeMatrices.o ReinitializeData.o SphHarmonicY.o Spline.o
-
+%.mod: %.o $.f90
+	$(F90) -c $(FLAGS) $(SWITCH) $<
 %.o: %.f90
 	$(F90) -c $(FLAGS) $(SWITCH) $<
 %.o: %.cpp
@@ -36,6 +38,6 @@ main.o: IO.o CalculateSchwarzschildMetric.o CalculateInitialData.o EvaluatedSdr.
 
 # Cleaning everything
 clean:
-	rm -f $(PROG) $(OBJS) *.kmo
+	rm -f $(PROG) $(OBJS) $(MODS) *.kmo       
 
 # END MAKEFILE

@@ -8,8 +8,8 @@
         !the metric values in Cartesian coordinates
         !to spherical coordinates at a specific collocation point
 
-        USE            omp_lib
-        IMPLICIT       none
+        USE             omp_lib
+        IMPLICIT        none
 
 !--------------------------------------------------------!
 !     Declare calling variables                          !

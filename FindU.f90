@@ -12,8 +12,8 @@
 !This subroutine finds U(theta, phi) using cubic spline interpolation
 !and then performing linear interpolation
 
-       USE omp_lib
-       IMPLICIT NONE
+        USE             omp_lib
+        IMPLICIT        none
 
 !-----------------------------------------------------------!
 !       Declare calling variables                           !
