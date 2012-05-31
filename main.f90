@@ -16,7 +16,7 @@
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Mr = 100
-    INTEGER*4, PARAMETER ::        M = 2
+    INTEGER*4, PARAMETER ::        M = 8
     INTEGER*4, PARAMETER ::        NP = (Mr+1)*(M*M)
 
     ! Mr is the degree of the radial Chebyshev polynomial
@@ -165,7 +165,7 @@
        t  = 0.0D0                   !Initial time
        Startit = 1                  !Starting from iteration 1
     END IF
-    R0 = 0.55D0                     !Initial radius of the null surface
+    R0 = 0.51D0                     !Initial radius of the null surface
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, and negative tdir give EH finder
@@ -184,7 +184,7 @@
     LWORK = 42617152                !Optimized size of the WORK matrix, Put LWORK = -1 to query for the optimal size
 
     !Spherical grid parameters
-    rmax = 0.8D0                    !maximum value of r
+    rmax = 0.6D0                    !maximum value of r
     rmin = 0.0D0                    !minimum value of r
 
     !Parameters related to reading HDF5 files--do h5dump to check these
@@ -201,9 +201,9 @@
 !     Output Parameters                                  !
 !--------------------------------------------------------!
 
-    WriteUit = 10000
-    WriteSit = 10000
-    Writeait = 10000
+    WriteUit = 1
+    WriteSit = 100
+    Writeait = 100
 
 !--------------------------------------------------------!
 !     Echo certain parameters                            !
@@ -232,7 +232,7 @@
 !--------------------------------------------------------!
 
     !Set the number of MKL threads (dynamic is automatic)
-    !CALL MKL_SET_DYNAMIC(.TRUE.)
+    CALL MKL_SET_DYNAMIC(.TRUE.)
 
     !Inquire number of threads
     nthreads = omp_get_max_threads()
@@ -358,8 +358,7 @@
        !     Read Metric and Evolve Data                        !
        !--------------------------------------------------------!
 
-      !CALL READMETRIC HERE!
-       iter = iterratio * (it-1)
+       iter = iterratio * it
 
        CALL GetMetric(&
             &M, Mr, NP,&

@@ -9,10 +9,9 @@
 
 ##On TACC--Ranger or Lonestar--use these after loading the hdf5 library:
 #module swap pgi intel
-#module load hdf5
+#module load hdf5/1.8.8
 #mpicc -o slicer hdf5_slicer.cc -I$TACC_HDF5_INC -Wl,-rpath,$TACC_HDF5_LIB -L$TACC_HDF5_LIB -lhdf5 -lz
 #mpicc -O3 -o merge hdf5_merge.c -I$TACC_HDF5_INC -Wl,-rpath,$TACC_HDF5_LIB -L$TACC_HDF5_LIB -lhdf5 -lz
-#module load phdf5
 
 ##User should define these variables
 RL=9 #Relevant level
@@ -48,7 +47,7 @@ for METRIC in alpha beta1 beta2 beta3; do
   --out3d-cube $METRIC.c=*.it=$IT.rl=$RL.h5 $METRIC.it=$IT.rl=$RL.h5
   #Merge together the number of processor components into a single group
   #based on iteration number
-  ./merge -g -u "$METRIC.it=$IT.rl=$RL.h5" "$METRIC.it=$IT.rl=$RL.merged.h5"
+  #./merge -g -u "$METRIC.it=$IT.rl=$RL.h5" "$METRIC.it=$IT.rl=$RL.merged.h5"
   #Reinitialize the value of C
   let "C=0"
   fi
@@ -79,7 +78,7 @@ for METRIC in gxx gyy gzz gxy gxz gyz; do
   --out3d-cube $METRIC.c=*.it=$IT.rl=$RL.h5 $METRIC.it=$IT.rl=$RL.h5
   #Merge together the number of processor components into a single group
   #based on iteration number
-  ./merge -g -u "$METRIC.it=$IT.rl=$RL.h5" "$METRIC.it=$IT.rl=$RL.merged.h5"
+  #./merge -g -u "$METRIC.it=$IT.rl=$RL.h5" "$METRIC.it=$IT.rl=$RL.merged.h5"
   #Reinitialize the value of C
   let "C=0"
   fi

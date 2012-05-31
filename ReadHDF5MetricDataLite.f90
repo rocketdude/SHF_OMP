@@ -1,8 +1,8 @@
 !----------------------------------------------------------!
-!     ReadHDF5Metric  subroutine                           !
+!     ReadHDF5MetricData  subroutine                       !
 !----------------------------------------------------------!
 
-    SUBROUTINE ReadHDF5Metric(&
+    SUBROUTINE ReadHDF5MetricData(&
         &Filename, dataset,&
         &CFLEN, CDLEN,&
         &nchunks,&
@@ -15,14 +15,17 @@
         !This subroutine is to read the metric data supplied in HDF5 file.
         !Since the metric data is chunked into pieces, the subroutine
         !also recombines all the data into a single 3-dimensional array hdfmetric.
-        !Our algorithm of recombining the metric data removes the outer ghost zones
-        !whenever we have to reflect the data.
+        !Our algorithm of recombining the metric data removes the outer buffer zones.
+        !This algorithm assumes that Runge-Kutta 4 was used to evolve the data, such
+        !that there are 4 substeps.
+
+        !This subroutine uses HDF5 Lite High-Level APIs
 
         !Uses Module: DynMetricArray
 
         USE omp_lib
         USE HDF5
-        USE H5LT
+        USE H5LT        
         USE DynMetricArray
 
         IMPLICIT  none
@@ -49,7 +52,7 @@
 !-----------------------------------------------------------!
 
         !Used to read the HDF5 files
-        INTEGER(HID_T)           :: file_id
+        INTEGER(HID_T)           :: file_id 
         INTEGER(HSIZE_T)         :: nxyz(nchunks,3) !The dimensions of the dataset for each chunk
         INTEGER*4                   hdferr  !Lets us know if there is error in reading the hdf5 files
 
@@ -60,14 +63,20 @@
         CHARACTER(LEN=CDLEN(1))         CDTemp1     !This is a cheat, we're assuming there are only two different lengths of CDTemp
         CHARACTER(LEN=CDLEN(nchunks))   CDTemp2
 
+        REAL*8, DIMENSION(:,:,:), ALLOCATABLE   :: combinedbuffer
+        INTEGER*4                               :: combinedbufsize(3)
+
         !Used to chunk together the chunked pieces
         INTEGER*4                   ReflectWhichWay(3)  ! 0 --> no need to reflect
                                                         ! -1 --> reflect the bottom (negative) data to the top
                                                         ! +1 --> reflect the top (positive) data to the bottom
         INTEGER*4                   iorigin(nchunks,3)  !Bottom left index for each dataset
+        INTEGER*4                   iTemp
         INTEGER(HSIZE_T)            minindex(3)
         INTEGER(HSIZE_T)            maxindex(3)
-        INTEGER*4                   ghost(3)            !Extra grids due to ghost zone
+        INTEGER*4                   ghost(3)            !Extra grids due to ghost-zones
+        INTEGER*4                   RKsubsteps
+        INTEGER*4                   bufzone(3)
         REAL*8                      origin(nchunks,3)   !Bottom left values for each dataset
         REAL*8                      minpoint(3)
         REAL*8                      maxpoint(3)
@@ -90,6 +99,7 @@
 !----------------------------------------------------------!
 
         fudge = 1.0D-7
+        RKsubsteps = 4
 
         !Read the HDF5 files
         hdferr = 0
@@ -172,7 +182,6 @@
 
         END IF
 
-
         !All the chunks should have the same spatial discretizations dx, dy, dz, so just get these delta from a single dataset
         CALL h5ltget_attribute_double_f(file_id, CDTemp1, 'delta', delta, hdferr)
         IF( hdferr .NE. 0 ) STOP "*** ERROR in getting dx, dy, dz ***"
@@ -181,6 +190,7 @@
         IF( hdferr .NE. 0 ) STOP "*** ERROR in closing hdf file ***"
         CALL h5close_f( hdferr )
 
+        !PROCESS THE DATA
         DO i = 1,3
             !Find the left-bottom corner (minimum index)
             minindex(i) = MINVAL(iorigin(:,i))
@@ -201,8 +211,22 @@
             !Find out if we either only have half the data or all the data, in each direction
             IF( ABS(maxpoint(i)) .LT. (ABS(minpoint(i))+fudge) .AND.&
               & ABS(maxpoint(i)) .GT. (ABS(minpoint(i))-fudge) ) THEN
-                metricdims(i) = maxindex(i)
+                combinedbufsize(i) = maxindex(i)
                 ReflectWhichWay(i) = 0
+                
+                !But now we need to calculate what the size of the ghost zone is
+                ghost(i) = (iorigin(1,i) + nxyz(1,i) - iorigin(2,i))/2
+                IF( nchunks .GE. 3 ) THEN
+                    DO cnum = 3, nchunks
+                        iTemp = (iorigin(1,i) + nxyz(1,i) - iorigin(cnum,i))/2
+                        IF( (ghost(i) .EQ. 0) .AND. (iTemp .GT. 0) ) THEN
+                            ghost(i) = iTemp
+                        ELSE IF( (ghost(i) .NE. 0) .AND. (iTemp .GT. 0) .AND. (iTemp .LT. ghost(i)) ) THEN
+                            ghost(i) = iTemp
+                        END IF
+                    END DO
+                END IF
+
             ELSE IF( ABS(maxpoint(i)) .GT. (ABS(minpoint(i))+fudge) ) THEN
                 IF( minpoint(i) .GT. 0 ) THEN
                     PRINT *, 'ERROR: in spatial index', i, ', the minimum point of the metric has to be less than 0'
@@ -210,7 +234,7 @@
                 ELSE
                     ghost(i) = IDINT(fudge + ABS(minpoint(i))/delta(i) ) !Any data below the 0 plane would be ghost zone
                     maxindex(i) = maxindex(i) - ghost(i)    !remove the bottom ghost zones but keep minindex = 1
-                    metricdims(i) = 2*( maxindex(i)-minindex(i) ) + 1
+                    combinedbufsize(i) = 2*( maxindex(i)-minindex(i) ) + 1
                     ReflectWhichWay(i) = +1
                 END IF
             ELSE IF( ABS(maxpoint(i)) .LT. (ABS(minpoint(i))-fudge) ) THEN
@@ -220,18 +244,18 @@
                 ELSE
                     ghost(i) = IDINT(fudge + maxpoint(i)/delta(i))  !Any data above the 0 plane would be ghost zone
                     maxindex(i) = maxindex(i) - ghost(i)     !remove the top ghost zones and keep minindex = 1
-                    metricdims(i) = 2*( maxindex(i)-minindex(i) ) + 1 
+                    combinedbufsize(i) = 2*( maxindex(i)-minindex(i) ) + 1 
                     ReflectWhichWay(i) = -1
                 END IF
             END IF
 
         END DO
 
-        !Allocate hdfmetric to its appropriate size
-        ALLOCATE( hdfmetric(metricdims(1), metricdims(2), metricdims(3)), STAT=error )
+        !Allocate combinedbuffer to its appropriate size
+        ALLOCATE( combinedbuffer(combinedbufsize(1), combinedbufsize(2), combinedbufsize(3)), STAT=error )
         IF( error .NE. 0 ) STOP "*** Trouble Allocating ***"
 
-        !Combine the chunked data and save it in hdfmetric
+        !Combine the chunked data and save it in combinedbuffer
         DO cnum = 1, nchunks
             DO i = 1, nxyz(cnum,1)
                 DO j = 1, nxyz(cnum,2)
@@ -239,7 +263,8 @@
                         ii = (i+iorigin(cnum,1)-1)
                         jj = (j+iorigin(cnum,2)-1)
                         kk = (k+iorigin(cnum,3)-1)
-                        hdfmetric(ii,jj,kk) = buffer(cnum,i,j,k)   !NOTE:hdfmetric still includes ghost zones
+                        combinedbuffer(ii,jj,kk) = buffer(cnum,i,j,k)   !NOTE:combinedbuffer still includes ghost zones
+                                                                        !     and buffer zones
                     END DO
                 END DO
             END DO
@@ -253,20 +278,20 @@
         IF( ReflectWhichWay(1) .EQ. +1 ) THEN !DATA IS FOR THE TOP HEMISPHERE
             !The data is now located at the bottom hemisphere, move it to the top hemisphere, remove ghost zones
             DO i = minindex(1), maxindex(1)
-                jj = metricdims(1) -i+1
+                jj = combinedbufsize(1) -i+1
                 kk = maxindex(1) + ghost(1) -i+1
-                hdfmetric(jj,:,:) = hdfmetric(kk,:,:)
+                combinedbuffer(jj,:,:) = combinedbuffer(kk,:,:)
             END DO
             !Reflect the top hemisphere values about x = 0
             DO i = minindex(1), (maxindex(1)-1)
-                jj = metricdims(1) -i +1
-                hdfmetric(i,:,:) = hdfmetric(jj,:,:)
+                jj = combinedbufsize(1) -i +1
+                combinedbuffer(i,:,:) = combinedbuffer(jj,:,:)
             END DO
         ELSE IF( ReflectWhichWay(1) .EQ. -1 ) THEN !DATA IS FOR THE BOTTOM HEMISPHERE
             !Reflect the bottom hemisphere values about x = 0
             DO i = minindex(1), (maxindex(1)-1)
-                jj = metricdims(1) -i +1
-                hdfmetric(jj,:,:) = hdfmetric(i,:,:)
+                jj = combinedbufsize(1) -i +1
+                combinedbuffer(jj,:,:) = combinedbuffer(i,:,:)
             END DO
         END IF
 
@@ -274,20 +299,20 @@
         IF( ReflectWhichWay(2) .EQ. +1 ) THEN !DATA IS FOR THE TOP HEMISPHERE
            !The data is now located at the bottom hemisphere, move it to the top hemisphere, remove ghost zones
             DO i = minindex(2), maxindex(2)
-                jj = metricdims(2) -i+1
+                jj = combinedbufsize(2) -i+1
                 kk = maxindex(2) + ghost(2) -i+1
-                hdfmetric(:,jj,:) = hdfmetric(:,kk,:)
+                combinedbuffer(:,jj,:) = combinedbuffer(:,kk,:)
             END DO
             !Reflect the top hemisphere values about y = 0
             DO i = minindex(2), (maxindex(2)-1)
-                jj = metricdims(2) -i +1
-                hdfmetric(:,i,:) = hdfmetric(:,jj,:)
+                jj = combinedbufsize(2) -i +1
+                combinedbuffer(:,i,:) = combinedbuffer(:,jj,:)
             END DO
         ELSE IF( ReflectWhichWay(2) .EQ. -1 ) THEN !DATA IS FOR THE BOTTOM HEMISPHERE
             !Reflect the bottom hemisphere values about y = 0
             DO i = minindex(2), (maxindex(2)-1)
-                jj = metricdims(2) -i +1
-                hdfmetric(:,jj,:) = hdfmetric(:,i,:)
+                jj = combinedbufsize(2) -i +1
+                combinedbuffer(:,jj,:) = combinedbuffer(:,i,:)
             END DO
         END IF
         
@@ -295,22 +320,41 @@
         IF( ReflectWhichWay(3) .EQ. +1 ) THEN !DATA IS FOR THE TOP HEMISPHERE
            !The data is now located at the bottom hemisphere, move it to the top hemisphere, remove ghost zones
             DO i = minindex(3), maxindex(3)
-                jj = metricdims(3) -i+1
+                jj = combinedbufsize(3) -i+1
                 kk = maxindex(3) + ghost(3) -i+1
-                hdfmetric(:,:,jj) = hdfmetric(:,:,kk)
+                combinedbuffer(:,:,jj) = combinedbuffer(:,:,kk)
             END DO
             !Reflect the top hemisphere values about z = 0
             DO i = minindex(3), (maxindex(3)-1)
-                jj = metricdims(3) -i +1
-                hdfmetric(:,:,i) = hdfmetric(:,:,jj)
+                jj = combinedbufsize(3) -i +1
+                combinedbuffer(:,:,i) = combinedbuffer(:,:,jj)
             END DO
         ELSE IF( ReflectWhichWay(3) .EQ. -1 ) THEN !DATA IS FOR THE BOTTOM HEMISPHERE
             !Reflect the bottom hemisphere values about z = 0
             DO i = minindex(3), (maxindex(3)-1)
-                jj = metricdims(3) -i +1
-                hdfmetric(:,:,jj) = hdfmetric(:,:,i)
+                jj = combinedbufsize(3) -i +1
+                combinedbuffer(:,:,jj) = combinedbuffer(:,:,i)
             END DO
         END IF
+
+        !Now, we need to remove the buffer zones and save the results to hdfmetric
+        bufzone = ghost*RKsubsteps
+
+        metricdims = combinedbufsize - 2*bufzone
+
+        ALLOCATE( hdfmetric(metricdims(1), metricdims(2), metricdims(3)), STAT=error )
+        IF( error .NE. 0 ) STOP "*** Trouble Allocating ***"
+
+        DO i = 1, metricdims(1)
+            DO j = 1, metricdims(2)
+                DO k = 1, metricdims(3)
+                    ii = i + bufzone(1)
+                    jj = j + bufzone(2)
+                    kk = k + bufzone(3)
+                    hdfmetric(i,j,k) = combinedbuffer(ii,jj,kk)
+                END DO
+            END DO
+        END DO
 
         !Since the extent of grid in the negative direction is equal to the extent of the grid in the positive direction,
         !we can calculate the index for the origin, the value of maximum (xyz), and the value of minimum (xyz) pretty easily.
@@ -327,5 +371,5 @@
         Zmin = -1.0D0 * Zmax
 
         RETURN
-    END SUBROUTINE ReadHDF5Metric    
+    END SUBROUTINE ReadHDF5MetricData
 

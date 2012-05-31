@@ -1,8 +1,8 @@
 !----------------------------------------------------------!
-!     Read & Interpolate Metric  subroutine                !
+!     GetMetricComponent  subroutine                       !
 !----------------------------------------------------------!
 
-    SUBROUTINE ReadNInterpolateMetric(&
+    SUBROUTINE GetMetricComponent(&
     &M, Mr, NP,&
     &CFLEN10, CFLEN9,&
     &bufsize,&
@@ -237,7 +237,7 @@
         !      Read rl=10 data                                     !
         !----------------------------------------------------------!
 
-        CALL ReadHDF5Metric(&
+        CALL ReadHDF5MetricData(&
                 &Filename10, dataset10,&
                 &CFLEN10, CDLEN10,&
                 &nchunks,&
@@ -260,7 +260,7 @@
         !      Read rl=9 data                                      !
         !----------------------------------------------------------!
 
-        CALL ReadHDF5Metric(&
+        CALL ReadHDF5MetricData(&
                 &Filename9, dataset9,&
                 &CFLEN9, CDLEN9,&
                 &nchunks,&
@@ -285,6 +285,8 @@
         !----------------------------------------------------------!
         
         IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) ) THEN
+        !$OMP PARALLEL DO &
+        !$OMP &PRIVATE(j, k, crow, x, y, z, Inside10, Inside9, dx, dy, dz, ni, nj, nk, x0, y0, z0, cube, fatxyz)
         DO i =  1, (Mr+1)
             DO j = 1, (2*M)
                 DO k = 1, (2*M)
@@ -360,10 +362,11 @@
                 END DO
             END DO
         END DO
+        !$OMP END PARALLEL DO
 
         ELSE
         PRINT *, 'ERROR in reading the metric data'
         END IF
 
         RETURN
-      END SUBROUTINE ReadNInterpolateMetric
+      END SUBROUTINE GetMetricComponent
