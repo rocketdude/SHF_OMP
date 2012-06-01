@@ -136,6 +136,7 @@
     INTEGER*4         iterratio   !Ratio of the iteration values in the EinsteinToolkit compared to this code's iteration
     INTEGER*4         iter        !Iteration values in the EinsteinToolkit
     INTEGER*4         nchunks     !Number of chunks that the metric is divided into
+    REAL*8            dt_data     !The value of dt for the metric data
 
 !--------------------------------------------------------!
 !     Declare Local Parameters                           !
@@ -158,7 +159,7 @@
     SFLAG = 0                       !If SFLAG = 1, we are continuing previous run: change t, Startit and aFile
     t = -8.1617491479814266D0       !Last time from previous run
     Startit = 6751                  !Startit = last iteration + 1
-    Maxit = 3000
+    Maxit = 1000
     aFile = 'a10.dat'
 
     IF( SFLAG .EQ. 0 ) THEN
@@ -174,7 +175,6 @@
     cfl = 1.0D0
     rootsign = -1.0D0               !Choose the root sign, either 1.0D0 or -1.0D0 (depends on the metric)
     tdir = -1.0D0                   !Direction of time, choose +1.0D0 or -1.0D0
-    dt = 2.50D-2                    !Size of time step
     reinit = 15
 
     IFLAG = 1                       !IFLAG = 0 ==> calculate AFinv (slow)
@@ -184,7 +184,7 @@
     LWORK = 42617152                !Optimized size of the WORK matrix, Put LWORK = -1 to query for the optimal size
 
     !Spherical grid parameters
-    rmax = 0.6D0                    !maximum value of r
+    rmax = 0.64D0                   !maximum value of r
     rmin = 0.0D0                    !minimum value of r
 
     !Parameters related to reading HDF5 files--do h5dump to check these
@@ -193,6 +193,8 @@
     bufsize(1) = 50                 !Buffer size; has to be bigger than the size of each dataset
     bufsize(2) = 50
     bufsize(3) = 50
+    dt_data = 2.50D-2               !Size of time step specified by the data
+    !dt = 0.0125 but rl=9 is only updated once every two iterations, so dt = 0.0250
 
     !Schwarzschild metric parameter (preliminary tests only)
 !!$    Mass = 0.45D0                   !Only used with Schwarzschild metric
@@ -201,7 +203,7 @@
 !     Output Parameters                                  !
 !--------------------------------------------------------!
 
-    WriteUit = 1
+    WriteUit = 10
     WriteSit = 100
     Writeait = 100
 
@@ -274,10 +276,7 @@
 !!$       dx = rsinthdphi
 !!$    END IF
 
-    IF( dt .LT. ABS(tdir * cfl * dx) ) THEN
-       PRINT *, 'ERROR:Time step is too large, beyond the Courant limit'
-       STOP
-    END IF
+    dt = tdir * cfl * dx
 
 !--------------------------------------------------------!
 !     Initial Data                                       !
@@ -358,10 +357,11 @@
        !     Read Metric and Evolve Data                        !
        !--------------------------------------------------------!
 
-       iter = iterratio * it
+       iter = iterratio * (Maxit - it)
 
        CALL GetMetric(&
             &M, Mr, NP,&
+            &dt, dt_data,&
             &iter, nchunks,&
             &bufsize,&
             &r, theta, phi,&

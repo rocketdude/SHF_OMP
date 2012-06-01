@@ -368,5 +368,8 @@
         PRINT *, 'ERROR in reading the metric data'
         END IF
 
+        DEALLOCATE( metric10 )
+        DEALLOCATE( metric9 )
+
         RETURN
       END SUBROUTINE GetMetricComponent

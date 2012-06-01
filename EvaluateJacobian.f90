@@ -2,7 +2,7 @@
 !    Evaluate Jacobian subroutine                        !
 !--------------------------------------------------------!
 
-      SUBROUTINE EvaluateJacobian(r,theta,phi,JMatrix)
+      SUBROUTINE EvaluateJacobian(r,theta,phi,dt_ratio,JMatrix)
                 
         !This subroutine builds the jacobian matrix to transform
         !the metric values in Cartesian coordinates
@@ -18,13 +18,14 @@
         REAL*8, INTENT(in)   :: r
         REAL*8, INTENT(in)   :: theta
         REAL*8, INTENT(in)   :: phi
+        REAL*8, INTENT(in)   :: dt_ratio
         REAL*8, INTENT(out)  :: JMatrix(4,4)
 
 !--------------------------------------------------------!
 !      Main Subroutine                                   !
 !--------------------------------------------------------!
 
-        JMatrix(1,1) = 1.0D0
+        JMatrix(1,1) = dt_ratio
         JMatrix(1,2) = 0.0D0
         JMatrix(1,3) = 0.0D0
         JMatrix(1,4) = 0.0D0

@@ -4,6 +4,7 @@
 
       SUBROUTINE GetMetric(&
 &M, Mr, NP,&
+&dt, dt_data,&
 &iter, nchunks,&
 &bufsize,&
 &r, theta, phi,&
@@ -26,6 +27,8 @@
         INTEGER*4, INTENT(in)  :: nchunks
 
         INTEGER(HSIZE_T), INTENT(in):: bufsize(3)        
+
+        REAL*8, INTENT(in)   :: dt, dt_data
 
         REAL*8, INTENT(in)   :: r(Mr+1)
         REAL*8, INTENT(in)   :: theta(2*M)
@@ -67,6 +70,7 @@
         REAL*8                  JMatrix(4,4)
         REAL*8                  gcart(4,4)
         REAL*8                  gsph(4,4)
+        REAL*8                  dt_ratio
 
         INTEGER*4               i, j, k
         INTEGER*4               CFLEN10
@@ -268,13 +272,14 @@
         !Now we need to perform coordinate transformation from (t,x,y,z) to (t,r,th,phi)
         !Both g_sph and g_cart are of down indices
         
+        dt_ratio = dt_data/dt
         !$OMP PARALLEL DO PRIVATE(j, k, JMatrix, crow, gcart, gsph, error)
         DO i = 1, (Mr+1)        
             DO j = 1, (2*M)
                 DO k = 1, (2*M)
             
                     !Build the Jacobian matrix JMatrix
-                    CALL EvaluateJacobian(r(i), theta(j),phi(k),JMatrix)
+                    CALL EvaluateJacobian(r(i),theta(j),phi(k),dt_ratio,JMatrix)
 
                     crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
                    
