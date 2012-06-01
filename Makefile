@@ -30,9 +30,9 @@ $(PROG) : $(OBJS)
 	$(F90) -o $(PROG) $(SWITCH) $(OBJS) $(LIBS)
 
 %.mod: %.o $.f90
-	$(F90) -c $(FLAGS) $(SWITCH) $<
+	$(F90) -c $(FLAGS) $(SWITCH) $(LIBS) $<
 %.o: %.f90
-	$(F90) -c $(FLAGS) $(SWITCH) $<
+	$(F90) -c $(FLAGS) $(SWITCH) $(LIBS) $<
 %.o: %.cpp
 	$(CC) -c $(CCFLAGS) $(CCSWITCH) $(CCLIBS) $<
 
