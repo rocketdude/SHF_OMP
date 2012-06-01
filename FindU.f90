@@ -63,7 +63,7 @@
        S = MATMUL(AF, a)
 
        !Writing S into file (only at certain iterations)
-       IF( MOD(it, WriteSit) .EQ. 0 ) CALL WriteS(4*NP, S, it)
+       IF( MOD(it, WriteSit) .EQ. 0 ) CALL WriteS(4*NP, ABS(S), it)
 
        !$OMP PARALLEL DO PRIVATE(k, i, iindex, jkindex, U_r, U_r2, flag, ilow, ilow2, deltar, rr, UU)
        DO j = 1, 2*M

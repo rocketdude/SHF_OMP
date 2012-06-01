@@ -88,4 +88,6 @@ for METRIC in gxx gyy gzz gxy gxz gyz; do
   #Reinitialize the value of IT
   let "IT=$ITSTART"
 done
+#Remove the chunked data
+rm *.c=*
 exit 0
