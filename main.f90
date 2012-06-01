@@ -159,14 +159,14 @@
     SFLAG = 0                       !If SFLAG = 1, we are continuing previous run: change t, Startit and aFile
     t = -8.1617491479814266D0       !Last time from previous run
     Startit = 6751                  !Startit = last iteration + 1
-    Maxit = 1000
+    Maxit = 500
     aFile = 'a10.dat'
 
     IF( SFLAG .EQ. 0 ) THEN
        t  = 0.0D0                   !Initial time
        Startit = 1                  !Starting from iteration 1
     END IF
-    R0 = 0.51D0                     !Initial radius of the null surface
+    R0 = 0.52D0                     !Initial radius of the null surface
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, and negative tdir give EH finder
@@ -184,17 +184,17 @@
     LWORK = 42617152                !Optimized size of the WORK matrix, Put LWORK = -1 to query for the optimal size
 
     !Spherical grid parameters
-    rmax = 0.64D0                   !maximum value of r
+    rmax = 1.10D0                   !maximum value of r
     rmin = 0.0D0                    !minimum value of r
 
     !Parameters related to reading HDF5 files--do h5dump to check these
-    iterratio = 2
+    iterratio = 4
     nchunks = 12
     bufsize(1) = 50                 !Buffer size; has to be bigger than the size of each dataset
     bufsize(2) = 50
     bufsize(3) = 50
-    dt_data = 2.50D-2               !Size of time step specified by the data
-    !dt = 0.0125 but rl=9 is only updated once every two iterations, so dt = 0.0250
+    dt_data = 5.00D-2               !Size of time step specified by the data
+    !dt = 0.0125 but rl=8 is only updated once every four iterations, so dt = 0.050
 
     !Schwarzschild metric parameter (preliminary tests only)
 !!$    Mass = 0.45D0                   !Only used with Schwarzschild metric

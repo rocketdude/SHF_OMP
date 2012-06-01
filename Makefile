@@ -14,7 +14,7 @@ CC = mpicc
 SWITCH = -O3 -xW -mcmodel=large -openmp
 LIBS = -Wl,-rpath,$$TACC_MKL_LIB \
    -L$$TACC_MKL_LIB -lmkl -lguide \
-   -I$$TACC_HDF5_INC -I$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB -lhdf5_fortran -lhdf5 -lz -cxxlib
+   -I$$TACC_HDF5_INC -I$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB -lhdf5_fortran -lhdf5 -lz
 FLAGS = -fpp
 
 #C++ DEPENDENCIES

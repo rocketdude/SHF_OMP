@@ -51,10 +51,11 @@
 !       Declare local variables                             !
 !-----------------------------------------------------------!
 
-        CHARACTER*32            format_string10
-        CHARACTER*32            format_string9
+        CHARACTER*32            format_string2
+        CHARACTER*32            format_string1
         CHARACTER*32            Filename10
         CHARACTER*32            Filename9
+        CHARACTER*32            Filename8
 
         REAL*8                  alphaXYZ(4*NP)
         REAL*8                  betaX(4*NP)
@@ -73,8 +74,8 @@
         REAL*8                  dt_ratio
 
         INTEGER*4               i, j, k
-        INTEGER*4               CFLEN10
-        INTEGER*4               CFLEN9
+        INTEGER*4               CFLEN2
+        INTEGER*4               CFLEN1
         INTEGER*4               crow
         INTEGER*4               error
 
@@ -89,183 +90,193 @@
         
         SELECT CASE(iter)
             CASE( 0:9 )
-                CFLEN9 = 9+1+8
-                CFLEN10 = 9+1+9
-                format_string9 = '(A9,I1,A8)'
-                format_string10 = '(A9,I1,A9)'
+                CFLEN1 = 9+1+8
+                CFLEN2 = 9+1+9
+                format_string1 = '(A9,I1,A8)'
+                format_string2 = '(A9,I1,A9)'
             CASE( 10:99 )
-                CFLEN9 = 9+2+8
-                CFLEN10 = 9+2+9
-                format_string9 = '(A9,I2,A8)'
-                format_string10 = '(A9,I2,A9)'
+                CFLEN1 = 9+2+8
+                CFLEN2 = 9+2+9
+                format_string1 = '(A9,I2,A8)'
+                format_string2 = '(A9,I2,A9)'
             CASE( 100:999 )
-                CFLEN9 = 9+3+8
-                CFLEN10 = 9+3+9
-                format_string9 = '(A9,I3,A8)'
-                format_string10 = '(A9,I3,A9)'
+                CFLEN1 = 9+3+8
+                CFLEN2 = 9+3+9
+                format_string1 = '(A9,I3,A8)'
+                format_string2 = '(A9,I3,A9)'
             CASE( 1000:9999 )
-                CFLEN9 = 9+4+8
-                CFLEN10 = 9+4+9
-                format_string9 = '(A9,I4,A8)'
-                format_string10 = '(A9,I4,A9)'
+                CFLEN1 = 9+4+8
+                CFLEN2 = 9+4+9
+                format_string1 = '(A9,I4,A8)'
+                format_string2 = '(A9,I4,A9)'
             CASE DEFAULT
                 PRINT *, 'Iteration number is too large'
                 STOP
         END SELECT
 
         !ALPHA
-        WRITE(Filename9, format_string9) 'alpha.it=',iter,'.rl=9.h5'
-        WRITE(Filename10, format_string10) 'alpha.it=',iter,'.rl=10.h5' 
+        WRITE(Filename9, format_string1) 'alpha.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'alpha.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'alpha.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
-            &CFLEN10, CFLEN9,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &0,&
-            &Filename10, Filename9,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &alphaXYZ)
 
         !BETA1
-        WRITE(Filename9, format_string9) 'beta1.it=',iter,'.rl=9.h5'
-        WRITE(Filename10, format_string10) 'beta1.it=',iter,'.rl=10.h5' 
+        WRITE(Filename9, format_string1) 'beta1.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'beta1.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'beta1.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
-            &CFLEN10, CFLEN9,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &1,&
-            &Filename10, Filename9,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &betaX)
 
         !BETA2
-        WRITE(Filename9, format_string9) 'beta2.it=',iter,'.rl=9.h5'
-        WRITE(Filename10, format_string10) 'beta2.it=',iter,'.rl=10.h5' 
+        WRITE(Filename9, format_string1) 'beta2.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'beta2.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'beta2.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
-            &CFLEN10, CFLEN9,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &2,&
-            &Filename10, Filename9,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &betaY)
 
         !BETA3
-        WRITE(Filename9, format_string9) 'beta3.it=',iter,'.rl=9.h5'
-        WRITE(Filename10, format_string10) 'beta3.it=',iter,'.rl=10.h5' 
+        WRITE(Filename9, format_string1) 'beta3.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'beta3.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'beta3.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
-            &CFLEN10, CFLEN9,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &3,&
-            &Filename10, Filename9,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &betaZ)
 
         SELECT CASE(iter)
             CASE( 0:9 )
-                CFLEN9 = 7+1+8
-                CFLEN10 = 7+1+9
-                format_string9 = '(A7,I1,A8)'
-                format_string10 = '(A7,I1,A9)'
+                CFLEN1 = 7+1+8
+                CFLEN2 = 7+1+9
+                format_string1 = '(A7,I1,A8)'
+                format_string2 = '(A7,I1,A9)'
             CASE( 10:99 )
-                CFLEN9 = 7+2+8
-                CFLEN10 = 7+2+9
-                format_string9 = '(A7,I2,A8)'
-                format_string10 = '(A7,I2,A9)'
+                CFLEN1 = 7+2+8
+                CFLEN2 = 7+2+9
+                format_string1 = '(A7,I2,A8)'
+                format_string2 = '(A7,I2,A9)'
             CASE( 100:999 )
-                CFLEN9 = 7+3+8
-                CFLEN10 = 7+3+9
-                format_string9 = '(A7,I3,A8)'
-                format_string10 = '(A7,I3,A9)'
+                CFLEN1 = 7+3+8
+                CFLEN2 = 7+3+9
+                format_string1 = '(A7,I3,A8)'
+                format_string2 = '(A7,I3,A9)'
             CASE( 1000:9999 )
-                CFLEN9 = 7+4+8
-                CFLEN10 = 7+4+9
-                format_string9 = '(A7,I4,A8)'
-                format_string10 = '(A7,I4,A9)'
+                CFLEN1 = 7+4+8
+                CFLEN2 = 7+4+9
+                format_string1 = '(A7,I4,A8)'
+                format_string2 = '(A7,I4,A9)'
             CASE DEFAULT
                 PRINT *, 'Iteration number is too large'
                 STOP
         END SELECT
 
         !GXX
-        WRITE(Filename9, format_string9) 'gxx.it=',iter,'.rl=9.h5'
-        WRITE(Filename10, format_string10) 'gxx.it=',iter,'.rl=10.h5' 
+        WRITE(Filename9, format_string1) 'gxx.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'gxx.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'gxx.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
-            &CFLEN10, CFLEN9,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &4,&
-            &Filename10, Filename9,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &gXX)
 
         !GYY
-        WRITE(Filename9, format_string9) 'gyy.it=',iter,'.rl=9.h5'
-        WRITE(Filename10, format_string10) 'gyy.it=',iter,'.rl=10.h5' 
+        WRITE(Filename9, format_string1) 'gyy.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'gyy.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'gyy.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
-            &CFLEN10, CFLEN9,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &5,&
-            &Filename10, Filename9,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &gYY)
 
         !GZZ
-        WRITE(Filename9, format_string9) 'gzz.it=',iter,'.rl=9.h5'
-        WRITE(Filename10, format_string10) 'gzz.it=',iter,'.rl=10.h5' 
+        WRITE(Filename9, format_string1) 'gzz.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'gzz.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'gzz.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
-            &CFLEN10, CFLEN9,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &6,&
-            &Filename10, Filename9,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &gZZ)
 
         !GXY
-        WRITE(Filename9, format_string9) 'gxy.it=',iter,'.rl=9.h5'
-        WRITE(Filename10, format_string10) 'gxy.it=',iter,'.rl=10.h5' 
+        WRITE(Filename9, format_string1) 'gxy.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'gxy.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'gxy.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
-            &CFLEN10, CFLEN9,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &7,&
-            &Filename10, Filename9,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &gXY)
 
         !GXZ
-        WRITE(Filename9, format_string9) 'gxz.it=',iter,'.rl=9.h5'
-        WRITE(Filename10, format_string10) 'gxz.it=',iter,'.rl=10.h5' 
+        WRITE(Filename9, format_string1) 'gxz.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'gxz.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'gxz.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
-            &CFLEN10, CFLEN9,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &8,&
-            &Filename10, Filename9,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &gXZ)
 
         !GYZ
-        WRITE(Filename9, format_string9) 'gyz.it=',iter,'.rl=9.h5'
-        WRITE(Filename10, format_string10) 'gyz.it=',iter,'.rl=10.h5' 
+        WRITE(Filename9, format_string1) 'gyz.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'gyz.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'gyz.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
-            &CFLEN10, CFLEN9,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &9,&
-            &Filename10, Filename9,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &gYZ)
 

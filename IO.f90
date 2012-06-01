@@ -832,7 +832,7 @@
 !-----------------------------------------------------------!
 
         INTEGER*4, INTENT(IN)::   nx, i
-        REAL*8, INTENT(IN)::    Array(nx)
+        COMPLEX*16, INTENT(IN)::    Array(nx)
 
 !-----------------------------------------------------------!
 !     Declare local variables                               !
@@ -859,7 +859,7 @@
 
         WRITE(TestFile, format_string) 'S',i,'.dat'
 
-        CALL WRITE1d(nx, Array, TestFile)
+        CALL WRITE1dC(nx, Array, TestFile)
 
         RETURN
       END SUBROUTINE WriteS

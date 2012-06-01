@@ -4,11 +4,11 @@
 
     SUBROUTINE GetMetricComponent(&
     &M, Mr, NP,&
-    &CFLEN10, CFLEN9,&
+    &CFLEN2, CFLEN1,&
     &bufsize,&
     &iter, nchunks,&
     &DATASETFLAG,&
-    &Filename10, Filename9,&
+    &Filename10, Filename9, Filename8,&
     &r, theta, phi,&
     &MetricData)
 
@@ -41,7 +41,7 @@
 !-----------------------------------------------------------!
 
         INTEGER*4, INTENT(in)       :: M, Mr, NP
-        INTEGER*4, INTENT(in)       :: CFLEN9, CFLEN10
+        INTEGER*4, INTENT(in)       :: CFLEN1, CFLEN2
         INTEGER*4, INTENT(in)       :: iter         !iteration number in the CarpetCode simulation (iter != it)
         INTEGER*4, INTENT(in)       :: nchunks      !number of chunks
         INTEGER*4, INTENT(in)       :: DATASETFLAG
@@ -54,6 +54,7 @@
 
         CHARACTER*32, INTENT(in)    :: Filename10
         CHARACTER*32, INTENT(in)    :: Filename9
+        CHARACTER*32, INTENT(in)    :: Filename8
 
         REAL*8, INTENT(out)         :: MetricData(4*NP)
 
@@ -62,30 +63,38 @@
 !-----------------------------------------------------------!
 
         REAL*8, ALLOCATABLE, DIMENSION(:,:,:) :: metric10
-        REAL*8, ALLOCATABLE, DIMENSION(:,:,:) :: metric9 
+        REAL*8, ALLOCATABLE, DIMENSION(:,:,:) :: metric9
+        REAL*8, ALLOCATABLE, DIMENSION(:,:,:) :: metric8
         INTEGER*4                                dims10(3)
         INTEGER*4                                dims9(3)
+        INTEGER*4                                dims8(3)
 
-        CHARACTER*32                format_string10
-        CHARACTER*32                format_string9
+        CHARACTER*32                format_string2
+        CHARACTER*32                format_string1
         CHARACTER*100               dataset10(nchunks)
         CHARACTER*100               dataset9(nchunks)
-        INTEGER*4                   CDLEN10(nchunks)
-        INTEGER*4                   CDLEN9(nchunks)
+        CHARACTER*100               dataset8(nchunks)
+        INTEGER*4                   CDLEN2(nchunks)
+        INTEGER*4                   CDLEN1(nchunks)
 
         INTEGER*4                   Ox10, Oy10, Oz10    !Index for the origin for rl=10
         INTEGER*4                   Ox9, Oy9, Oz9       !Index for the origin for rl=9
+        INTEGER*4                   Ox8, Oy8, Oz8       !Index for the origin for rl=8
 
         REAL*8                      Xmin10, Ymin10, Zmin10
         REAL*8                      Xmax10, Ymax10, Zmax10
         REAL*8                      Xmin9, Ymin9, Zmin9
         REAL*8                      Xmax9, Ymax9, Zmax9
+        REAL*8                      Xmin8, Ymin8, Zmin8
+        REAL*8                      Xmax8, Ymax8, Zmax8
         REAL*8                      delta10(3)          !Spatial discretization for rl=10
         REAL*8                      delta9(3)           !Spatial discretization for rl=9
+        REAL*8                      delta8(3)           !Spatial discretization for rl=9
 
         !Used for tricubic interpolation
         LOGICAL                     Inside10
         LOGICAL                     Inside9
+        LOGICAL                     Inside8
         REAL*8                      x, y, z
         REAL*8                      x0, y0, z0
         REAL*8                      dx, dy, dz
@@ -113,121 +122,131 @@
 
             IF( (DATASETFLAG .GE. 0) .AND. (DATASETFLAG .LE. 3) ) THEN
                 IF( (cnum .LE. 10) .AND. (iter .LT. 10) ) THEN
-                    CDLEN10(cnum) = 30+1+14+1
-                    CDLEN9(cnum) = 30+1+13+1
-                    format_string10 = '(A30,I1,A14,I1)'
-                    format_string9 = '(A30,I1,A13,I1)'
+                    CDLEN2(cnum) = 30+1+14+1
+                    CDLEN1(cnum) = 30+1+13+1
+                    format_string2 = '(A30,I1,A14,I1)'
+                    format_string1 = '(A30,I1,A13,I1)'
                 ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 10) .AND. (iter .LT. 100) ) THEN
-                    CDLEN10(cnum) = 30+2+14+1
-                    CDLEN9(cnum) = 30+2+13+1
-                    format_string10 = '(A30,I2,A14,I1)'
-                    format_string9 = '(A30,I2,A13,I1)'
+                    CDLEN2(cnum) = 30+2+14+1
+                    CDLEN1(cnum) = 30+2+13+1
+                    format_string2 = '(A30,I2,A14,I1)'
+                    format_string1 = '(A30,I2,A13,I1)'
                 ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 1000) ) THEN
-                    CDLEN10(cnum) = 30+3+14+1
-                    CDLEN9(cnum) = 30+3+13+1
-                    format_string10 = '(A30,I3,A14,I1)'
-                    format_string9 = '(A30,I3,A13,I1)'
+                    CDLEN2(cnum) = 30+3+14+1
+                    CDLEN1(cnum) = 30+3+13+1
+                    format_string2 = '(A30,I3,A14,I1)'
+                    format_string1 = '(A30,I3,A13,I1)'
                 ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 10000) ) THEN
-                    CDLEN10(cnum) = 30+4+14+1
-                    CDLEN9(cnum) = 30+4+13+1
-                    format_string10 = '(A30,I4,A14,I1)'
-                    format_string9 = '(A30,I4,A13,I1)'
+                    CDLEN2(cnum) = 30+4+14+1
+                    CDLEN1(cnum) = 30+4+13+1
+                    format_string2 = '(A30,I4,A14,I1)'
+                    format_string1 = '(A30,I4,A13,I1)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .LT. 10) ) THEN
-                    CDLEN10(cnum) = 30+1+14+2
-                    CDLEN9(cnum) = 30+1+13+2
-                    format_string10 = '(A30,I1,A14,I2)'
-                    format_string9 = '(A30,I1,A13,I2)'
+                    CDLEN2(cnum) = 30+1+14+2
+                    CDLEN1(cnum) = 30+1+13+2
+                    format_string2 = '(A30,I1,A14,I2)'
+                    format_string1 = '(A30,I1,A13,I2)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 10) .AND. (iter .LT. 100) ) THEN
-                    CDLEN10(cnum) = 30+2+14+2
-                    CDLEN9(cnum) = 30+2+13+2
-                    format_string10 = '(A30,I2,A14,I2)'
-                    format_string9 = '(A30,I2,A13,I2)'
+                    CDLEN2(cnum) = 30+2+14+2
+                    CDLEN1(cnum) = 30+2+13+2
+                    format_string2 = '(A30,I2,A14,I2)'
+                    format_string1 = '(A30,I2,A13,I2)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 1000) ) THEN
-                    CDLEN10(cnum) = 30+3+14+2
-                    CDLEN9(cnum) = 30+3+13+2
-                    format_string10 = '(A30,I3,A14,I2)'
-                    format_string9 = '(A30,I3,A13,I2)'
+                    CDLEN2(cnum) = 30+3+14+2
+                    CDLEN1(cnum) = 30+3+13+2
+                    format_string2 = '(A30,I3,A14,I2)'
+                    format_string1 = '(A30,I3,A13,I2)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 10000) ) THEN
-                    CDLEN10(cnum) = 30+4+14+2
-                    CDLEN9(cnum) = 30+4+13+2
-                    format_string10 = '(A30,I4,A14,I2)'
-                    format_string9 = '(A30,I4,A13,I2)'
+                    CDLEN2(cnum) = 30+4+14+2
+                    CDLEN1(cnum) = 30+4+13+2
+                    format_string2 = '(A30,I4,A14,I2)'
+                    format_string1 = '(A30,I4,A13,I2)'
                 END IF
 
                 IF( DATASETFLAG .EQ. 0 ) THEN
-                    WRITE(dataset9(cnum), format_string9) 'KRANC2BSSNCHIMATTER::alpha it=',iter,' tl=0 rl=9 c=',(cnum-1)
-                    WRITE(dataset10(cnum), format_string10) 'KRANC2BSSNCHIMATTER::alpha it=',iter,' tl=0 rl=10 c=',(cnum-1)
+                    WRITE(dataset9(cnum), format_string1) 'KRANC2BSSNCHIMATTER::alpha it=',iter,' tl=0 rl=9 c=',(cnum-1)
+                    WRITE(dataset8(cnum), format_string1) 'KRANC2BSSNCHIMATTER::alpha it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset10(cnum), format_string2) 'KRANC2BSSNCHIMATTER::alpha it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 1 ) THEN
-                    WRITE(dataset9(cnum), format_string9) 'KRANC2BSSNCHIMATTER::beta1 it=',iter,' tl=0 rl=9 c=',(cnum-1)
-                    WRITE(dataset10(cnum), format_string10) 'KRANC2BSSNCHIMATTER::beta1 it=',iter,' tl=0 rl=10 c=',(cnum-1)
+                    WRITE(dataset9(cnum), format_string1) 'KRANC2BSSNCHIMATTER::beta1 it=',iter,' tl=0 rl=9 c=',(cnum-1)
+                    WRITE(dataset8(cnum), format_string1) 'KRANC2BSSNCHIMATTER::beta1 it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset10(cnum), format_string2) 'KRANC2BSSNCHIMATTER::beta1 it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 2 ) THEN
-                    WRITE(dataset9(cnum), format_string9) 'KRANC2BSSNCHIMATTER::beta2 it=',iter,' tl=0 rl=9 c=',(cnum-1)
-                    WRITE(dataset10(cnum), format_string10) 'KRANC2BSSNCHIMATTER::beta2 it=',iter,' tl=0 rl=10 c=',(cnum-1)
+                    WRITE(dataset9(cnum), format_string1) 'KRANC2BSSNCHIMATTER::beta2 it=',iter,' tl=0 rl=9 c=',(cnum-1)
+                    WRITE(dataset8(cnum), format_string1) 'KRANC2BSSNCHIMATTER::beta2 it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset10(cnum), format_string2) 'KRANC2BSSNCHIMATTER::beta2 it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 3 ) THEN
-                    WRITE(dataset9(cnum), format_string9) 'KRANC2BSSNCHIMATTER::beta3 it=',iter,' tl=0 rl=9 c=',(cnum-1)
-                    WRITE(dataset10(cnum), format_string10) 'KRANC2BSSNCHIMATTER::beta3 it=',iter,' tl=0 rl=10 c=',(cnum-1)
+                    WRITE(dataset9(cnum), format_string1) 'KRANC2BSSNCHIMATTER::beta3 it=',iter,' tl=0 rl=9 c=',(cnum-1)
+                    WRITE(dataset8(cnum), format_string1) 'KRANC2BSSNCHIMATTER::beta3 it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset10(cnum), format_string2) 'KRANC2BSSNCHIMATTER::beta3 it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 END IF
             ELSE
                 IF( (cnum .LE. 10) .AND. (iter .LT. 10) ) THEN
-                    CDLEN10(cnum) = 16+1+14+1
-                    CDLEN9(cnum) = 16+1+13+1
-                    format_string10 = '(A16,I1,A14,I1)'
-                    format_string9 = '(A16,I1,A13,I1)'
+                    CDLEN2(cnum) = 16+1+14+1
+                    CDLEN1(cnum) = 16+1+13+1
+                    format_string2 = '(A16,I1,A14,I1)'
+                    format_string1 = '(A16,I1,A13,I1)'
                 ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 10) .AND. (iter .LT. 100) ) THEN
-                    CDLEN10(cnum) = 16+2+14+1
-                    CDLEN9(cnum) = 16+2+13+1
-                    format_string10 = '(A16,I2,A14,I1)'
-                    format_string9 = '(A16,I2,A13,I1)'
+                    CDLEN2(cnum) = 16+2+14+1
+                    CDLEN1(cnum) = 16+2+13+1
+                    format_string2 = '(A16,I2,A14,I1)'
+                    format_string1 = '(A16,I2,A13,I1)'
                 ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 1000) ) THEN
-                    CDLEN10(cnum) = 16+3+14+1
-                    CDLEN9(cnum) = 16+3+13+1
-                    format_string10 = '(A16,I3,A14,I1)'
-                    format_string9 = '(A16,I3,A13,I1)'
+                    CDLEN2(cnum) = 16+3+14+1
+                    CDLEN1(cnum) = 16+3+13+1
+                    format_string2 = '(A16,I3,A14,I1)'
+                    format_string1 = '(A16,I3,A13,I1)'
                 ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 10000) ) THEN
-                    CDLEN10(cnum) = 16+4+14+1
-                    CDLEN9(cnum) = 16+4+13+1
-                    format_string10 = '(A16,I4,A14,I1)'
-                    format_string9 = '(A16,I4,A13,I1)'
+                    CDLEN2(cnum) = 16+4+14+1
+                    CDLEN1(cnum) = 16+4+13+1
+                    format_string2 = '(A16,I4,A14,I1)'
+                    format_string1 = '(A16,I4,A13,I1)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .LT. 10) ) THEN
-                    CDLEN10(cnum) = 16+1+14+2
-                    CDLEN9(cnum) = 16+1+13+2
-                    format_string10 = '(A16,I1,A14,I2)'
-                    format_string9 = '(A16,I1,A13,I2)'
+                    CDLEN2(cnum) = 16+1+14+2
+                    CDLEN1(cnum) = 16+1+13+2
+                    format_string2 = '(A16,I1,A14,I2)'
+                    format_string1 = '(A16,I1,A13,I2)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 10) .AND. (iter .LT. 100) ) THEN
-                    CDLEN10(cnum) = 16+2+14+2
-                    CDLEN9(cnum) = 16+2+13+2
-                    format_string10 = '(A16,I2,A14,I2)'
-                    format_string9 = '(A16,I2,A13,I2)'
+                    CDLEN2(cnum) = 16+2+14+2
+                    CDLEN1(cnum) = 16+2+13+2
+                    format_string2 = '(A16,I2,A14,I2)'
+                    format_string1 = '(A16,I2,A13,I2)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 1000) ) THEN
-                    CDLEN10(cnum) = 16+3+14+2
-                    CDLEN9(cnum) = 16+3+13+2
-                    format_string10 = '(A16,I3,A14,I2)'
-                    format_string9 = '(A16,I3,A13,I2)'
+                    CDLEN2(cnum) = 16+3+14+2
+                    CDLEN1(cnum) = 16+3+13+2
+                    format_string2 = '(A16,I3,A14,I2)'
+                    format_string1 = '(A16,I3,A13,I2)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 10000) ) THEN
-                    CDLEN10(cnum) = 16+4+14+2
-                    CDLEN9(cnum) = 16+4+13+2
-                    format_string10 = '(A16,I4,A14,I2)'
-                    format_string9 = '(A16,I4,A13,I2)'
+                    CDLEN2(cnum) = 16+4+14+2
+                    CDLEN1(cnum) = 16+4+13+2
+                    format_string2 = '(A16,I4,A14,I2)'
+                    format_string1 = '(A16,I4,A13,I2)'
                 END IF
                 
                 IF( DATASETFLAG .EQ. 4 ) THEN
-                    WRITE(dataset9(cnum), format_string9) 'ADMBASE::gxx it=',iter,' tl=0 rl=9 c=',(cnum-1)
-                    WRITE(dataset10(cnum), format_string10) 'ADMBASE::gxx it=',iter,' tl=0 rl=10 c=',(cnum-1)
+                    WRITE(dataset9(cnum), format_string1) 'ADMBASE::gxx it=',iter,' tl=0 rl=9 c=',(cnum-1)
+                    WRITE(dataset8(cnum), format_string1) 'ADMBASE::gxx it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset10(cnum), format_string2) 'ADMBASE::gxx it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 5 ) THEN
-                    WRITE(dataset9(cnum), format_string9) 'ADMBASE::gyy it=',iter,' tl=0 rl=9 c=',(cnum-1)
-                    WRITE(dataset10(cnum), format_string10) 'ADMBASE::gyy it=',iter,' tl=0 rl=10 c=',(cnum-1)
+                    WRITE(dataset9(cnum), format_string1) 'ADMBASE::gyy it=',iter,' tl=0 rl=9 c=',(cnum-1)
+                    WRITE(dataset8(cnum), format_string1) 'ADMBASE::gyy it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset10(cnum), format_string2) 'ADMBASE::gyy it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 6 ) THEN
-                    WRITE(dataset9(cnum), format_string9) 'ADMBASE::gzz it=',iter,' tl=0 rl=9 c=',(cnum-1)
-                    WRITE(dataset10(cnum), format_string10) 'ADMBASE::gzz it=',iter,' tl=0 rl=10 c=',(cnum-1)
+                    WRITE(dataset9(cnum), format_string1) 'ADMBASE::gzz it=',iter,' tl=0 rl=9 c=',(cnum-1)
+                    WRITE(dataset8(cnum), format_string1) 'ADMBASE::gzz it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset10(cnum), format_string2) 'ADMBASE::gzz it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 7 ) THEN
-                    WRITE(dataset9(cnum), format_string9) 'ADMBASE::gxy it=',iter,' tl=0 rl=9 c=',(cnum-1)
-                    WRITE(dataset10(cnum), format_string10) 'ADMBASE::gxy it=',iter,' tl=0 rl=10 c=',(cnum-1)
+                    WRITE(dataset9(cnum), format_string1) 'ADMBASE::gxy it=',iter,' tl=0 rl=9 c=',(cnum-1)
+                    WRITE(dataset8(cnum), format_string1) 'ADMBASE::gxy it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset10(cnum), format_string2) 'ADMBASE::gxy it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 8 ) THEN
-                    WRITE(dataset9(cnum), format_string9) 'ADMBASE::gxz it=',iter,' tl=0 rl=9 c=',(cnum-1)
-                    WRITE(dataset10(cnum), format_string10) 'ADMBASE::gxz it=',iter,' tl=0 rl=10 c=',(cnum-1)
+                    WRITE(dataset9(cnum), format_string1) 'ADMBASE::gxz it=',iter,' tl=0 rl=9 c=',(cnum-1)
+                    WRITE(dataset8(cnum), format_string1) 'ADMBASE::gxz it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset10(cnum), format_string2) 'ADMBASE::gxz it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 9 ) THEN
-                    WRITE(dataset9(cnum), format_string9) 'ADMBASE::gyz it=',iter,' tl=0 rl=9 c=',(cnum-1)
-                    WRITE(dataset10(cnum), format_string10) 'ADMBASE::gyz it=',iter,' tl=0 rl=10 c=',(cnum-1)
+                    WRITE(dataset9(cnum), format_string1) 'ADMBASE::gyz it=',iter,' tl=0 rl=9 c=',(cnum-1)
+                    WRITE(dataset8(cnum), format_string1) 'ADMBASE::gyz it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset10(cnum), format_string2) 'ADMBASE::gyz it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 END IF
 
             END IF
@@ -239,7 +258,7 @@
 
         CALL ReadHDF5MetricData(&
                 &Filename10, dataset10,&
-                &CFLEN10, CDLEN10,&
+                &CFLEN2, CDLEN2,&
                 &nchunks,&
                 &bufsize,&
                 &Xmin10, Ymin10, Zmin10,&
@@ -262,10 +281,10 @@
 
         CALL ReadHDF5MetricData(&
                 &Filename9, dataset9,&
-                &CFLEN9, CDLEN9,&
+                &CFLEN1, CDLEN1,&
                 &nchunks,&
                 &bufsize,&
-                &Xmin9, Ymin10, Zmin10,&
+                &Xmin9, Ymin9, Zmin9,&
                 &Xmax9, Ymax9, Zmax9,&
                 &delta9,&
                 &Ox9, Oy9, Oz9)
@@ -280,11 +299,34 @@
         IF( error .NE. 0 ) STOP "*** Trouble deallocating ***"
 
         !----------------------------------------------------------!
+        !      Read rl=8 data                                      !
+        !----------------------------------------------------------!
+
+        CALL ReadHDF5MetricData(&
+                &Filename8, dataset8,&
+                &CFLEN1, CDLEN1,&
+                &nchunks,&
+                &bufsize,&
+                &Xmin8, Ymin8, Zmin8,&
+                &Xmax8, Ymax8, Zmax8,&
+                &delta8,&
+                &Ox8, Oy8, Oz8)
+
+        dims8 = metricdims
+        ALLOCATE( metric8(dims8(1), dims8(2), dims8(3)), STAT=error )
+        IF( error .NE. 0 ) STOP "*** Trouble allocating ***"
+
+        metric8 = hdfmetric
+
+        DEALLOCATE( hdfmetric, STAT=error )
+        IF( error .NE. 0 ) STOP "*** Trouble deallocating ***"
+
+        !----------------------------------------------------------!
         !      Interpolate metric using                            !
         !      Lekien-Marsden tricubic interpolation routine       !
         !----------------------------------------------------------!
         
-        IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) ) THEN
+        IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) .AND. ALLOCATED(metric8) ) THEN
         !$OMP PARALLEL DO &
         !$OMP &PRIVATE(j, k, crow, x, y, z, Inside10, Inside9, dx, dy, dz, ni, nj, nk, x0, y0, z0, cube, fatxyz)
         DO i =  1, (Mr+1)
@@ -304,6 +346,10 @@
                     Inside9 =    (ABS(x) .LE. (Xmax9-2*delta9(1))) .AND.&
                                 &(ABS(y) .LE. (Ymax9-2*delta9(2))) .AND.&
                                 &(ABS(z) .LE. (Zmax9-2*delta9(3))) 
+
+                    Inside8 =    (ABS(x) .LE. (Xmax8-2*delta8(1))) .AND.&
+                                &(ABS(y) .LE. (Ymax8-2*delta8(2))) .AND.&
+                                &(ABS(z) .LE. (Zmax8-2*delta8(3))) 
 
                     IF( Inside10 .EQV. .TRUE. )THEN
 
@@ -345,6 +391,26 @@
 
                         cube = metric9( (ni-1):(ni+2), (nj-1):(nj+2), (nk-1):(nk+2) )
 
+                    ELSEIF( (Inside9 .EQV. .FALSE.) .AND. (Inside8 .EQV. .TRUE.) ) THEN
+
+                        dx = delta8(1)
+                        dy = delta8(2)
+                        dz = delta8(3)
+
+                        ni = IDINT( x/dx ) + Ox8
+                        nj = IDINT( y/dy ) + Oy8
+                        nk = IDINT( z/dz ) + Oz8
+
+                        IF( x .LT. 0.0D0 ) ni = ni-1
+                        IF( y .LT. 0.0D0 ) nj = nj-1
+                        IF( z .LT. 0.0D0 ) nk = nk-1
+
+                        x0 = (ni-Ox8)*dx
+                        y0 = (nj-Oy8)*dy
+                        z0 = (nk-Oz8)*dz
+
+                        cube = metric8( (ni-1):(ni+2), (nj-1):(nj+2), (nk-1):(nk+2) )
+
                     ELSE
                         PRINT *, 'ERROR: The spherical grid is larger than the grid for the metric'
                         STOP
@@ -370,6 +436,7 @@
 
         DEALLOCATE( metric10 )
         DEALLOCATE( metric9 )
+        DEALLOCATE( metric8 )
 
         RETURN
       END SUBROUTINE GetMetricComponent
