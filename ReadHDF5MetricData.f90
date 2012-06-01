@@ -141,8 +141,8 @@
             IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
 
             !Get the iorigin
-            CALL h5aopen_f(dset_id, 'iorigin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-            !CALL h5aopen_name_f(dset_id, 'iorigin', attr_id, hdferr)    !For HDF5 version below 1.8.0
+            !CALL h5aopen_f(dset_id, 'iorigin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+            CALL h5aopen_name_f(dset_id, 'iorigin', attr_id, hdferr)    !For HDF5 version below 1.8.0
             IF( hdferr .NE. 0 ) STOP "*** ERROR in opening iorigin attribute***"
             CALL h5aread_f(attr_id, H5T_STD_I32LE, iorigin(cnum,:), attr_dims, hdferr)
             IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
@@ -150,8 +150,8 @@
             IF( hdferr .NE. 0 ) STOP "*** ERROR in closing iorigin attribute***"
 
             !Get the values of origin
-            CALL h5aopen_f(dset_id, 'origin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-            !CALL h5aopen_name_f(dset_id, 'origin', attr_id, hdferr)    !For HDF5 version below 1.8.0
+            !CALL h5aopen_f(dset_id, 'origin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+            CALL h5aopen_name_f(dset_id, 'origin', attr_id, hdferr)    !For HDF5 version below 1.8.0
             IF( hdferr .NE. 0 ) STOP "*** ERROR in opening origin attribute***"
             CALL h5aread_f(attr_id, H5T_IEEE_F64LE, origin(cnum,:), attr_dims, hdferr)
             IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
@@ -161,8 +161,8 @@
             IF( cnum .EQ. 1 ) THEN
                 !All the chunks should have the same spatial discretizations dx, dy, dz, 
                 !so just get these delta from a single dataset
-                CALL h5aopen_f(dset_id, 'delta', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-                !CALL h5aopen_name_f(dset_id, 'delta', attr_id, hdferr)    !For HDF5 version below 1.8.0
+                !CALL h5aopen_f(dset_id, 'delta', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+                CALL h5aopen_name_f(dset_id, 'delta', attr_id, hdferr)    !For HDF5 version below 1.8.0
                 IF( hdferr .NE. 0 ) STOP "*** ERROR in opening delta attribute***"
                 CALL h5aread_f(attr_id, H5T_IEEE_F64LE, delta, attr_dims, hdferr)
                 IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of dx, dy, dz ***"
@@ -202,8 +202,8 @@
             IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
 
             !Get the iorigin
-            CALL h5aopen_f(dset_id, 'iorigin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-            !CALL h5aopen_name_f(dset_id, 'iorigin', attr_id, hdferr)    !For HDF5 version below 1.8.0
+            !CALL h5aopen_f(dset_id, 'iorigin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+            CALL h5aopen_name_f(dset_id, 'iorigin', attr_id, hdferr)    !For HDF5 version below 1.8.0
             IF( hdferr .NE. 0 ) STOP "*** ERROR in opening iorigin attribute***"
             CALL h5aread_f(attr_id, H5T_STD_I32LE, iorigin(cnum,:), attr_dims, hdferr)
             IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
@@ -211,8 +211,8 @@
             IF( hdferr .NE. 0 ) STOP "*** ERROR in closing iorigin attribute***"
 
             !Get the values of origin
-            CALL h5aopen_f(dset_id, 'origin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-            !CALL h5aopen_name_f(dset_id, 'origin', attr_id, hdferr)    !For HDF5 version below 1.8.0
+            !CALL h5aopen_f(dset_id, 'origin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+            CALL h5aopen_name_f(dset_id, 'origin', attr_id, hdferr)    !For HDF5 version below 1.8.0
             IF( hdferr .NE. 0 ) STOP "*** ERROR in opening origin attribute***"
             CALL h5aread_f(attr_id, H5T_IEEE_F64LE, origin(cnum,:), attr_dims, hdferr)
             IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
@@ -222,8 +222,8 @@
             IF( cnum .EQ. 1 ) THEN
                 !All the chunks should have the same spatial discretizations dx, dy, dz, 
                 !so just get these delta from a single dataset
-                CALL h5aopen_f(dset_id, 'delta', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-                !CALL h5aopen_name_f(dset_id, 'delta', attr_id, hdferr)    !For HDF5 version below 1.8.0
+                !CALL h5aopen_f(dset_id, 'delta', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+                CALL h5aopen_name_f(dset_id, 'delta', attr_id, hdferr)    !For HDF5 version below 1.8.0
                 IF( hdferr .NE. 0 ) STOP "*** ERROR in opening delta attribute***"
                 CALL h5aread_f(attr_id, H5T_IEEE_F64LE, delta, attr_dims, hdferr)
                 IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of dx, dy, dz ***"
@@ -261,8 +261,8 @@
             IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
 
             !Get the iorigin
-            CALL h5aopen_f(dset_id, 'iorigin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-            !CALL h5aopen_name_f(dset_id, 'iorigin', attr_id, hdferr)    !For HDF5 version below 1.8.0
+            !CALL h5aopen_f(dset_id, 'iorigin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+            CALL h5aopen_name_f(dset_id, 'iorigin', attr_id, hdferr)    !For HDF5 version below 1.8.0
             IF( hdferr .NE. 0 ) STOP "*** ERROR in opening iorigin attribute***"
             CALL h5aread_f(attr_id, H5T_STD_I32LE, iorigin(cnum,:), attr_dims, hdferr)
             IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
@@ -270,8 +270,8 @@
             IF( hdferr .NE. 0 ) STOP "*** ERROR in closing iorigin attribute***"
 
             !Get the values of origin
-            CALL h5aopen_f(dset_id, 'origin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-            !CALL h5aopen_name_f(dset_id, 'origin', attr_id, hdferr)    !For HDF5 version below 1.8.0
+            !CALL h5aopen_f(dset_id, 'origin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+            CALL h5aopen_name_f(dset_id, 'origin', attr_id, hdferr)    !For HDF5 version below 1.8.0
             IF( hdferr .NE. 0 ) STOP "*** ERROR in opening origin attribute***"
             CALL h5aread_f(attr_id, H5T_IEEE_F64LE, origin(cnum,:), attr_dims, hdferr)
             IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
