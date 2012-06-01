@@ -134,8 +134,8 @@
     ! Parameters to read metric from HDF5 files
     INTEGER(HSIZE_T)  bufsize(3)  !Buffer size to read the metric from HDF5 files
     INTEGER*4         iterratio   !Ratio of the iteration values in the EinsteinToolkit compared to this code's iteration
-    INTEGER*4         iter        !Iteration values in the EinsteinToolkit
     INTEGER*4         nchunks     !Number of chunks that the metric is divided into
+    INTEGER*4         it_data     !The iteration value for the metric data
     REAL*8            dt_data     !The value of dt for the metric data
 
 !--------------------------------------------------------!
@@ -357,12 +357,12 @@
        !     Read Metric and Evolve Data                        !
        !--------------------------------------------------------!
 
-       iter = iterratio * (Maxit - it)
+       it_data = iterratio * (Maxit - it)
 
        CALL GetMetric(&
             &M, Mr, NP,&
             &dt, dt_data,&
-            &iter, nchunks,&
+            &it_data, nchunks,&
             &bufsize,&
             &r, theta, phi,&
             &alpha,&

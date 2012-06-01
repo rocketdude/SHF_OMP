@@ -269,10 +269,11 @@
             &r, theta, phi,&
             &gYZ)
 
-        !Now we need to perform coordinate transformation from (t,x,y,z) to (t,r,th,phi)
+        !Now we need to perform coordinate transformation from (t',x,y,z) to (t,r,th,phi)
         !Both g_sph and g_cart are of down indices
         
-        dt_ratio = dt_data/dt
+        dt_ratio = ABS(dt_data/dt)
+        
         !$OMP PARALLEL DO PRIVATE(j, k, JMatrix, crow, gcart, gsph, error)
         DO i = 1, (Mr+1)        
             DO j = 1, (2*M)
