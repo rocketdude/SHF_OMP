@@ -32,7 +32,7 @@ echo "Processing up to iteration $ITMAX"
 ##
 for METRIC in alpha beta1 beta2 beta3; do
   while [ "$IT" -le "$ITMAX" ]; do
-  if [ $((IT % 2)) -eq 0 ]; then
+  if [ $((IT % 4)) -eq 0 ]; then
     echo "Processing $METRIC at it = $IT"
     while [ "$C" -lt "$CMAX" ]; do         
       #Extract dataset from the file and save it into a new file
@@ -63,7 +63,7 @@ done
 ##
 for METRIC in gxx gyy gzz gxy gxz gyz; do
   while [ "$IT" -le "$ITMAX" ]; do
-  if [ $((IT % 2)) -eq 0 ]; then  
+  if [ $((IT % 4)) -eq 0 ]; then  
     echo "Processing $METRIC at it = $IT"
       while [ "$C" -lt "$CMAX" ]; do         
       #Extract dataset from the file and save it into a new file
