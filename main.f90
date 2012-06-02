@@ -172,7 +172,8 @@
     !Note: negative rootsign, positive lapse & shift functions, and negative tdir give EH finder
     eps =  2.22044604925031308D-016 !Machine epsilon (calculate everytime you change machine)
     c = 0.1D0
-    cfl = 1.0D0
+    cfl = 1.508D0
+    dt = 2.50D-3                    !Just enter the absolute value, change the sign by changing tdir
     rootsign = -1.0D0               !Choose the root sign, either 1.0D0 or -1.0D0 (depends on the metric)
     tdir = -1.0D0                   !Direction of time, choose +1.0D0 or -1.0D0
     reinit = 15
@@ -193,7 +194,7 @@
     bufsize(1) = 50                 !Buffer size; has to be bigger than the size of each dataset
     bufsize(2) = 50
     bufsize(3) = 50
-    dt_data = 5.00D-2               !Size of time step specified by the data
+    dt_data = 5.00D-3               !Size of time step specified by the data
     !dt = 0.0125 but rl=8 is only updated once every four iterations, so dt = 0.050
 
     !Schwarzschild metric parameter (preliminary tests only)
@@ -276,7 +277,10 @@
 !!$       dx = rsinthdphi
 !!$    END IF
 
-    dt = tdir * cfl * dx
+    IF( ABS(dt) .GT. ABS(tdir * cfl * dx) ) THEN
+        PRINT *, 'Warning: dt might be greater than Courant limit!'
+    END IF
+    dt = ABS(dt) * tdir
 
 !--------------------------------------------------------!
 !     Initial Data                                       !

@@ -13,10 +13,14 @@
 &AF, AFinv, Dth, Dphi, F,&
 &a)
 
-        !EvolveData subroutine uses the Strong-Stability Preserving Runge-Kutta (SSPRK (5,4))
+        !EvolveData subroutine uses the Strong-Stability Preserving Runge-Kutta (SSPRK (3,3))
         !An outline of the integrator can be found on "Spectral Methods for Time-Dependent
         !Problems" by Jan Hesthaven, pg 201
-        !with CFL coefficient of 1.508
+        !u^(0) = a(t)
+        !u^(1) = u^(0) + dt * L( u^(0) )
+        !u^(2) = (3/4)u^(0) + (1/4)u^(1) + (1/4)dt * L( u^(1) )
+        !a(t+dt) = u^(3) = (1/3)u^(0) + (2/3)u^(2) + (2/3)dt * L( u^(2) )
+        !with CFL coefficient of 1
         
         USE             omp_lib
         IMPLICIT        none
@@ -70,9 +74,8 @@
         COMPLEX*16      dSdphi(4*NP)
         COMPLEX*16      dSdt(4*NP)
 
-        COMPLEX*16      aaRK(NP,5)
+        COMPLEX*16      aaRK(NP,3)
         COMPLEX*16      dadt(NP)
-        COMPLEX*16      dadt3(NP)
 
 !--------------------------------------------------------!
 !      Main Subroutine                                   !
@@ -142,7 +145,7 @@
         
         dadt = MATMUL( AFinv, dSdt)
 
-        a = aaRK(:,1) + 0.391752226571890D0 * dt * dadt
+        a = aaRK(:,1) + dt*dadt
 
 
 !--------------------------------------------------------!
@@ -209,8 +212,7 @@
         
         dadt = MATMUL( AFinv, dSdt)
 
-        a = 0.444370493651235D0 * aaRK(:,1) + 0.555629506348765D0 * aaRK(:,2)&
-            &+ 0.368410593050371D0 * dt * dadt
+        a = 0.75D0*aaRK(:,1) + 0.25D0*aaRK(:,2) + 0.25D0*dt*dadt
 
 !--------------------------------------------------------!
 !      STEP 3                                            !
@@ -276,145 +278,7 @@
         
         dadt = MATMUL( AFinv, dSdt)
 
-        a = 0.620101851488403D0 * aaRK(:,1) + 0.379898148511597D0 * aaRK(:,3)&
-            & + 0.251891774271694D0 * dt * dadt
+        a = aaRK(:,1)/3.0D0 + 2.0D0*aaRK(:,3)/3.0D0 + 2.0D0*dt*dadt/3.0D0
 
-!--------------------------------------------------------!
-!      STEP 4                                            !
-!--------------------------------------------------------!
-
-!!$        !Filter coefficients a with an exponential fitler
-!!$        a = F*a
-
-        !Store the coefficients inside aaRK which will be used in the Runge-Kutta method
-        aaRK(:,4) = a
-
-        !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(&
-             &M, Mr, NP, Lmax,&
-             &rmin, rmax,&
-             &a, AF,&
-             &dSdr)
-
-        dSdphi = MATMUL(Dphi, a)
-        dSdth = MATMUL(Dth, a)
-
-        !$OMP PARALLEL DO PRIVATE(j, k, crow, sqrtterm)
-        DO i = 1, (Mr+1)
-           DO j = 1, 2*M
-              DO k = 1, 2*M
-                 
-                 crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
-
-                 IF( i .EQ. (Mr+1) ) THEN
-                    !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
-                    sqrtterm = SQRT(&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
-                         &)
-
-                    dSdt(crow) = &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
-                 ELSE
-                    !INNER POINTS
-                    sqrtterm = SQRT(&
-                         &gRR(crow)*dSdr(crow)*dSdr(crow) +&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gRTh(crow)*dSdr(crow)*dSdth(crow) +&
-                         &2.0D0*gRPhi(crow)*dSdr(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
-                         &)
-
-                    dSdt(crow) = &
-                         &betaR(crow)*dSdr(crow) + &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
-                 END IF
-
-              END DO
-           END DO
-        END DO
-        !$OMP END PARALLEL DO
-        
-        dadt = MATMUL( AFinv, dSdt)
-
-        a = 0.178079954393132D0 * aaRK(:,1) + 0.821920045606868D0 * aaRK(:,4)&
-            & + 0.544974750228521D0 * dt * dadt
-
-
-!--------------------------------------------------------!
-!      STEP 5                                            !
-!--------------------------------------------------------!
-
-!!$        !Filter coefficients a with an exponential fitler
-!!$        a = F*a
-
-        !Store the coefficients inside aaRK which will be used in the Runge-Kutta method
-        aaRK(:,5) = a
-        dadt3 = dadt
-
-        !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(&
-             &M, Mr, NP, Lmax,&
-             &rmin, rmax,&
-             &a, AF,&
-             &dSdr)
-
-        dSdphi = MATMUL(Dphi, a)
-        dSdth = MATMUL(Dth, a)
-
-        !$OMP PARALLEL DO PRIVATE(j, k, crow, sqrtterm)
-        DO i = 1, (Mr+1)
-           DO j = 1, 2*M
-              DO k = 1, 2*M
-                 
-                 crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
-
-                 IF( i .EQ. (Mr+1) ) THEN
-                    !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
-                    sqrtterm = SQRT(&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
-                         &)
-
-                    dSdt(crow) = &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
-                 ELSE
-                    !INNER POINTS
-                    sqrtterm = SQRT(&
-                         &gRR(crow)*dSdr(crow)*dSdr(crow) +&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gRTh(crow)*dSdr(crow)*dSdth(crow) +&
-                         &2.0D0*gRPhi(crow)*dSdr(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
-                         &)
-
-                    dSdt(crow) = &
-                         &betaR(crow)*dSdr(crow) + &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
-                 END IF
-
-              END DO
-           END DO
-        END DO
-        !$OMP END PARALLEL DO
-        
-        dadt = MATMUL( AFinv, dSdt)
-
-        a = 0.517231671970585D0 * aaRK(:,3) + 0.096059710526147D0 * aaRK(:,4)&
-            & + 0.063692468666290D0 * dt * dadt3 + 0.386708617503269D0 * aaRK(:,5)&
-            & + 0.226007483236906D0 * dt * dadt
-        
         RETURN
       END SUBROUTINE EvolveData
