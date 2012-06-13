@@ -954,3 +954,89 @@
 
         RETURN
       END SUBROUTINE Writea
+
+!========================================================!
+!    Write Metric data Array Subroutine                  !
+!========================================================!
+
+      SUBROUTINE OutputMetric(nx, ny, nz, Array, i, METRICFLAG)
+
+        IMPLICIT none
+
+!-----------------------------------------------------------!
+!     Declare passed variables                              !
+!-----------------------------------------------------------!
+
+        INTEGER*4, INTENT(IN)::   nx, ny, nz, i, METRICFLAG
+        REAL*8, INTENT(IN)::    Array(nx)
+
+!-----------------------------------------------------------!
+!     Declare local variables                               !
+!-----------------------------------------------------------!
+        
+        CHARACTER*32            format_string
+        CHARACTER*32            TestFile
+
+!-----------------------------------------------------------!
+!     Write                                                 !
+!-----------------------------------------------------------!
+
+        !METRICFLAG:
+        ! = 0 -> alpha, = 1 -> beta1, = 2 -> beta2, = 3 -> beta3
+        ! = 4 -> gxx, =5 -> gyy, =6 -> gzz, =7 -> gxy, =8 -> gxz, =9 -> gyz
+
+        IF( METRICFLAG .GE. 0 .AND. METRICFLAG .LE. 3 ) THEN
+            IF (i < 10) THEN
+                format_string = '(A5,I1,A4)'
+            ELSE IF (i .ge. 10 .and. i < 100) THEN
+                format_string = '(A5,I2,A4)'
+            ELSE IF (i < 1000 .and. i .ge. 100) THEN
+                format_string = '(A5,I3,A4)'
+            ELSE IF (i .ge. 1000 .and. i < 10000) THEN
+                format_string = '(A5,I4,A4)'
+            ELSE
+                format_string = '(A5,I5,A4)'
+            END IF
+
+            IF( METRICFLAG .EQ. 0 ) THEN
+                WRITE(TestFile, format_string) 'alpha',i,'.dat'
+            ELSEIF( METRICFLAG .EQ. 1 ) THEN
+                WRITE(TestFile, format_string) 'beta1',i,'.dat'
+            ELSEIF( METRICFLAG .EQ. 2 ) THEN
+                WRITE(TestFile, format_string) 'beta2',i,'.dat'
+            ELSEIF( METRICFLAG .EQ. 3 ) THEN
+                WRITE(TestFile, format_string) 'beta3',i,'.dat'
+            END IF
+
+        ELSE
+            IF (i < 10) THEN
+                format_string = '(A3,I1,A4)'
+            ELSE IF (i .ge. 10 .and. i < 100) THEN
+                format_string = '(A3,I2,A4)'
+            ELSE IF (i < 1000 .and. i .ge. 100) THEN
+                format_string = '(A3,I3,A4)'
+            ELSE IF (i .ge. 1000 .and. i < 10000) THEN
+                format_string = '(A3,I4,A4)'
+            ELSE
+                format_string = '(A3,I5,A4)'
+            END IF
+
+            IF( METRICFLAG .EQ. 4 ) THEN
+                WRITE(TestFile, format_string) 'gxx',i,'.dat'
+            ELSEIF( METRICFLAG .EQ. 5 ) THEN
+                WRITE(TestFile, format_string) 'gyy',i,'.dat'
+            ELSEIF( METRICFLAG .EQ. 6 ) THEN
+                WRITE(TestFile, format_string) 'gzz',i,'.dat'
+            ELSEIF( METRICFLAG .EQ. 7 ) THEN
+                WRITE(TestFile, format_string) 'gxy',i,'.dat'
+            ELSEIF( METRICFLAG .EQ. 8 ) THEN
+                WRITE(TestFile, format_string) 'gxz',i,'.dat'
+            ELSEIF( METRICFLAG .EQ. 9 ) THEN
+                WRITE(TestFile, format_string) 'gyz',i,'.dat'
+            END IF
+        END IF
+
+        CALL WRITE3d(nx, ny, nz, Array, TestFile)
+
+        RETURN
+      END SUBROUTINE OutputMetric

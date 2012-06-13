@@ -4,6 +4,7 @@
 
     SUBROUTINE ReadHDF5MetricData(&
         &Filename, dataset,&
+        &DATASETFLAG,&
         &CFLEN, CDLEN,&
         &nchunks,&
         &bufsize,&
@@ -31,13 +32,14 @@
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-        INTEGER*4, INTENT(in)               :: nchunks
-        INTEGER*4, INTENT(in)               :: CFLEN
-        INTEGER*4, INTENT(in)               :: CDLEN(nchunks)
-        INTEGER(HSIZE_T), INTENT(in)        :: bufsize(3)
+        INTEGER*4                           :: nchunks
+        INTEGER*4                           :: CFLEN
+        INTEGER*4                           :: CDLEN(nchunks)
+        INTEGER*4                           :: DATASETFLAG
+        INTEGER(HSIZE_T)                    :: bufsize(3)
 
-        CHARACTER(LEN=*), INTENT(in)        :: Filename
-        CHARACTER(LEN=*), INTENT(in)        :: dataset(nchunks)
+        CHARACTER(LEN=*)                    :: Filename
+        CHARACTER(LEN=*)                    :: dataset(nchunks)
 
         REAL*8, INTENT(out)                 :: Xmin, Ymin, Zmin
         REAL*8, INTENT(out)                 :: Xmax, Ymax, Zmax
@@ -71,6 +73,7 @@
         INTEGER*4                   ReflectWhichWay(3)  ! 0 --> no need to reflect
                                                         ! -1 --> reflect the bottom (negative) data to the top
                                                         ! +1 --> reflect the top (positive) data to the bottom
+        LOGICAL                     PiSymmetry          ! .TRUE. if there's XY PiSymmetry
         INTEGER*4                   iorigin(nchunks,3)  !Bottom left index for each dataset
         INTEGER*4                   iTemp
         INTEGER(HSIZE_T)            minindex(3)
@@ -99,9 +102,13 @@
 !----------------------------------------------------------!
 !      Main                                                !
 !----------------------------------------------------------!
-
+ 
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !CHANGE THESE PARAMETERS WHEN NEEDED!
         fudge = 1.0D-7
         RKsubsteps = 4
+        PiSymmetry = .TRUE.
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         !Read the HDF5 files
         hdferr = 0
@@ -117,172 +124,172 @@
         !Iterate through all the chunks
         IF( nchunks .LE. 10 ) THEN
         
-        DO cnum = 1, nchunks
-            CDTemp1 = dataset(cnum)
-            
-            !Open dataset
-            CALL h5dopen_f(file_id, CDTemp1, dset_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in opening dataset ***" 
+            DO cnum = 1, nchunks
+                CDTemp1 = dataset(cnum)
+                
+                !Open dataset
+                CALL h5dopen_f(file_id, CDTemp1, dset_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening dataset ***" 
 
-            !Get the dimensions
-            CALL h5dget_space_f(dset_id, dspace_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in opening dataspace ***"
-            CALL h5sget_simple_extent_dims_f(dspace_id, nxyz(cnum,:), maxdims, hdferr)
-            IF( (nxyz(cnum,1) .GT. bufsize(1)) .OR. (nxyz(cnum,2) .GT. bufsize(2)) .OR. (nxyz(cnum,3) .GT. bufsize(3)) ) THEN
-                PRINT *, 'ERROR: buffer size is not big enough'
-                STOP
-            END IF
-            CALL h5sclose_f(dspace_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in closing dataspace ***"
+                !Get the dimensions
+                CALL h5dget_space_f(dset_id, dspace_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening dataspace ***"
+                CALL h5sget_simple_extent_dims_f(dspace_id, nxyz(cnum,:), maxdims, hdferr)
+                IF( (nxyz(cnum,1) .GT. bufsize(1)) .OR. (nxyz(cnum,2) .GT. bufsize(2)) .OR. (nxyz(cnum,3) .GT. bufsize(3)) ) THEN
+                    PRINT *, 'ERROR: buffer size is not big enough'
+                    STOP
+                END IF
+                CALL h5sclose_f(dspace_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing dataspace ***"
 
-            !Read dataset
-            CALL h5dread_f(dset_id, H5T_IEEE_F64LE, buffer(cnum,1:nxyz(cnum,1),1:nxyz(cnum,2),1:nxyz(cnum,3)),&
-                &nxyz(cnum,:), hdferr, H5S_ALL_F, H5S_ALL_F, H5P_DEFAULT_F)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
+                !Read dataset
+                CALL h5dread_f(dset_id, H5T_IEEE_F64LE, buffer(cnum,1:nxyz(cnum,1),1:nxyz(cnum,2),1:nxyz(cnum,3)),&
+                    &nxyz(cnum,:), hdferr, H5S_ALL_F, H5S_ALL_F, H5P_DEFAULT_F)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
 
-            !Get the iorigin
-            !CALL h5aopen_f(dset_id, 'iorigin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-            CALL h5aopen_name_f(dset_id, 'iorigin', attr_id, hdferr)    !For HDF5 version below 1.8.0
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in opening iorigin attribute***"
-            CALL h5aread_f(attr_id, H5T_STD_I32LE, iorigin(cnum,:), attr_dims, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
-            CALL h5aclose_f(attr_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in closing iorigin attribute***"
-
-            !Get the values of origin
-            !CALL h5aopen_f(dset_id, 'origin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-            CALL h5aopen_name_f(dset_id, 'origin', attr_id, hdferr)    !For HDF5 version below 1.8.0
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in opening origin attribute***"
-            CALL h5aread_f(attr_id, H5T_IEEE_F64LE, origin(cnum,:), attr_dims, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
-            CALL h5aclose_f(attr_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in closing origin attribute***"
-            
-            IF( cnum .EQ. 1 ) THEN
-                !All the chunks should have the same spatial discretizations dx, dy, dz, 
-                !so just get these delta from a single dataset
-                !CALL h5aopen_f(dset_id, 'delta', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-                CALL h5aopen_name_f(dset_id, 'delta', attr_id, hdferr)    !For HDF5 version below 1.8.0
-                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening delta attribute***"
-                CALL h5aread_f(attr_id, H5T_IEEE_F64LE, delta, attr_dims, hdferr)
-                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of dx, dy, dz ***"
+                !Get the iorigin
+                !CALL h5aopen_f(dset_id, 'iorigin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+                CALL h5aopen_name_f(dset_id, 'iorigin', attr_id, hdferr)    !For HDF5 version below 1.8.0
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening iorigin attribute***"
+                CALL h5aread_f(attr_id, H5T_STD_I32LE, iorigin(cnum,:), attr_dims, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
                 CALL h5aclose_f(attr_id, hdferr)
-                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing delta attribute***"
-            END IF
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing iorigin attribute***"
 
-            !Close dataset
-            CALL h5dclose_f(dset_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in closing dataset ***" 
+                !Get the values of origin
+                !CALL h5aopen_f(dset_id, 'origin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+                CALL h5aopen_name_f(dset_id, 'origin', attr_id, hdferr)    !For HDF5 version below 1.8.0
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening origin attribute***"
+                CALL h5aread_f(attr_id, H5T_IEEE_F64LE, origin(cnum,:), attr_dims, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
+                CALL h5aclose_f(attr_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing origin attribute***"
+                
+                IF( cnum .EQ. 1 ) THEN
+                    !All the chunks should have the same spatial discretizations dx, dy, dz, 
+                    !so just get these delta from a single dataset
+                    !CALL h5aopen_f(dset_id, 'delta', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+                    CALL h5aopen_name_f(dset_id, 'delta', attr_id, hdferr)    !For HDF5 version below 1.8.0
+                    IF( hdferr .NE. 0 ) STOP "*** ERROR in opening delta attribute***"
+                    CALL h5aread_f(attr_id, H5T_IEEE_F64LE, delta, attr_dims, hdferr)
+                    IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of dx, dy, dz ***"
+                    CALL h5aclose_f(attr_id, hdferr)
+                    IF( hdferr .NE. 0 ) STOP "*** ERROR in closing delta attribute***"
+                END IF
 
-        END DO
+                !Close dataset
+                CALL h5dclose_f(dset_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing dataset ***" 
+
+            END DO
         
         ELSE
 
-        DO cnum = 1, 10
-            CDTemp1 = dataset(cnum)
-            
-            !Open dataset
-            CALL h5dopen_f(file_id, CDTemp1, dset_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in opening dataset ***" 
+            DO cnum = 1, 10
+                CDTemp1 = dataset(cnum)
+                
+                !Open dataset
+                CALL h5dopen_f(file_id, CDTemp1, dset_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening dataset ***" 
 
-            !Get the dimensions
-            CALL h5dget_space_f(dset_id, dspace_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in opening dataspace ***"
-            CALL h5sget_simple_extent_dims_f(dspace_id, nxyz(cnum,:), maxdims, hdferr)
-            IF( (nxyz(cnum,1) .GT. bufsize(1)) .OR. (nxyz(cnum,2) .GT. bufsize(2)) .OR. (nxyz(cnum,3) .GT. bufsize(3)) ) THEN
-                PRINT *, 'ERROR: buffer size is not big enough'
-                STOP
-            END IF
-            CALL h5sclose_f(dspace_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in closing dataspace ***"
+                !Get the dimensions
+                CALL h5dget_space_f(dset_id, dspace_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening dataspace ***"
+                CALL h5sget_simple_extent_dims_f(dspace_id, nxyz(cnum,:), maxdims, hdferr)
+                IF( (nxyz(cnum,1) .GT. bufsize(1)) .OR. (nxyz(cnum,2) .GT. bufsize(2)) .OR. (nxyz(cnum,3) .GT. bufsize(3)) ) THEN
+                    PRINT *, 'ERROR: buffer size is not big enough'
+                    STOP
+                END IF
+                CALL h5sclose_f(dspace_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing dataspace ***"
 
-            !Read dataset
-            CALL h5dread_f(dset_id, H5T_IEEE_F64LE, buffer(cnum,1:nxyz(cnum,1),1:nxyz(cnum,2),1:nxyz(cnum,3)),&
-                &nxyz(cnum,:), hdferr, H5S_ALL_F, H5S_ALL_F, H5P_DEFAULT_F)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
+                !Read dataset
+                CALL h5dread_f(dset_id, H5T_IEEE_F64LE, buffer(cnum,1:nxyz(cnum,1),1:nxyz(cnum,2),1:nxyz(cnum,3)),&
+                    &nxyz(cnum,:), hdferr, H5S_ALL_F, H5S_ALL_F, H5P_DEFAULT_F)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
 
-            !Get the iorigin
-            !CALL h5aopen_f(dset_id, 'iorigin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-            CALL h5aopen_name_f(dset_id, 'iorigin', attr_id, hdferr)    !For HDF5 version below 1.8.0
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in opening iorigin attribute***"
-            CALL h5aread_f(attr_id, H5T_STD_I32LE, iorigin(cnum,:), attr_dims, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
-            CALL h5aclose_f(attr_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in closing iorigin attribute***"
-
-            !Get the values of origin
-            !CALL h5aopen_f(dset_id, 'origin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-            CALL h5aopen_name_f(dset_id, 'origin', attr_id, hdferr)    !For HDF5 version below 1.8.0
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in opening origin attribute***"
-            CALL h5aread_f(attr_id, H5T_IEEE_F64LE, origin(cnum,:), attr_dims, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
-            CALL h5aclose_f(attr_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in closing origin attribute***"
-
-            IF( cnum .EQ. 1 ) THEN
-                !All the chunks should have the same spatial discretizations dx, dy, dz, 
-                !so just get these delta from a single dataset
-                !CALL h5aopen_f(dset_id, 'delta', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-                CALL h5aopen_name_f(dset_id, 'delta', attr_id, hdferr)    !For HDF5 version below 1.8.0
-                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening delta attribute***"
-                CALL h5aread_f(attr_id, H5T_IEEE_F64LE, delta, attr_dims, hdferr)
-                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of dx, dy, dz ***"
+                !Get the iorigin
+                !CALL h5aopen_f(dset_id, 'iorigin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+                CALL h5aopen_name_f(dset_id, 'iorigin', attr_id, hdferr)    !For HDF5 version below 1.8.0
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening iorigin attribute***"
+                CALL h5aread_f(attr_id, H5T_STD_I32LE, iorigin(cnum,:), attr_dims, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
                 CALL h5aclose_f(attr_id, hdferr)
-                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing delta attribute***"
-            END IF
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing iorigin attribute***"
 
-            !Close dataset
-            CALL h5dclose_f(dset_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in closing dataset ***" 
+                !Get the values of origin
+                !CALL h5aopen_f(dset_id, 'origin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+                CALL h5aopen_name_f(dset_id, 'origin', attr_id, hdferr)    !For HDF5 version below 1.8.0
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening origin attribute***"
+                CALL h5aread_f(attr_id, H5T_IEEE_F64LE, origin(cnum,:), attr_dims, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
+                CALL h5aclose_f(attr_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing origin attribute***"
 
-        END DO
+                IF( cnum .EQ. 1 ) THEN
+                    !All the chunks should have the same spatial discretizations dx, dy, dz, 
+                    !so just get these delta from a single dataset
+                    !CALL h5aopen_f(dset_id, 'delta', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+                    CALL h5aopen_name_f(dset_id, 'delta', attr_id, hdferr)    !For HDF5 version below 1.8.0
+                    IF( hdferr .NE. 0 ) STOP "*** ERROR in opening delta attribute***"
+                    CALL h5aread_f(attr_id, H5T_IEEE_F64LE, delta, attr_dims, hdferr)
+                    IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of dx, dy, dz ***"
+                    CALL h5aclose_f(attr_id, hdferr)
+                    IF( hdferr .NE. 0 ) STOP "*** ERROR in closing delta attribute***"
+                END IF
 
-        DO cnum = 11, nchunks
-            CDTemp2 = dataset(cnum)
+                !Close dataset
+                CALL h5dclose_f(dset_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing dataset ***" 
 
-            !Open dataset
-            CALL h5dopen_f(file_id, CDTemp2, dset_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in opening dataset ***" 
+            END DO
 
-            !Get the dimensions
-            CALL h5dget_space_f(dset_id, dspace_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in opening dataspace ***"
-            CALL h5sget_simple_extent_dims_f(dspace_id, nxyz(cnum,:), maxdims, hdferr)
-            IF( (nxyz(cnum,1) .GT. bufsize(1)) .OR. (nxyz(cnum,2) .GT. bufsize(2)) .OR. (nxyz(cnum,3) .GT. bufsize(3)) ) THEN
-                PRINT *, 'ERROR: buffer size is not big enough'
-                STOP
-            END IF
-            CALL h5sclose_f(dspace_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in closing dataspace ***"
+            DO cnum = 11, nchunks
+                CDTemp2 = dataset(cnum)
 
-            !Read dataset
-            CALL h5dread_f(dset_id, H5T_IEEE_F64LE, buffer(cnum,1:nxyz(cnum,1),1:nxyz(cnum,2),1:nxyz(cnum,3)),&
-                &nxyz(cnum,:), hdferr, H5S_ALL_F, H5S_ALL_F, H5P_DEFAULT_F)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
+                !Open dataset
+                CALL h5dopen_f(file_id, CDTemp2, dset_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening dataset ***" 
 
-            !Get the iorigin
-            !CALL h5aopen_f(dset_id, 'iorigin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-            CALL h5aopen_name_f(dset_id, 'iorigin', attr_id, hdferr)    !For HDF5 version below 1.8.0
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in opening iorigin attribute***"
-            CALL h5aread_f(attr_id, H5T_STD_I32LE, iorigin(cnum,:), attr_dims, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
-            CALL h5aclose_f(attr_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in closing iorigin attribute***"
+                !Get the dimensions
+                CALL h5dget_space_f(dset_id, dspace_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening dataspace ***"
+                CALL h5sget_simple_extent_dims_f(dspace_id, nxyz(cnum,:), maxdims, hdferr)
+                IF( (nxyz(cnum,1) .GT. bufsize(1)) .OR. (nxyz(cnum,2) .GT. bufsize(2)) .OR. (nxyz(cnum,3) .GT. bufsize(3)) ) THEN
+                    PRINT *, 'ERROR: buffer size is not big enough'
+                    STOP
+                END IF
+                CALL h5sclose_f(dspace_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing dataspace ***"
 
-            !Get the values of origin
-            !CALL h5aopen_f(dset_id, 'origin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
-            CALL h5aopen_name_f(dset_id, 'origin', attr_id, hdferr)    !For HDF5 version below 1.8.0
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in opening origin attribute***"
-            CALL h5aread_f(attr_id, H5T_IEEE_F64LE, origin(cnum,:), attr_dims, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
-            CALL h5aclose_f(attr_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in closing origin attribute***"
+                !Read dataset
+                CALL h5dread_f(dset_id, H5T_IEEE_F64LE, buffer(cnum,1:nxyz(cnum,1),1:nxyz(cnum,2),1:nxyz(cnum,3)),&
+                    &nxyz(cnum,:), hdferr, H5S_ALL_F, H5S_ALL_F, H5P_DEFAULT_F)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
 
-            !Close dataset
-            CALL h5dclose_f(dset_id, hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in closing dataset ***" 
+                !Get the iorigin
+                !CALL h5aopen_f(dset_id, 'iorigin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+                CALL h5aopen_name_f(dset_id, 'iorigin', attr_id, hdferr)    !For HDF5 version below 1.8.0
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening iorigin attribute***"
+                CALL h5aread_f(attr_id, H5T_STD_I32LE, iorigin(cnum,:), attr_dims, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
+                CALL h5aclose_f(attr_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing iorigin attribute***"
 
-        END DO
+                !Get the values of origin
+                !CALL h5aopen_f(dset_id, 'origin', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+                CALL h5aopen_name_f(dset_id, 'origin', attr_id, hdferr)    !For HDF5 version below 1.8.0
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening origin attribute***"
+                CALL h5aread_f(attr_id, H5T_IEEE_F64LE, origin(cnum,:), attr_dims, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
+                CALL h5aclose_f(attr_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing origin attribute***"
+
+                !Close dataset
+                CALL h5dclose_f(dset_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing dataset ***" 
+
+            END DO
 
         END IF
         !Close the file
@@ -417,7 +424,28 @@
                 combinedbuffer(:,jj,:) = combinedbuffer(:,i,:)
             END DO
         END IF
-        
+
+        !Check for PI-symmetry in the XY-plane
+        IF((PiSymmetry .EQV. .TRUE.) .AND. (DATASETFLAG .GE. 1) .AND. (DATASETFLAG .LE. 3)) THEN
+            !Perform 180 degree rotation for vectors
+            DO i = minindex(1), (maxindex(1)-1)
+                DO j = minindex(2), (maxindex(2)-1)
+                    jj = combinedbufsize(1) -i +1
+                    kk = combinedbufsize(2) -j +1
+                    combinedbuffer(i,j,:) = -1.0D0 * combinedbuffer(jj,kk,:)
+                END DO
+            END DO
+        ELSEIF((PiSymmetry .EQV. .TRUE.) .AND. (DATASETFLAG .LT. 1) .AND. (DATASETFLAG .GT. 3)) THEN
+            !Perform 180 degree rotation for non-vectors
+            DO i = minindex(1), (maxindex(1)-1)
+                DO j = minindex(2), (maxindex(2)-1)
+                    jj = combinedbufsize(1) -i +1
+                    kk = combinedbufsize(2) -j +1
+                    combinedbuffer(i,j,:) = combinedbuffer(jj,kk,:)
+                END DO
+            END DO
+        END IF
+
         !Z-DIRECTION
         IF( ReflectWhichWay(3) .EQ. +1 ) THEN !DATA IS FOR THE TOP HEMISPHERE
            !The data is now located at the bottom hemisphere, move it to the top hemisphere, remove ghost zones

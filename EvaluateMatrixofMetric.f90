@@ -18,10 +18,10 @@
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-    REAL*8, INTENT(in)                  :: alpha
-    REAL*8, INTENT(in)                  :: beta1, beta2, beta3
-    REAL*8, INTENT(in)                  :: g11, g22, g33
-    REAL*8, INTENT(in)                  :: g12, g13, g23
+    REAL*8                              :: alpha
+    REAL*8                              :: beta1, beta2, beta3
+    REAL*8                              :: g11, g22, g33
+    REAL*8                              :: g12, g13, g23
     REAL*8, INTENT(out)                 :: gAB(4,4)
 
 !-----------------------------------------------------------!
@@ -55,7 +55,7 @@
     gAB(4,1) = gAB(1,4)
 
     !alpha
-    gAB(1,1) = beta1*gAB(1,2) + beta2*gAB(1,3) + beta3*gAB(1,4) - ( alpha**2 )
+    gAB(1,1) = beta1*gAB(1,2) + beta2*gAB(1,3) + beta3*gAB(1,4) - ( alpha*alpha )
 
     RETURN
     END SUBROUTINE EvaluateMatrixofMetric

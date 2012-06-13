@@ -17,10 +17,10 @@
 !     Declare calling variables                          !
 !--------------------------------------------------------!
 
-        INTEGER*4, INTENT(in)  :: M, Mr, NP, Lmax
-        REAL*8, INTENT(in)     :: eps
+        INTEGER*4               :: M, Mr, NP, Lmax
+        REAL*8                  :: eps
 
-        REAL*8, INTENT(out)  :: F(NP)
+        REAL*8, INTENT(out)     :: F(NP)
 
 !--------------------------------------------------------!
 !     Declare Locals                                     !

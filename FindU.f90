@@ -19,14 +19,14 @@
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-       INTEGER*4, INTENT(in)  :: M, Mr, NP, it, WriteSit
+       INTEGER*4            :: M, Mr, NP, it, WriteSit
 
-       REAL*8, INTENT(in)     :: r(Mr+1)
-       COMPLEX*16, INTENT(in) :: AF(4*NP, NP)
-       COMPLEX*16, INTENT(in) :: a(NP)
+       REAL*8               :: r(Mr+1)
+       COMPLEX*16           :: AF(4*NP, NP)
+       COMPLEX*16           :: a(NP)
 
-       REAL*8, INTENT(out) :: U(2*M, 2*M)
-       REAL*8, INTENT(out) :: Uave
+       REAL*8, INTENT(out)  :: U(2*M, 2*M)
+       REAL*8, INTENT(out)  :: Uave
 
 !--------------------------------------------------------!
 !     Declare Locals                                     !

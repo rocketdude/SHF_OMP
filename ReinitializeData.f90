@@ -19,15 +19,15 @@
 !     Declare calling variables                          !
 !--------------------------------------------------------!
 
-        INTEGER*4, INTENT(in)  :: M, Mr, NP
+        INTEGER*4               :: M, Mr, NP
         
-        REAL*8, INTENT(in)   :: c
-        REAL*8, INTENT(in)   :: U(2*M, 2*M)
-        REAL*8, INTENT(in)   :: r(Mr+1)
-        REAL*8, INTENT(in)   :: theta(2*M)
-        REAL*8, INTENT(in)   :: phi(2*M)
+        REAL*8                  :: c
+        REAL*8                  :: U(2*M, 2*M)
+        REAL*8                  :: r(Mr+1)
+        REAL*8                  :: theta(2*M)
+        REAL*8                  :: phi(2*M)
 
-        COMPLEX*16, INTENT(in)  :: B(NP, 4*NP)
+        COMPLEX*16              :: B(NP, 4*NP)
         COMPLEX*16, INTENT(out) :: a(NP)
 
 !--------------------------------------------------------!

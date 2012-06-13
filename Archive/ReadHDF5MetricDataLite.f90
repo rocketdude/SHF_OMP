@@ -2,6 +2,8 @@
 !     ReadHDF5MetricData  subroutine                       !
 !----------------------------------------------------------!
 
+
+    !NOTE: Don't use this because it doesn't take into account Pi symmetry
     SUBROUTINE ReadHDF5MetricData(&
         &Filename, dataset,&
         &CFLEN, CDLEN,&
@@ -34,13 +36,13 @@
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-        INTEGER*4, INTENT(in)               :: nchunks
-        INTEGER*4, INTENT(in)               :: CFLEN
-        INTEGER*4, INTENT(in)               :: CDLEN(nchunks)
-        INTEGER(HSIZE_T), INTENT(in)        :: bufsize(3)
+        INTEGER*4                           :: nchunks
+        INTEGER*4                           :: CFLEN
+        INTEGER*4                           :: CDLEN(nchunks)
+        INTEGER(HSIZE_T)                    :: bufsize(3)
 
-        CHARACTER(LEN=*), INTENT(in)        :: Filename
-        CHARACTER(LEN=*), INTENT(in)        :: dataset(nchunks)
+        CHARACTER(LEN=*)                    :: Filename
+        CHARACTER(LEN=*)                    :: dataset(nchunks)
 
         REAL*8, INTENT(out)                 :: Xmin, Ymin, Zmin
         REAL*8, INTENT(out)                 :: Xmax, Ymax, Zmax
@@ -115,70 +117,70 @@
         !Iterate through all the chunks
         IF( nchunks .LE. 10 ) THEN
         
-        DO cnum = 1, nchunks
-            CDTemp1 = dataset(cnum)
-  
-            CALL h5ltget_dataset_info_f(file_id, CDTemp1, nxyz(cnum,:), type_class, type_size, hdferr)          
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the dimensions of the dataset ***"
-            IF( (nxyz(cnum,1) .GT. bufsize(1)) .OR. (nxyz(cnum,2) .GT. bufsize(2)) .OR. (nxyz(cnum,3) .GT. bufsize(3)) ) THEN
-                PRINT *, 'ERROR: buffer size is not big enough'
-                STOP
-            END IF
+            DO cnum = 1, nchunks
+                CDTemp1 = dataset(cnum)
+      
+                CALL h5ltget_dataset_info_f(file_id, CDTemp1, nxyz(cnum,:), type_class, type_size, hdferr)          
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the dimensions of the dataset ***"
+                IF( (nxyz(cnum,1) .GT. bufsize(1)) .OR. (nxyz(cnum,2) .GT. bufsize(2)) .OR. (nxyz(cnum,3) .GT. bufsize(3)) ) THEN
+                    PRINT *, 'ERROR: buffer size is not big enough'
+                    STOP
+                END IF
 
-            CALL h5ltread_dataset_f(file_id, CDTemp1, H5T_IEEE_F64LE, &
-                &buffer(cnum,1:nxyz(cnum,1),1:nxyz(cnum,2),1:nxyz(cnum,3)), nxyz(cnum,:), hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
+                CALL h5ltread_dataset_f(file_id, CDTemp1, H5T_IEEE_F64LE, &
+                    &buffer(cnum,1:nxyz(cnum,1),1:nxyz(cnum,2),1:nxyz(cnum,3)), nxyz(cnum,:), hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
 
-            CALL h5ltget_attribute_int_f(file_id, CDTemp1, 'iorigin', iorigin(cnum,:), hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
+                CALL h5ltget_attribute_int_f(file_id, CDTemp1, 'iorigin', iorigin(cnum,:), hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
 
-            CALL h5ltget_attribute_double_f(file_id, CDTemp1, 'origin', origin(cnum,:), hdferr) 
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
-        END DO
-        
+                CALL h5ltget_attribute_double_f(file_id, CDTemp1, 'origin', origin(cnum,:), hdferr) 
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
+            END DO
+            
         ELSE
 
-        DO cnum = 1, 10
-            CDTemp1 = dataset(cnum)
-            
-            CALL h5ltget_dataset_info_f(file_id, CDTemp1, nxyz(cnum,:), type_class, type_size, hdferr)          
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the dimensions of the dataset ***"
-            IF( (nxyz(cnum,1) .GT. bufsize(1)) .OR. (nxyz(cnum,2) .GT. bufsize(2)) .OR. (nxyz(cnum,3) .GT. bufsize(3)) ) THEN
-                PRINT *, 'ERROR: buffer size is not big enough'
-                STOP
-            END IF
+            DO cnum = 1, 10
+                CDTemp1 = dataset(cnum)
+                
+                CALL h5ltget_dataset_info_f(file_id, CDTemp1, nxyz(cnum,:), type_class, type_size, hdferr)          
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the dimensions of the dataset ***"
+                IF( (nxyz(cnum,1) .GT. bufsize(1)) .OR. (nxyz(cnum,2) .GT. bufsize(2)) .OR. (nxyz(cnum,3) .GT. bufsize(3)) ) THEN
+                    PRINT *, 'ERROR: buffer size is not big enough'
+                    STOP
+                END IF
 
-            CALL h5ltread_dataset_f(file_id, CDTemp1, H5T_IEEE_F64LE, &
-                &buffer(cnum,1:nxyz(cnum,1),1:nxyz(cnum,2),1:nxyz(cnum,3)), nxyz(cnum,:), hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
+                CALL h5ltread_dataset_f(file_id, CDTemp1, H5T_IEEE_F64LE, &
+                    &buffer(cnum,1:nxyz(cnum,1),1:nxyz(cnum,2),1:nxyz(cnum,3)), nxyz(cnum,:), hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
 
-            CALL h5ltget_attribute_int_f(file_id, CDTemp1, 'iorigin', iorigin(cnum,:), hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
+                CALL h5ltget_attribute_int_f(file_id, CDTemp1, 'iorigin', iorigin(cnum,:), hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
 
-            CALL h5ltget_attribute_double_f(file_id, CDTemp1, 'origin', origin(cnum,:), hdferr) 
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
-        END DO
+                CALL h5ltget_attribute_double_f(file_id, CDTemp1, 'origin', origin(cnum,:), hdferr) 
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
+            END DO
 
-        DO cnum = 11, nchunks
-            CDTemp2 = dataset(cnum)
+            DO cnum = 11, nchunks
+                CDTemp2 = dataset(cnum)
 
-            CALL h5ltget_dataset_info_f(file_id, CDTemp2, nxyz(cnum,:), type_class, type_size, hdferr)          
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the dimensions of the dataset ***"
-            IF( (nxyz(cnum,1) .GT. bufsize(1)) .OR. (nxyz(cnum,2) .GT. bufsize(2)) .OR. (nxyz(cnum,3) .GT. bufsize(3)) ) THEN
-                PRINT *, 'ERROR: buffer size is not big enough'
-                STOP
-            END IF
+                CALL h5ltget_dataset_info_f(file_id, CDTemp2, nxyz(cnum,:), type_class, type_size, hdferr)          
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the dimensions of the dataset ***"
+                IF( (nxyz(cnum,1) .GT. bufsize(1)) .OR. (nxyz(cnum,2) .GT. bufsize(2)) .OR. (nxyz(cnum,3) .GT. bufsize(3)) ) THEN
+                    PRINT *, 'ERROR: buffer size is not big enough'
+                    STOP
+                END IF
 
-            CALL h5ltread_dataset_f(file_id, CDTemp2, H5T_IEEE_F64LE, &
-                &buffer(cnum,1:nxyz(cnum,1),1:nxyz(cnum,2),1:nxyz(cnum,3)), nxyz(cnum,:), hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
+                CALL h5ltread_dataset_f(file_id, CDTemp2, H5T_IEEE_F64LE, &
+                    &buffer(cnum,1:nxyz(cnum,1),1:nxyz(cnum,2),1:nxyz(cnum,3)), nxyz(cnum,:), hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in reading dataset ***"
 
-            CALL h5ltget_attribute_int_f(file_id, CDTemp2, 'iorigin', iorigin(cnum,:), hdferr)
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
+                CALL h5ltget_attribute_int_f(file_id, CDTemp2, 'iorigin', iorigin(cnum,:), hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting iorigin ***"
 
-            CALL h5ltget_attribute_double_f(file_id, CDTemp2, 'origin', origin(cnum,:), hdferr) 
-            IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
-        END DO
+                CALL h5ltget_attribute_double_f(file_id, CDTemp2, 'origin', origin(cnum,:), hdferr) 
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of origin ***"
+            END DO
 
         END IF
 

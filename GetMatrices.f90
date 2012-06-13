@@ -33,12 +33,12 @@
 !     Declare calling variables                          !
 !--------------------------------------------------------!
 
-        INTEGER*4, INTENT(in)  :: M, Mr, NP, Lmax, LWORK, IFLAG
+        INTEGER*4                :: M, Mr, NP, Lmax, LWORK, IFLAG
         
-        REAL*8, INTENT(in)   :: r(Mr+1)
-        REAL*8, INTENT(in)   :: rho(Mr+1)
-        REAL*8, INTENT(in)   :: theta(2*M)
-        REAL*8, INTENT(in)   :: phi(2*M)
+        REAL*8                   :: r(Mr+1)
+        REAL*8                   :: rho(Mr+1)
+        REAL*8                   :: theta(2*M)
+        REAL*8                   :: phi(2*M)
 
         COMPLEX*16, INTENT(out)  :: AF(4*NP, NP)
         COMPLEX*16, INTENT(out)  :: AFinv(NP, 4*NP)
@@ -189,11 +189,11 @@
 !     Declare calling variables                          !
 !--------------------------------------------------------!
 
-        INTEGER*4, INTENT(in)  :: n, l, ml
+        INTEGER*4                :: n, l, ml
 
-        REAL*8, INTENT(in)   :: rho
-        REAL*8, INTENT(in)   :: theta
-        REAL*8, INTENT(in)   :: phi
+        REAL*8                   :: rho
+        REAL*8                   :: theta
+        REAL*8                   :: phi
         
         COMPLEX*16, INTENT(out)  :: f
 
@@ -246,12 +246,12 @@
 !     Declare calling variables                          !
 !--------------------------------------------------------!
 
-        INTEGER*4, INTENT(in)  :: n, l, ml
-        INTEGER*4, INTENT(in)  :: M, Mr
+        INTEGER*4                :: n, l, ml
+        INTEGER*4                :: M, Mr
 
-        REAL*8, INTENT(in)   :: rho
-        REAL*8, INTENT(in)   :: theta
-        REAL*8, INTENT(in)   :: phi
+        REAL*8                   :: rho
+        REAL*8                   :: theta
+        REAL*8                   :: phi
         
         COMPLEX*16, INTENT(out)  :: g
 

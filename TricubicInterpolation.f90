@@ -25,10 +25,10 @@
 !     Declare calling variables                            !
 !----------------------------------------------------------!
 
-        REAL*8, INTENT(in)      :: cube(4,4,4)
-        REAL*8, INTENT(in)      :: dx, dy, dz
-        REAL*8, INTENT(in)      :: x, y, z
-        REAL*8, INTENT(in)      :: x0, y0, z0
+        REAL*8                   :: cube(4,4,4)
+        REAL*8                   :: dx, dy, dz
+        REAL*8                   :: x, y, z
+        REAL*8                   :: x0, y0, z0
 
         REAL*8, INTENT(out)      :: fatxyz
 

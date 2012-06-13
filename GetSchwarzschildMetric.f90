@@ -22,12 +22,12 @@
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-        INTEGER, INTENT(in)  :: M, Mr, NP
+        INTEGER*4            :: M, Mr, NP
 
-        REAL*8, INTENT(in)   :: Mass
-        REAL*8, INTENT(in)   :: r(Mr+1)
-        REAL*8, INTENT(in)   :: theta(2*M)
-        REAL*8, INTENT(in)   :: phi(2*M)
+        REAL*8               :: Mass
+        REAL*8               :: r(Mr+1)
+        REAL*8               :: theta(2*M)
+        REAL*8               :: phi(2*M)
 
         REAL*8, INTENT(out)  :: alpha(4*NP)
         REAL*8, INTENT(out)  :: betaR(4*NP)

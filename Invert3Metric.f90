@@ -17,8 +17,8 @@
 !     Declare calling variables                          !
 !--------------------------------------------------------!
 
-        REAL*8, INTENT(in)      :: g11, g22, g33 !g_ij
-        REAL*8, INTENT(in)      :: g12, g13, g23 !g_ij
+        REAL*8                  :: g11, g22, g33 !g_ij
+        REAL*8                  :: g12, g13, g23 !g_ij
         REAL*8, INTENT(out)     :: u11, u22, u33 !g^ij
         REAL*8, INTENT(out)     :: u12, u13, u23 !g^ij
         INTEGER*4, INTENT(out)  :: error         !error=0 if successful, =-1 if not

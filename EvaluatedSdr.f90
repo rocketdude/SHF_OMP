@@ -19,13 +19,13 @@
 !     Declare calling variables                          !
 !--------------------------------------------------------!
 
-        INTEGER*4, INTENT(in)  :: M, Mr, NP, Lmax
+        INTEGER*4               :: M, Mr, NP, Lmax
 
-        REAL*8, INTENT(in)   :: rmin
-        REAL*8, INTENT(in)   :: rmax
+        REAL*8                  :: rmin
+        REAL*8                  :: rmax
 
-        COMPLEX*16, INTENT(in)  :: a(NP)
-        COMPLEX*16, INTENT(in)  :: AF(4*NP, NP)
+        COMPLEX*16              :: a(NP)
+        COMPLEX*16              :: AF(4*NP, NP)
 
         COMPLEX*16, INTENT(out) :: dSdr(4*NP)
 

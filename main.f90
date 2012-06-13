@@ -11,7 +11,6 @@
   PROGRAM              SHF
     USE                omp_lib
     USE                HDF5
-    !USE                H5LT
 
     IMPLICIT           none
 
@@ -71,6 +70,7 @@
     ! We only use half of the theta coordinates for the collocation points
 
     REAL*8            t           !Current time
+    REAL*8            tA, tB      !If tA < t < tB, we don't need to read new metric data, just interpolate
     REAL*8            tdir        !Direction of time (+1 for forward, -1 for backward)
     REAL*8            dt          !Time increment
     REAL*8            dx          !Smallest distance between two points (used to determine dt)
@@ -111,7 +111,7 @@
 !     Declare Metric Data                                !
 !--------------------------------------------------------!
 
-    ! Values of the upper index metric at the different collocation points
+    ! Values of the upper index metric at t = t0, at the different collocation points
     ! The collocation points are (r, theta, phi)
 
     ! Spatial metric (gamma's)--all upper indices
@@ -128,15 +128,32 @@
     REAL*8        betaTh(4*NP)   !Shift function beta^{theta}
     REAL*8        betaPhi(4*NP)  !Shift function beta^{phi}
 
+    ! Values of the upper index metric at t = t0 + dt_data
+    REAL*8        BgRR(4*NP)
+    REAL*8        BgThTh(4*NP)
+    REAL*8        BgPhiPhi(4*NP)
+    REAL*8        BgRTh(4*NP)
+    REAL*8        BgRPhi(4*NP)
+    REAL*8        BgThPhi(4*NP)
+
+    REAL*8        Balpha(4*NP)
+    REAL*8        BbetaR(4*NP)
+    REAL*8        BbetaTh(4*NP)
+    REAL*8        BbetaPhi(4*NP)
+
     ! Schwarzschild metric parameters
     REAL*8            Mass   !Mass of Schwarzschild black hole located at the center
 
     ! Parameters to read metric from HDF5 files
-    INTEGER(HSIZE_T)  bufsize(3)  !Buffer size to read the metric from HDF5 files
-    INTEGER*4         iterratio   !Ratio of the iteration values in the EinsteinToolkit compared to this code's iteration
-    INTEGER*4         nchunks     !Number of chunks that the metric is divided into
-    INTEGER*4         it_data     !The iteration value for the metric data
-    REAL*8            dt_data     !The value of dt for the metric data
+    INTEGER(HSIZE_T)  bufsize(3)    !Buffer size to read the metric from HDF5 files
+    INTEGER*4         nchunks       !Number of chunks that the metric is divided into
+    INTEGER*4         it_data       !The Einstein Toolkit iteration value for the metric data
+    INTEGER*4         it_data_max   !Maximum Einstein Toolkit iteration value for the metric data
+    INTEGER*4         it_data_min   !Minimum Einstein Toolkit iteration value for the metric data
+    INTEGER*4         delta_it_data !Difference in it_data between metric values
+    REAL*8            dt_data       !The value of dt for the metric data
+
+    INTEGER*4         Maxit_allowed !The amount of iterations that we can have with the available metric data
 
 !--------------------------------------------------------!
 !     Declare Local Parameters                           !
@@ -159,7 +176,7 @@
     SFLAG = 0                       !If SFLAG = 1, we are continuing previous run: change t, Startit and aFile
     t = -8.1617491479814266D0       !Last time from previous run
     Startit = 6751                  !Startit = last iteration + 1
-    Maxit = 500
+    Maxit = 12000
     aFile = 'a10.dat'
 
     IF( SFLAG .EQ. 0 ) THEN
@@ -172,9 +189,10 @@
     !Note: negative rootsign, positive lapse & shift functions, and negative tdir give EH finder
     eps =  2.22044604925031308D-016 !Machine epsilon (calculate everytime you change machine)
     c = 0.1D0
-    cfl = 1.508D0
-    dt = 2.50D-3                    !Just enter the absolute value, change the sign by changing tdir
+    cfl = 1.508D0                   !Depends on which SSP-Runge-Kutta you're using.
+                                    !SSPRK(5,4)=>cfl=1.508 and SSPRK(3,3)=>cfl=1.0
     rootsign = -1.0D0               !Choose the root sign, either 1.0D0 or -1.0D0 (depends on the metric)
+                                    !for alpha=(+), beta=(+), dt=(-), -1.0D0 is an event horizon finder
     tdir = -1.0D0                   !Direction of time, choose +1.0D0 or -1.0D0
     reinit = 15
 
@@ -189,13 +207,15 @@
     rmin = 0.0D0                    !minimum value of r
 
     !Parameters related to reading HDF5 files--do h5dump to check these
-    iterratio = 4
     nchunks = 12
     bufsize(1) = 50                 !Buffer size; has to be bigger than the size of each dataset
     bufsize(2) = 50
     bufsize(3) = 50
-    dt_data = 5.00D-3               !Size of time step specified by the data
+    dt_data = 5.00D-2               !Size of time step specified by the data
     !dt = 0.0125 but rl=8 is only updated once every four iterations, so dt = 0.050
+    it_data_max = 2000
+    it_data_min = 0
+    delta_it_data = 4
 
     !Schwarzschild metric parameter (preliminary tests only)
 !!$    Mass = 0.45D0                   !Only used with Schwarzschild metric
@@ -205,8 +225,8 @@
 !--------------------------------------------------------!
 
     WriteUit = 10
-    WriteSit = 100
-    Writeait = 100
+    WriteSit = 10000
+    Writeait = 10000
 
 !--------------------------------------------------------!
 !     Echo certain parameters                            !
@@ -277,10 +297,8 @@
 !!$       dx = rsinthdphi
 !!$    END IF
 
-    IF( ABS(dt) .GT. ABS(tdir * cfl * dx) ) THEN
-        PRINT *, 'Warning: dt might be greater than Courant limit!'
-    END IF
-    dt = ABS(dt) * tdir
+    dt = tdir * cfl * dx
+    dt_data = tdir * ABS(dt_data)
 
 !--------------------------------------------------------!
 !     Initial Data                                       !
@@ -288,6 +306,11 @@
 
     PRINT *, '==============================='
     PRINT *, 'INITIALIZING PROGRAM'
+
+    !Make sure that we have enough metric data for the amount of iterations
+    Maxit_allowed = INT( DBLE((it_data_max - it_data_min)/delta_it_data + 1) * ( dt_data/dt ) )
+    PRINT *, 'Maximum of iterations allowed =', Maxit_allowed
+    IF( (Maxit-Startit+1) .GT. Maxit_allowed ) STOP "***Not enough metric data for the # of iterations***"
 
     CALL GetMatrices(& 
          & M, Mr, NP, Lmax, LWORK, IFLAG,&
@@ -352,28 +375,67 @@
 
     PRINT *, '==============================='
     PRINT *, 'START MAIN LOOP'
+    
+    !Get the first metric data and initializes read metric logics
+    tB = t
+    tA = tB - dt_data
+    it_data = it_data_max
+    CALL GetMetric(&
+        &M, Mr, NP,&
+        &it_data, nchunks,&
+        &bufsize,&
+        &r, theta, phi,&
+        &Balpha,&
+        &BbetaR, BbetaTh, BbetaPhi,&
+        &BgRR, BgThTh, BgPhiPhi,&
+        &BgRTh, BgRPhi, BgThPhi)
+
 
     mainloop: DO it = Startit, Maxit
        
        t = t+dt
-       
+
        !--------------------------------------------------------!
        !     Read Metric and Evolve Data                        !
        !--------------------------------------------------------!
 
-       it_data = iterratio * (Maxit - it)
+       IF( ABS(t) .GE. ABS(tB) ) THEN
+            tA = tB
+            tB = tB + dt_data
 
-       CALL GetMetric(&
-            &M, Mr, NP,&
-            &dt, dt_data,&
-            &it_data, nchunks,&
-            &bufsize,&
-            &r, theta, phi,&
-            &alpha,&
-            &betaR, betaTh, betaPhi,&
+            alpha = Balpha
+            betaR = BbetaR
+            betaTh = BbetaTh
+            betaPhi = BbetaPhi
+            gRR = BgRR
+            gThTh = BgThTh
+            gPhiPhi = BgPhiPhi
+            gRTh = BgRTh
+            gRPhi = BgRPhi
+            gThPhi = BgThPhi
+
+            it_data = it_data - delta_it_data
+
+            CALL GetMetric(&
+                &M, Mr, NP,&
+                &it_data, nchunks,&
+                &bufsize,&
+                &r, theta, phi,&
+                &Balpha,&
+                &BbetaR, BbetaTh, BbetaPhi,&
+                &BgRR, BgThTh, BgPhiPhi,&
+                &BgRTh, BgRPhi, BgThPhi)      
+       END IF
+
+       CALL TemporalMetricInterpolation(&
+            &NP,&
+            &t, tA, tB,&
+            &alpha, betaR, betaTh, betaPhi,&
             &gRR, gThTh, gPhiPhi,&
-            &gRTh, gRPhi, gThPhi)
-
+            &gRTh, gRPhi, gThPhi,&
+            &Balpha, BbetaR, BbetaTh, BbetaPhi,&
+            &BgRR, BgThTh, BgPhiPhi,&
+            &BgRTh, BgRPhi, BgThPhi)
 
        CALL EvolveData(&
             &M, Mr, NP, Lmax,&

@@ -4,7 +4,6 @@
 
       SUBROUTINE GetMetric(&
 &M, Mr, NP,&
-&dt, dt_data,&
 &iter, nchunks,&
 &bufsize,&
 &r, theta, phi,&
@@ -15,37 +14,34 @@
 
         USE       omp_lib
         USE       HDF5
-        !USE       H5LT
         IMPLICIT  none
 
 !-----------------------------------------------------------!
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-        INTEGER*4, INTENT(in)  :: M, Mr, NP
-        INTEGER*4, INTENT(in)  :: iter
-        INTEGER*4, INTENT(in)  :: nchunks
+        INTEGER*4               :: M, Mr, NP
+        INTEGER*4               :: iter
+        INTEGER*4               :: nchunks
 
-        INTEGER(HSIZE_T), INTENT(in):: bufsize(3)        
+        INTEGER(HSIZE_T)        :: bufsize(3)        
 
-        REAL*8, INTENT(in)   :: dt, dt_data
+        REAL*8                  :: r(Mr+1)
+        REAL*8                  :: theta(2*M)
+        REAL*8                  :: phi(2*M)
 
-        REAL*8, INTENT(in)   :: r(Mr+1)
-        REAL*8, INTENT(in)   :: theta(2*M)
-        REAL*8, INTENT(in)   :: phi(2*M)
+        REAL*8, INTENT(out)     :: alpha(4*NP)
+        REAL*8, INTENT(out)     :: betaR(4*NP)
+        REAL*8, INTENT(out)     :: betaTh(4*NP)
+        REAL*8, INTENT(out)     :: betaPhi(4*NP)
 
-        REAL*8, INTENT(out)  :: alpha(4*NP)
-        REAL*8, INTENT(out)  :: betaR(4*NP)
-        REAL*8, INTENT(out)  :: betaTh(4*NP)
-        REAL*8, INTENT(out)  :: betaPhi(4*NP)
+        REAL*8, INTENT(out)     :: gRR(4*NP)
+        REAL*8, INTENT(out)     :: gThTh(4*NP)
+        REAL*8, INTENT(out)     :: gPhiPhi(4*NP)
 
-        REAL*8, INTENT(out)  :: gRR(4*NP)
-        REAL*8, INTENT(out)  :: gThTh(4*NP)
-        REAL*8, INTENT(out)  :: gPhiPhi(4*NP)
-
-        REAL*8, INTENT(out)  :: gRTh(4*NP)
-        REAL*8, INTENT(out)  :: gRPhi(4*NP)
-        REAL*8, INTENT(out)  :: gThPhi(4*NP)
+        REAL*8, INTENT(out)     :: gRTh(4*NP)
+        REAL*8, INTENT(out)     :: gRPhi(4*NP)
+        REAL*8, INTENT(out)     :: gThPhi(4*NP)
 
 !-----------------------------------------------------------!
 !       Declare local variables                             !
@@ -83,7 +79,7 @@
 !      Main                                                !
 !----------------------------------------------------------!
 
-        PRINT *, 'Getting Metric Data'
+        PRINT *, 'Getting Metric Data of it=', iter
 
         !The filenames for the metric correspond to the ones defined in the
         !shell program: process-hdf-metric.sh
@@ -280,18 +276,16 @@
             &r, theta, phi,&
             &gYZ)
 
-        !Now we need to perform coordinate transformation from (t',x,y,z) to (t,r,th,phi)
+        !Now we need to perform coordinate transformation from (t,x,y,z) to (t,r,th,phi)
         !Both g_sph and g_cart are of down indices
-        
-        dt_ratio = ABS(dt_data/dt)
-        
+ 
         !$OMP PARALLEL DO PRIVATE(j, k, JMatrix, crow, gcart, gsph, error)
         DO i = 1, (Mr+1)        
             DO j = 1, (2*M)
                 DO k = 1, (2*M)
             
                     !Build the Jacobian matrix JMatrix
-                    CALL EvaluateJacobian(r(i),theta(j),phi(k),dt_ratio,JMatrix)
+                    CALL EvaluateJacobian(r(i),theta(j),phi(k),JMatrix)
 
                     crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
                    
@@ -327,8 +321,8 @@
                     ! Get alpha
                     ! alpha = sqrt( beta^i beta_i - g_00 )
                     ! beta^r = betaR, beta^th = betaTh, beta^phi = betaPhi, gsph(1,1) = g_00
-                    alpha(crow) = SQRT( gsph(1,2) * betaR(crow) + gsph(1,3) * betaTh(crow) + gsph(1,4) * betaPhi(crow) )&
-                                & - gsph(1,1)
+                    alpha(crow) = SQRT( gsph(1,2) * betaR(crow) + gsph(1,3) * betaTh(crow) + gsph(1,4) * betaPhi(crow) &
+                                & - gsph(1,1) )
 
                 END DO
             END DO

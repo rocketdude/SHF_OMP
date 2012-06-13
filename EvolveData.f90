@@ -25,35 +25,35 @@
 !     Declare calling variables                          !
 !--------------------------------------------------------!
 
-        INTEGER*4, INTENT(in)  :: M, Mr, NP, Lmax
+        INTEGER*4               :: M, Mr, NP, Lmax
 
-        REAL*8, INTENT(in)   :: rootsign
-        REAL*8, INTENT(in)   :: rmin
-        REAL*8, INTENT(in)   :: rmax
+        REAL*8                  :: rootsign
+        REAL*8                  :: rmin
+        REAL*8                  :: rmax
 
-        REAL*8, INTENT(in)   :: alpha(4*NP)
-        REAL*8, INTENT(in)   :: betaR(4*NP)
-        REAL*8, INTENT(in)   :: betaTh(4*NP)
-        REAL*8, INTENT(in)   :: betaPhi(4*NP)
+        REAL*8                  :: alpha(4*NP)
+        REAL*8                  :: betaR(4*NP)
+        REAL*8                  :: betaTh(4*NP)
+        REAL*8                  :: betaPhi(4*NP)
 
-        REAL*8, INTENT(in)   :: gRR(4*NP)
-        REAL*8, INTENT(in)   :: gThTh(4*NP)
-        REAL*8, INTENT(in)   :: gPhiPhi(4*NP)
+        REAL*8                  :: gRR(4*NP)
+        REAL*8                  :: gThTh(4*NP)
+        REAL*8                  :: gPhiPhi(4*NP)
 
-        REAL*8, INTENT(in)   :: gRTh(4*NP)
-        REAL*8, INTENT(in)   :: gRPhi(4*NP)
-        REAL*8, INTENT(in)   :: gThPhi(4*NP)
+        REAL*8                  :: gRTh(4*NP)
+        REAL*8                  :: gRPhi(4*NP)
+        REAL*8                  :: gThPhi(4*NP)
 
-        REAL*8, INTENT(in)   :: dt
-        REAL*8, INTENT(in)   :: F(NP)
-        COMPLEX*16, INTENT(in)  :: AF(4*NP,NP)
-        COMPLEX*16, INTENT(in)  :: AFinv(NP, 4*NP)
-        COMPLEX*16, INTENT(in)  :: Dth(4*NP,NP)
-        COMPLEX*16, INTENT(in)  :: Dphi(4*NP,NP)
+        REAL*8                  :: dt
+        REAL*8                  :: F(NP)
+        COMPLEX*16              :: AF(4*NP,NP)
+        COMPLEX*16              :: AFinv(NP, 4*NP)
+        COMPLEX*16              :: Dth(4*NP,NP)
+        COMPLEX*16              :: Dphi(4*NP,NP)
 
-        COMPLEX*16, INTENT(inout)  :: a(NP)
+        COMPLEX*16              :: a(NP)
 
-        COMPLEX*16      SphHarmonicY
+        COMPLEX*16                 SphHarmonicY
 
 !--------------------------------------------------------!
 !     Declare Locals                                     !

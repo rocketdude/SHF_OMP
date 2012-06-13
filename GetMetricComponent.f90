@@ -31,7 +31,6 @@
 
         USE omp_lib
         USE HDF5
-        !USE H5LT
         USE DynMetricArray
 
         IMPLICIT  none
@@ -40,21 +39,21 @@
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-        INTEGER*4, INTENT(in)       :: M, Mr, NP
-        INTEGER*4, INTENT(in)       :: CFLEN1, CFLEN2
-        INTEGER*4, INTENT(in)       :: iter         !iteration number in the CarpetCode simulation (iter != it)
-        INTEGER*4, INTENT(in)       :: nchunks      !number of chunks
-        INTEGER*4, INTENT(in)       :: DATASETFLAG
+        INTEGER*4                   :: M, Mr, NP
+        INTEGER*4                   :: CFLEN1, CFLEN2
+        INTEGER*4                   :: iter         !iteration number in the CarpetCode simulation (iter != it)
+        INTEGER*4                   :: nchunks      !number of chunks
+        INTEGER*4                   :: DATASETFLAG
 
-        INTEGER(HSIZE_T), INTENT(in):: bufsize(3)        
+        INTEGER(HSIZE_T)            :: bufsize(3)        
 
-        REAL*8, INTENT(in)          :: r(Mr+1)
-        REAL*8, INTENT(in)          :: theta(2*M)
-        REAL*8, INTENT(in)          :: phi(2*M)
+        REAL*8                      :: r(Mr+1)
+        REAL*8                      :: theta(2*M)
+        REAL*8                      :: phi(2*M)
 
-        CHARACTER*32, INTENT(in)    :: Filename10
-        CHARACTER*32, INTENT(in)    :: Filename9
-        CHARACTER*32, INTENT(in)    :: Filename8
+        CHARACTER*32                :: Filename10
+        CHARACTER*32                :: Filename9
+        CHARACTER*32                :: Filename8
 
         REAL*8, INTENT(out)         :: MetricData(4*NP)
 
@@ -258,6 +257,7 @@
 
         CALL ReadHDF5MetricData(&
                 &Filename10, dataset10,&
+                &DATASETFLAG,&
                 &CFLEN2, CDLEN2,&
                 &nchunks,&
                 &bufsize,&
@@ -281,6 +281,7 @@
 
         CALL ReadHDF5MetricData(&
                 &Filename9, dataset9,&
+                &DATASETFLAG,&
                 &CFLEN1, CDLEN1,&
                 &nchunks,&
                 &bufsize,&
@@ -304,6 +305,7 @@
 
         CALL ReadHDF5MetricData(&
                 &Filename8, dataset8,&
+                &DATASETFLAG,&
                 &CFLEN1, CDLEN1,&
                 &nchunks,&
                 &bufsize,&
@@ -431,7 +433,7 @@
         !$OMP END PARALLEL DO
 
         ELSE
-        PRINT *, 'ERROR in reading the metric data'
+            PRINT *, 'ERROR in reading the metric data'
         END IF
 
         DEALLOCATE( metric10 )
