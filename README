@@ -24,3 +24,8 @@ Event Horizon Finder using Pseudospectral methods.
                     The former is more robust because it is compatible with
                     HDF5 version 1.6.x (on Ranger)
 
+06/13/2012
+-       Added temporal metric interpolation routine to satisfy Courant's condition
+-       Allowed for pi-symmetry in HDF5 metric data
+-       New SSPRK routine: SSPRK(5,4) which has larger cfl value
+
