@@ -4,11 +4,10 @@
 
     SUBROUTINE GetMetricComponent(&
     &M, Mr, NP,&
-    &CFLEN2, CFLEN1,&
     &bufsize,&
     &iter, nchunks,&
     &DATASETFLAG,&
-    &Filename10, Filename9, Filename8,&
+    &Filename&
     &r, theta, phi,&
     &MetricData)
 
@@ -41,7 +40,6 @@
 !-----------------------------------------------------------!
 
         INTEGER*4                   :: M, Mr, NP
-        INTEGER*4                   :: CFLEN1, CFLEN2
         INTEGER*4                   :: iter         !iteration number in the CarpetCode simulation (iter != it)
         INTEGER*4                   :: nchunks      !number of chunks
         INTEGER*4                   :: DATASETFLAG
@@ -52,9 +50,7 @@
         REAL*8                      :: theta(2*M)
         REAL*8                      :: phi(2*M)
 
-        CHARACTER*32                :: Filename10
-        CHARACTER*32                :: Filename9
-        CHARACTER*32                :: Filename8
+        CHARACTER*32                :: Filename(nchunks)
 
         REAL*8, INTENT(out)         :: MetricData(4*NP)
 
@@ -74,8 +70,6 @@
         CHARACTER*100               dataset10(nchunks)
         CHARACTER*100               dataset9(nchunks)
         CHARACTER*100               dataset8(nchunks)
-        INTEGER*4                   CDLEN2(nchunks)
-        INTEGER*4                   CDLEN1(nchunks)
 
         INTEGER*4                   Ox10, Oy10, Oz10    !Index for the origin for rl=10
         INTEGER*4                   Ox9, Oy9, Oz9       !Index for the origin for rl=9
@@ -110,10 +104,6 @@
         !Allocation status
         INTEGER*4                   error
 
-        !Conformal metric data  
-        REAL*8                      mass
-
-        CHARACTER*32                CTemp
 !----------------------------------------------------------!
 !      Main                                                !
 !----------------------------------------------------------!
@@ -125,43 +115,27 @@
 
             IF( (DATASETFLAG .GE. 0) .AND. (DATASETFLAG .LE. 3) ) THEN
                 IF( (cnum .LE. 10) .AND. (iter .LT. 10) ) THEN
-                    CDLEN2(cnum) = 24+1+14+1
-                    CDLEN1(cnum) = 24+1+13+1
                     format_string2 = '(A24,I1,A14,I1)'
                     format_string1 = '(A24,I1,A13,I1)'
                 ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 10) .AND. (iter .LT. 100) ) THEN
-                    CDLEN2(cnum) = 24+2+14+1
-                    CDLEN1(cnum) = 24+2+13+1
                     format_string2 = '(A24,I2,A14,I1)'
                     format_string1 = '(A24,I2,A13,I1)'
                 ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 1000) ) THEN
-                    CDLEN2(cnum) = 24+3+14+1
-                    CDLEN1(cnum) = 24+3+13+1
                     format_string2 = '(A24,I3,A14,I1)'
                     format_string1 = '(A24,I3,A13,I1)'
                 ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 10000) ) THEN
-                    CDLEN2(cnum) = 24+4+14+1
-                    CDLEN1(cnum) = 24+4+13+1
                     format_string2 = '(A24,I4,A14,I1)'
                     format_string1 = '(A24,I4,A13,I1)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .LT. 10) ) THEN
-                    CDLEN2(cnum) = 24+1+14+2
-                    CDLEN1(cnum) = 24+1+13+2
                     format_string2 = '(A24,I1,A14,I2)'
                     format_string1 = '(A24,I1,A13,I2)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 10) .AND. (iter .LT. 100) ) THEN
-                    CDLEN2(cnum) = 24+2+14+2
-                    CDLEN1(cnum) = 24+2+13+2
                     format_string2 = '(A24,I2,A14,I2)'
                     format_string1 = '(A24,I2,A13,I2)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 1000) ) THEN
-                    CDLEN2(cnum) = 24+3+14+2
-                    CDLEN1(cnum) = 24+3+13+2
                     format_string2 = '(A24,I3,A14,I2)'
                     format_string1 = '(A24,I3,A13,I2)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 10000) ) THEN
-                    CDLEN2(cnum) = 24+4+14+2
-                    CDLEN1(cnum) = 24+4+13+2
                     format_string2 = '(A24,I4,A14,I2)'
                     format_string1 = '(A24,I4,A13,I2)'
                 END IF
@@ -185,43 +159,27 @@
                 END IF
             ELSE
                 IF( (cnum .LE. 10) .AND. (iter .LT. 10) ) THEN
-                    CDLEN2(cnum) = 16+1+14+1
-                    CDLEN1(cnum) = 16+1+13+1
                     format_string2 = '(A16,I1,A14,I1)'
                     format_string1 = '(A16,I1,A13,I1)'
                 ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 10) .AND. (iter .LT. 100) ) THEN
-                    CDLEN2(cnum) = 16+2+14+1
-                    CDLEN1(cnum) = 16+2+13+1
                     format_string2 = '(A16,I2,A14,I1)'
                     format_string1 = '(A16,I2,A13,I1)'
                 ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 1000) ) THEN
-                    CDLEN2(cnum) = 16+3+14+1
-                    CDLEN1(cnum) = 16+3+13+1
                     format_string2 = '(A16,I3,A14,I1)'
                     format_string1 = '(A16,I3,A13,I1)'
                 ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 10000) ) THEN
-                    CDLEN2(cnum) = 16+4+14+1
-                    CDLEN1(cnum) = 16+4+13+1
                     format_string2 = '(A16,I4,A14,I1)'
                     format_string1 = '(A16,I4,A13,I1)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .LT. 10) ) THEN
-                    CDLEN2(cnum) = 16+1+14+2
-                    CDLEN1(cnum) = 16+1+13+2
                     format_string2 = '(A16,I1,A14,I2)'
                     format_string1 = '(A16,I1,A13,I2)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 10) .AND. (iter .LT. 100) ) THEN
-                    CDLEN2(cnum) = 16+2+14+2
-                    CDLEN1(cnum) = 16+2+13+2
                     format_string2 = '(A16,I2,A14,I2)'
                     format_string1 = '(A16,I2,A13,I2)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 1000) ) THEN
-                    CDLEN2(cnum) = 16+3+14+2
-                    CDLEN1(cnum) = 16+3+13+2
                     format_string2 = '(A16,I3,A14,I2)'
                     format_string1 = '(A16,I3,A13,I2)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 10000) ) THEN
-                    CDLEN2(cnum) = 16+4+14+2
-                    CDLEN1(cnum) = 16+4+13+2
                     format_string2 = '(A16,I4,A14,I2)'
                     format_string1 = '(A16,I4,A13,I2)'
                 END IF
@@ -260,9 +218,8 @@
         !----------------------------------------------------------!
 
         CALL ReadHDF5MetricData(&
-                &Filename10, dataset10,&
+                &Filename, dataset10,&
                 &DATASETFLAG,&
-                &CFLEN2, CDLEN2,&
                 &nchunks,&
                 &bufsize,&
                 &Xmin10, Ymin10, Zmin10,&
@@ -284,9 +241,8 @@
         !----------------------------------------------------------!
 
         CALL ReadHDF5MetricData(&
-                &Filename9, dataset9,&
+                &Filename, dataset9,&
                 &DATASETFLAG,&
-                &CFLEN1, CDLEN1,&
                 &nchunks,&
                 &bufsize,&
                 &Xmin9, Ymin9, Zmin9,&
@@ -308,9 +264,8 @@
         !----------------------------------------------------------!
 
         CALL ReadHDF5MetricData(&
-                &Filename8, dataset8,&
+                &Filename, dataset8,&
                 &DATASETFLAG,&
-                &CFLEN1, CDLEN1,&
                 &nchunks,&
                 &bufsize,&
                 &Xmin8, Ymin8, Zmin8,&

@@ -29,3 +29,7 @@ Event Horizon Finder using Pseudospectral methods.
 -       Allowed for pi-symmetry in HDF5 metric data
 -       New SSPRK routine: SSPRK(5,4) which has larger cfl value
 
+09/05/2012
+-       Fixed bug in getting metric data
+-       Made the functions that get and read the metric data much nicer; 
+        there's no need for using the HDF5 tools
