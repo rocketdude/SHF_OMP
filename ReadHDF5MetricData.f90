@@ -177,10 +177,11 @@
             !Close the file
             CALL h5fclose_f(file_id, hdferr)
             IF( hdferr .NE. 0 ) STOP "*** ERROR in closing hdf file ***"
-            CALL h5close_f( hdferr )
 
         END DO
-       
+        !Close the HDF5 fortran environment
+        CALL h5close_f( hdferr )
+
         !PROCESS THE DATA
         DO i = 1,3
             !Find the left-bottom corner (minimum index)

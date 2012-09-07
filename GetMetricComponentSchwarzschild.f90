@@ -7,7 +7,7 @@
     &bufsize,&
     &iter, nchunks,&
     &DATASETFLAG,&
-    &Filename&
+    &Filename,&
     &r, theta, phi,&
     &MetricData)
 
@@ -30,7 +30,6 @@
 
         USE omp_lib
         USE HDF5
-        !USE H5LT
         USE DynMetricArray
 
         IMPLICIT  none
@@ -282,12 +281,6 @@
         DEALLOCATE( hdfmetric, STAT=error )
         IF( error .NE. 0 ) STOP "*** Trouble deallocating ***" 
 
-        CALL OutputMetric(dims8(1), dims8(2), dims8(3), metric8, 0, DATASETFLAG)
-
-        IF( DATASETFLAG .EQ. 9 ) THEN
-            CTemp = 'gyz0.dat'
-            CALL Write3D(dims8(1), dims8(2), dims8(3), metric8, CTemp)
-        END IF
         !----------------------------------------------------------!
         !      Interpolate metric using                            !
         !      Lekien-Marsden tricubic interpolation routine       !

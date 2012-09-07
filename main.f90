@@ -176,14 +176,14 @@
     SFLAG = 0                       !If SFLAG = 1, we are continuing previous run: change t, Startit and aFile
     t = -8.1617491479814266D0       !Last time from previous run
     Startit = 6751                  !Startit = last iteration + 1
-    Maxit = 12000
+    Maxit = 5000
     aFile = 'a10.dat'
 
     IF( SFLAG .EQ. 0 ) THEN
        t  = 0.0D0                   !Initial time
        Startit = 1                  !Starting from iteration 1
     END IF
-    R0 = 0.52D0                     !Initial radius of the null surface
+    R0 = 0.99D0                     !Initial radius of the null surface
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, and negative tdir give EH finder
@@ -200,7 +200,11 @@
                                     !IFLAG = 1 ==> read AFinv from AFinv.dat
                                     !IFLAG = -1 ==> calculate AFinv and write it into AFinv.dat
     !Note:LWORK needs to be changed everytime we change M or Mr, AFinv has to be recalculated
-    LWORK = 42617152                !Optimized size of the WORK matrix, Put LWORK = -1 to query for the optimal size
+    LWORK = 7139904                 !Optimized size of the WORK matrix, Put LWORK = -1 to query for the optimal size
+                                    !Some optimized values for LWORK:
+                                    !If Mr=40 & M=8, LWORK=7139904
+                                    !If Mr=100 & M=8, LWORK=42617152
+                                    !If Mr=100 & M=2, LWORK=189880
 
     !Spherical grid parameters
     rmax = 1.10D0                   !maximum value of r
@@ -213,8 +217,8 @@
     bufsize(3) = 50
     dt_data = 5.00D-2               !Size of time step specified by the data
     !dt = 0.0125 but rl=8 is only updated once every four iterations, so dt = 0.050
-    it_data_max = 2000
-    it_data_min = 0
+    it_data_max = 8000
+    it_data_min = 6000
     delta_it_data = 4
 
     !Schwarzschild metric parameter (preliminary tests only)
