@@ -299,7 +299,6 @@
             END DO
         END IF
 
-        PRINT *, 'ReflectWhichWay =', ReflectWhichWay
         !Because this is a 180 degrees symmetry, one of ReflectWhichWay must be 0
         Vector = .FALSE.
         IF( (DATASETFLAG .GE. 1) .AND. (DATASETFLAG .LE. 3) ) Vector = .TRUE.

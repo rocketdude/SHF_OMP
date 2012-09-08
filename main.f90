@@ -14,7 +14,7 @@
 
     IMPLICIT           none
 
-    INTEGER*4, PARAMETER ::        Mr = 100
+    INTEGER*4, PARAMETER ::        Mr = 40
     INTEGER*4, PARAMETER ::        M = 8
     INTEGER*4, PARAMETER ::        NP = (Mr+1)*(M*M)
 
@@ -211,7 +211,7 @@
     rmin = 0.0D0                    !minimum value of r
 
     !Parameters related to reading HDF5 files--do h5dump to check these
-    nchunks = 12
+    nchunks = 4
     bufsize(1) = 50                 !Buffer size; has to be bigger than the size of each dataset
     bufsize(2) = 50
     bufsize(3) = 50
@@ -230,7 +230,7 @@
 
     WriteUit = 10
     WriteSit = 10000
-    Writeait = 10000
+    Writeait = 500
 
 !--------------------------------------------------------!
 !     Echo certain parameters                            !
@@ -315,6 +315,7 @@
     Maxit_allowed = INT( DBLE((it_data_max - it_data_min)/delta_it_data + 1) * ( dt_data/dt ) )
     PRINT *, 'Maximum of iterations allowed =', Maxit_allowed
     IF( (Maxit-Startit+1) .GT. Maxit_allowed ) STOP "***Not enough metric data for the # of iterations***"
+    PRINT *, 'Number of metric data chunks =', nchunks
 
     CALL GetMatrices(& 
          & M, Mr, NP, Lmax, LWORK, IFLAG,&
