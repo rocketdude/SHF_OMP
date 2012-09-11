@@ -5,7 +5,7 @@ PROG = SHF
 
 MODS = DynMetricArray.mod
 #Place objects related to modules first
-OBJS = DynMetricArray.o IO.o main.o EvaluatedSdr.o EvaluateJacobian.o EvaluateMatrixofMetric.o EvolveData.o FindU.o Functions.o GetFilter.o GetInitialData.o GetMatrices.o GetMetric.o GetMetricComponent.o GetSchwarzschildMetric.o Invert3Metric.o progress.o ReadHDF5MetricData.o ReinitializeData.o SphHarmonicY.o Spline.o TemporalMetricInterpolation.o TricubicInterpolation.o
+OBJS = DynMetricArray.o IO.o main.o EvaluatedSdr.o EvaluateJacobian.o EvaluateMatrixofMetric.o EvolveData.o FindU.o Functions.o GetFilter.o GetInitialData.o GetMatrices.o GetMetric.o GetMetricComponent.o GetSchwarzschildMetric.o Invert3Metric.o progress.o ReadHDF5MetricData.o ReinitializeData.o OneDimensionalInterpolation.o SphHarmonicY.o TemporalMetricInterpolation.o TricubicInterpolation.o
 
 F90 = h5fc
 CC = h5c++

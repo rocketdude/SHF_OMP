@@ -17,11 +17,13 @@
     INTEGER*4, PARAMETER ::        Mr = 40
     INTEGER*4, PARAMETER ::        M = 8
     INTEGER*4, PARAMETER ::        NP = (Mr+1)*(M*M)
+    INTEGER*4, PARAMETER ::        TempO = 4
 
     ! Mr is the degree of the radial Chebyshev polynomial
     ! M is the degree of angular spherical harmonics with maximum L = M-1
     ! M has to be multiples of two
     ! NP is the number of coefficients, 4*NP is the number of collocation points
+    ! TempO is the temporal interpolation order
 
     REAL*8, PARAMETER ::         PI = 3.141592653589793238462643383279502884197D0
 
@@ -215,8 +217,8 @@
     bufsize(1) = 50                 !Buffer size; has to be bigger than the size of each dataset
     bufsize(2) = 50
     bufsize(3) = 50
-    dt_data = 5.00D-2               !Size of time step specified by the data
-    !dt = 0.0125 but rl=8 is only updated once every four iterations, so dt = 0.050
+    dt_data = 2.50D-2               !Size of time step specified by the data
+    !dt = 0.00625 but rl=8 is only updated once every four iterations, so dt = 0.025
     it_data_max = 8000
     it_data_min = 6000
     delta_it_data = 4

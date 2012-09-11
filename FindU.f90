@@ -81,7 +81,7 @@
              
              !Calculate the second derivatives and store it into U_r2
 
-             CALL SPLINE_CUBIC_SET( Mr+1, r, U_r, 0, 0.0D0, 0, 0.0D0, U_r2 )
+             CALL ComputeSpline2ndDeriv(r, U_r, Mr+1, 1.0D31, 1.0D31, U_r2) !Natural cubic spline
 
              !Find ilow and ilow+1 which are the indices that bound where S100 is located
              flag = 0
@@ -103,13 +103,7 @@
              deltar = (r(ilow+1) - r(ilow))/DBLE(SP-1)
              DO i = 1, SP
                 rr(i) = r(ilow) + DBLE(i-1)*deltar
-                ilow2 = ilow
-                CALL SPLINE_CUBIC_VAL2( Mr+1, r, U_r, U_r2, ilow2, rr(i), UU(i), Temp, Temp)
-
-                IF( ilow .NE. ilow2) THEN
-                   PRINT *, 'Error in cubic spline'
-                   STOP
-                END IF
+                CALL CubicSplineInterpolation(r, U_r, U_r2, ilow, Mr+1, rr(i), UU(i))
 
              END DO
 
