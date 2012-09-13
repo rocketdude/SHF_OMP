@@ -185,13 +185,13 @@
     aFile = 'a10.dat'
 
     !Termination conditions
-    Maxit = 11000
-    tfinal = 0.0D0
+    Maxit = 22000
+    tfinal = 12.5D0
 
     IF( SFLAG .EQ. 0 ) THEN
        Startit = 1                  !Starting from iteration 1
     END IF
-    R0 = 0.99D0                     !Initial radius of the null surface
+    R0 = 0.975D0                    !Initial radius of the null surface
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, and negative tdir give EH finder
@@ -215,8 +215,8 @@
                                     !If Mr=100 & M=2, LWORK=189880
 
     !Spherical grid parameters
-    rmax = 1.10D0                   !maximum value of r
-    rmin = 0.0D0                    !minimum value of r
+    rmax = 1.20D0                   !maximum value of r
+    rmin = 0.20D0                   !minimum value of r
 
     !Parameters related to reading HDF5 files--do h5dump to check these
     nchunks = 4
@@ -224,7 +224,7 @@
     bufsize(2) = 50
     bufsize(3) = 50
     it_data_max = 8000
-    it_data_min = 6000
+    it_data_min = 2000
     delta_it_data = 4
 
     !Schwarzschild metric parameter (preliminary tests only)
