@@ -27,7 +27,6 @@ OBJS = DynMetricArray.o \
        ReadHDF5MetricData.o \
        ReinitializeData.o \
        SphHarmonicY.o \
-       TemporalMetricInterpolation.o \
        TricubicInterpolation.o
 
 F90 = h5fc

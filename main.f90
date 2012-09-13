@@ -72,6 +72,7 @@
     ! We only use half of the theta coordinates for the collocation points
 
     REAL*8            t           !Current time
+    REAL*8            tfinal      !Final time
     REAL*8            tdir        !Direction of time (+1 for forward, -1 for backward)
     REAL*8            dt          !Time increment
     REAL*8            dx          !Smallest distance between two points (used to determine dt)
@@ -181,8 +182,11 @@
     SFLAG = 0                       !If SFLAG = 1, we are continuing previous run: change t, Startit and aFile
     t = -8.1617491479814266D0       !Last time from previous run
     Startit = 6751                  !Startit = last iteration + 1
-    Maxit = 5000
     aFile = 'a10.dat'
+
+    !Termination conditions
+    Maxit = 11000
+    tfinal = 0.0D0
 
     IF( SFLAG .EQ. 0 ) THEN
        Startit = 1                  !Starting from iteration 1
@@ -304,8 +308,7 @@
 !!$    END IF
 
     dt = tdir * cfl * dx
-    dt_data = tdir * ABS(dt_data)
-
+    
 !--------------------------------------------------------!
 !     Initial Data                                       !
 !--------------------------------------------------------!
@@ -313,10 +316,6 @@
     PRINT *, '==============================='
     PRINT *, 'INITIALIZING PROGRAM'
 
-    !Make sure that we have enough metric data for the amount of iterations
-    Maxit_allowed = INT( DBLE((it_data_max - it_data_min)/delta_it_data + 1) * ( dt_data/dt ) )
-    PRINT *, 'Maximum of iterations allowed =', Maxit_allowed
-    IF( (Maxit-Startit+1) .GT. Maxit_allowed ) STOP "***Not enough metric data for the # of iterations***"
     PRINT *, 'Number of metric data chunks =', nchunks
 
     CALL GetMatrices(& 
@@ -378,6 +377,8 @@
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
        WRITE(7,*) R0
        CLOSE(7)
+    ELSE IF( SFLAG .EQ. 1 ) THEN
+        t = t+dt
     END IF
 
     !Initializes read metric logics
@@ -386,7 +387,7 @@
     END DO
 
     readdata = 0
-    t_thres  = 1.0D30
+    t_thresh = 1.0D30
 
     PRINT *, '==============================='
     PRINT *, 'START MAIN PROGRAM'
@@ -398,8 +399,8 @@
        !--------------------------------------------------------!
 
         IF ( t .LT. t_thresh ) THEN
-            readdata = MAXLOC(it_data)
-            it_data_test = MIN(it_data) - delta_it_data
+            readdata = MAXLOC(it_data,1)
+            it_data_test = MINVAL(it_data) - delta_it_data
 
             IF (it_data_test .LT. it_data_min) THEN
                 readdata = -1
@@ -485,6 +486,12 @@
        PRINT *, '------------------'
 
        t = t+dt
+
+       IF( ((t .LT. tfinal) .AND. (tdir .LT. 0.0D0)) .OR.&
+          &((t .GT. tfinal) .AND. (tdir .GT. 0.0D0)) ) THEN
+           CALL Writea(NP, a, it)
+           EXIT
+       END IF
 
     END DO mainloop
 

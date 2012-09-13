@@ -29,6 +29,7 @@
 
     INTEGER*4               M, Mr, NP, TP
     INTEGER*4               nchunks
+    INTEGER*4               readdata
     REAL*8                  t
     REAL*8                  t_thresh
     REAL*8                  t_data(TP)
@@ -97,9 +98,9 @@
 
         END DO
 
-        t = MAX(t_data)
-        t_thresh = MIN(t_data) + &
-                 & (MAX(t_data) - MIN(t_data))*DBLE(TP-2)/DBLE(2*(TP-1))
+        t = MAXVAL(t_data)
+        t_thresh = MINVAL(t_data) + &
+                 & (MAXVAL(t_data) - MINVAL(t_data))*DBLE(TP-2)/DBLE(2*(TP-1))
 
     ELSEIF (readdata .GT. 0 ) THEN
         
@@ -116,8 +117,8 @@
         &BgRR(i,:), BgThTh(i,:), BgPhiPhi(i,:),&
         &BgRTh(i,:), BgRPhi(i,:), BgThPhi(i,:))
 
-        t_thresh = MIN(t_data) + &
-                 & (MAX(t_data) - MIN(t_data))*DBLE(TP-2)/DBLE(2*(TP-1))
+        t_thresh = MINVAL(t_data) + &
+                 & (MAXVAL(t_data) - MINVAL(t_data))*DBLE(TP-2)/DBLE(2*(TP-1))
 
     END IF
 
