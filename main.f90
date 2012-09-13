@@ -78,6 +78,7 @@
     REAL*8            dx          !Smallest distance between two points (used to determine dt)
     REAL*8            rdtheta     !Smallest distance in the theta direction
     REAL*8            rsinthdphi  !Smallest distance in the phi direction
+    REAL*8            walltime_start, walltime_stop  !used for calculating the total wall time
     REAL*8            cputime_start, cputime_stop    !used for calculating the program speed
     REAL*8            eps         !Machine epsilon (needs to be calculated before running this)
     REAL*8            rootsign    !Choose the sign of the root (+/-)
@@ -259,6 +260,7 @@
 !--------------------------------------------------------!	  
 
     CALL cpu_time( cputime_start )
+    walltime_start = OMP_GET_WTIME()
 
 !--------------------------------------------------------!
 !     Creating mesh & Inquiring Threads                  !
@@ -504,7 +506,9 @@
 !--------------------------------------------------------!
 
     CALL cpu_time( cputime_stop )
+    walltime_stop = OMP_GET_WTIME()
     WRITE(*,*) 'Elapsed CPU Time = ', cputime_stop - cputime_start
+    WRITE(*,*) 'Elapse Walltime = ', walltime_stop - walltime_start
 
     STOP
   END PROGRAM SHF
