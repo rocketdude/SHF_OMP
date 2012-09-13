@@ -204,7 +204,7 @@
     tdir = -1.0D0                   !Direction of time, choose +1.0D0 or -1.0D0
     reinit = 15
 
-    IFLAG = 1                       !IFLAG = 0 ==> calculate AFinv (slow)
+    IFLAG =-1                       !IFLAG = 0 ==> calculate AFinv (slow)
                                     !IFLAG = 1 ==> read AFinv from AFinv.dat
                                     !IFLAG = -1 ==> calculate AFinv and write it into AFinv.dat
     !Note:LWORK needs to be changed everytime we change M or Mr, AFinv has to be recalculated
@@ -387,7 +387,7 @@
     END DO
 
     readdata = 0
-    t_thresh = 1.0D30
+    t_thresh = tdir * ABS(1.0D30)
 
     PRINT *, '==============================='
     PRINT *, 'START MAIN PROGRAM'
@@ -398,7 +398,8 @@
        !     Read Metric and Evolve Data                        !
        !--------------------------------------------------------!
 
-        IF ( t .LT. t_thresh ) THEN
+        IF ( ((tdir .LT. 0.0D0) .AND. (t .LT. t_thresh)) &
+             ((tdir .GT. 0.0D0) .AND. (t .GT. t_thresh)) THEN
             readdata = MAXLOC(it_data,1)
             it_data_test = MINVAL(it_data) - delta_it_data
 
@@ -412,7 +413,7 @@
         CALL GetMetricAtCurrentTime(&
              &M, Mr, NP, TP,&
              &readdata,&
-             &t, t_thresh,&
+             &t, t_thresh, tdir,&
              &t_data, it_data,&    
              &nchunks,&
              &bufsize,&

@@ -5,7 +5,7 @@
     SUBROUTINE GetMetricAtCurrentTime(&
     &M, Mr, NP, TP,&
     &readdata,&
-    &t, t_thresh,&
+    &t, t_thresh, tdir,&
     &t_data, it_data,&    
     &nchunks,&
     &bufsize,&
@@ -98,9 +98,19 @@
 
         END DO
 
-        t = MAXVAL(t_data)
-        t_thresh = MINVAL(t_data) + &
-                 & (MAXVAL(t_data) - MINVAL(t_data))*DBLE(TP-2)/DBLE(2*(TP-1))
+        IF( tdir .LT. 0.0D0 ) THEN
+        
+            t = MAXVAL(t_data)
+            t_thresh = MINVAL(t_data) + &
+                    & (MAXVAL(t_data) - MINVAL(t_data))*DBLE(TP-2)/DBLE(2*(TP-1))
+    
+        ELSEIF( tdir .GT. 0.0D0 ) THEN
+        
+            t = MINVAL(t_data)
+            t_thresh = MAXVAL(t_data) - &
+                    & (MAXVAL(t_data) - MINVAL(t_data))*DBLE(TP-2)/DBLE(2*(TP-1))
+
+        END IF
 
     ELSEIF (readdata .GT. 0 ) THEN
         
@@ -117,8 +127,17 @@
         &BgRR(i,:), BgThTh(i,:), BgPhiPhi(i,:),&
         &BgRTh(i,:), BgRPhi(i,:), BgThPhi(i,:))
 
-        t_thresh = MINVAL(t_data) + &
-                 & (MAXVAL(t_data) - MINVAL(t_data))*DBLE(TP-2)/DBLE(2*(TP-1))
+        IF( tdir .LT. 0.0D0 ) THEN
+        
+            t_thresh = MINVAL(t_data) + &
+                    & (MAXVAL(t_data) - MINVAL(t_data))*DBLE(TP-2)/DBLE(2*(TP-1))
+    
+        ELSEIF( tdir .GT. 0.0D0 ) THEN
+        
+            t_thresh = MAXVAL(t_data) - &
+                    & (MAXVAL(t_data) - MINVAL(t_data))*DBLE(TP-2)/DBLE(2*(TP-1))
+
+        END IF
 
     END IF
 
