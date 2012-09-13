@@ -31,6 +31,7 @@
     INTEGER*4               nchunks
     INTEGER*4               readdata
     REAL*8                  t
+    REAL*8                  tdir
     REAL*8                  t_thresh
     REAL*8                  t_data(TP)
     INTEGER*4               it_data(TP)

@@ -398,8 +398,8 @@
        !     Read Metric and Evolve Data                        !
        !--------------------------------------------------------!
 
-        IF ( ((tdir .LT. 0.0D0) .AND. (t .LT. t_thresh)) &
-             ((tdir .GT. 0.0D0) .AND. (t .GT. t_thresh)) THEN
+        IF ( ((tdir .LT. 0.0D0) .AND. (t .LT. t_thresh)) .OR. &
+            &((tdir .GT. 0.0D0) .AND. (t .GT. t_thresh)) ) THEN
             readdata = MAXLOC(it_data,1)
             it_data_test = MINVAL(it_data) - delta_it_data
 
