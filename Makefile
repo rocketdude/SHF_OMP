@@ -3,7 +3,7 @@
 
 PROG = SHF
 
-MODS = DynMetricArray.mod
+MODS = dynmetricarray.mod
 #Place objects related to modules first
 OBJS = DynMetricArray.o \
        IO.o \
@@ -14,7 +14,7 @@ OBJS = DynMetricArray.o \
        EvolveData.o \
        FindU.o \
        Functions.o \
-       GetAllMetricComponents.f90 \
+       GetAllMetricComponents.o \
        GetFilter.o \
        GetInitialData.o \
        GetMatrices.o \

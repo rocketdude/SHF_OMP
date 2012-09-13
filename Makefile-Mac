@@ -14,7 +14,7 @@ OBJS = DynMetricArray.o \
        EvolveData.o \
        FindU.o \
        Functions.o \
-       GetAllMetricComponents.f90 \
+       GetAllMetricComponents.o \
        GetFilter.o \
        GetInitialData.o \
        GetMatrices.o \
