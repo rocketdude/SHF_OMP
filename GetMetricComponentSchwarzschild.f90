@@ -5,6 +5,7 @@
     SUBROUTINE GetMetricComponent(&
     &M, Mr, NP,&
     &bufsize,&
+    &time,&
     &iter, nchunks,&
     &DATASETFLAG,&
     &Filename,&
@@ -52,6 +53,7 @@
         CHARACTER*32                :: Filename(nchunks)
 
         REAL*8, INTENT(out)         :: MetricData(4*NP)
+        REAL*8, INTENT(out)         :: time
 
 !-----------------------------------------------------------!
 !       Declare local variables                             !
@@ -82,7 +84,9 @@
         REAL*8                      Xmax8, Ymax8, Zmax8
         REAL*8                      delta10(3)          !Spatial discretization for rl=10
         REAL*8                      delta9(3)           !Spatial discretization for rl=9
-        REAL*8                      delta8(3)           !Spatial discretization for rl=9
+        REAL*8                      delta8(3)           !Spatial discretization for rl=8
+        REAL*8                      time10, time9, time8
+
 
         !Used for tricubic interpolation
         LOGICAL                     Inside10
@@ -220,6 +224,7 @@
                 &Filename, dataset10,&
                 &DATASETFLAG,&
                 &nchunks,&
+                &time10,&
                 &bufsize,&
                 &Xmin10, Ymin10, Zmin10,&
                 &Xmax10, Ymax10, Zmax10,&
@@ -243,6 +248,7 @@
                 &Filename, dataset9,&
                 &DATASETFLAG,&
                 &nchunks,&
+                &time9,&
                 &bufsize,&
                 &Xmin9, Ymin9, Zmin9,&
                 &Xmax9, Ymax9, Zmax9,&
@@ -266,6 +272,7 @@
                 &Filename, dataset8,&
                 &DATASETFLAG,&
                 &nchunks,&
+                &time8,&
                 &bufsize,&
                 &Xmin8, Ymin8, Zmin8,&
                 &Xmax8, Ymax8, Zmax8,&
@@ -285,7 +292,13 @@
         !      Interpolate metric using                            !
         !      Lekien-Marsden tricubic interpolation routine       !
         !----------------------------------------------------------!
-        
+
+        IF( (time10 .NE. time9) .OR. (time10 .NE. time8) ) THEN
+            STOP "***ERROR*** Time discrepancy"
+        ELSE
+            time = time10
+        END IF
+
         IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) .AND. ALLOCATED(metric8) ) THEN
         !$OMP PARALLEL DO &
         !$OMP &PRIVATE(j, k, crow, x, y, z, Inside10, Inside9, dx, dy, dz, ni, nj, nk, x0, y0, z0, cube, fatxyz)

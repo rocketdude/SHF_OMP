@@ -17,13 +17,13 @@
     INTEGER*4, PARAMETER ::        Mr = 40
     INTEGER*4, PARAMETER ::        M = 8
     INTEGER*4, PARAMETER ::        NP = (Mr+1)*(M*M)
-    INTEGER*4, PARAMETER ::        TempO = 4
+    INTEGER*4, PARAMETER ::        TP = 4
 
     ! Mr is the degree of the radial Chebyshev polynomial
     ! M is the degree of angular spherical harmonics with maximum L = M-1
     ! M has to be multiples of two
     ! NP is the number of coefficients, 4*NP is the number of collocation points
-    ! TempO is the temporal interpolation order
+    ! TP-1 is the temporal interpolation order
 
     REAL*8, PARAMETER ::         PI = 3.141592653589793238462643383279502884197D0
 
@@ -72,7 +72,6 @@
     ! We only use half of the theta coordinates for the collocation points
 
     REAL*8            t           !Current time
-    REAL*8            tA, tB      !If tA < t < tB, we don't need to read new metric data, just interpolate
     REAL*8            tdir        !Direction of time (+1 for forward, -1 for backward)
     REAL*8            dt          !Time increment
     REAL*8            dx          !Smallest distance between two points (used to determine dt)
@@ -130,18 +129,18 @@
     REAL*8        betaTh(4*NP)   !Shift function beta^{theta}
     REAL*8        betaPhi(4*NP)  !Shift function beta^{phi}
 
-    ! Values of the upper index metric at t = t0 + dt_data
-    REAL*8        BgRR(4*NP)
-    REAL*8        BgThTh(4*NP)
-    REAL*8        BgPhiPhi(4*NP)
-    REAL*8        BgRTh(4*NP)
-    REAL*8        BgRPhi(4*NP)
-    REAL*8        BgThPhi(4*NP)
+    ! Values of the upper index metric at different times
+    REAL*8        BgRR(TP, 4*NP)
+    REAL*8        BgThTh(TP, 4*NP)
+    REAL*8        BgPhiPhi(TP, 4*NP)
+    REAL*8        BgRTh(TP, 4*NP)
+    REAL*8        BgRPhi(TP, 4*NP)
+    REAL*8        BgThPhi(TP, 4*NP)
 
-    REAL*8        Balpha(4*NP)
-    REAL*8        BbetaR(4*NP)
-    REAL*8        BbetaTh(4*NP)
-    REAL*8        BbetaPhi(4*NP)
+    REAL*8        Balpha(TP, 4*NP)
+    REAL*8        BbetaR(TP, 4*NP)
+    REAL*8        BbetaTh(TP, 4*NP)
+    REAL*8        BbetaPhi(TP, 4*NP)
 
     ! Schwarzschild metric parameters
     REAL*8            Mass   !Mass of Schwarzschild black hole located at the center
@@ -149,11 +148,15 @@
     ! Parameters to read metric from HDF5 files
     INTEGER(HSIZE_T)  bufsize(3)    !Buffer size to read the metric from HDF5 files
     INTEGER*4         nchunks       !Number of chunks that the metric is divided into
-    INTEGER*4         it_data       !The Einstein Toolkit iteration value for the metric data
+    INTEGER*4         it_data(TP)   !The Einstein Toolkit iteration value for the metric data
     INTEGER*4         it_data_max   !Maximum Einstein Toolkit iteration value for the metric data
     INTEGER*4         it_data_min   !Minimum Einstein Toolkit iteration value for the metric data
     INTEGER*4         delta_it_data !Difference in it_data between metric values
-    REAL*8            dt_data       !The value of dt for the metric data
+    INTEGER*4         readdata      !Index of it_data that needs to be read
+    INTEGER*4         it_data_test
+
+    REAL*8            t_data(TP)    !Data times
+    REAL*8            t_thresh      !Threshold time, beyond this read new data
 
     INTEGER*4         Maxit_allowed !The amount of iterations that we can have with the available metric data
 
@@ -182,7 +185,6 @@
     aFile = 'a10.dat'
 
     IF( SFLAG .EQ. 0 ) THEN
-       t  = 0.0D0                   !Initial time
        Startit = 1                  !Starting from iteration 1
     END IF
     R0 = 0.99D0                     !Initial radius of the null surface
@@ -217,8 +219,6 @@
     bufsize(1) = 50                 !Buffer size; has to be bigger than the size of each dataset
     bufsize(2) = 50
     bufsize(3) = 50
-    dt_data = 2.50D-2               !Size of time step specified by the data
-    !dt = 0.00625 but rl=8 is only updated once every four iterations, so dt = 0.025
     it_data_max = 8000
     it_data_min = 6000
     delta_it_data = 4
@@ -368,7 +368,7 @@
 !     Evolve Eikonal S                                   !
 !--------------------------------------------------------!
 
-    IF( Startit .EQ. 1 ) THEN
+    IF( SFLAG .EQ. 0 ) THEN
        !Initialize output files and write values for iteration 0
        CTemp = 'Time.dat'
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
@@ -380,69 +380,48 @@
        CLOSE(7)
     END IF
 
-    PRINT *, '==============================='
-    PRINT *, 'START MAIN LOOP'
-    
-    !Get the first metric data and initializes read metric logics
-    tB = t
-    tA = tB - dt_data
-    it_data = it_data_max
-    CALL GetMetric(&
-        &M, Mr, NP,&
-        &it_data, nchunks,&
-        &bufsize,&
-        &r, theta, phi,&
-        &Balpha,&
-        &BbetaR, BbetaTh, BbetaPhi,&
-        &BgRR, BgThTh, BgPhiPhi,&
-        &BgRTh, BgRPhi, BgThPhi)
+    !Initializes read metric logics
+    DO i = 1, TP
+        it_data(i) = it_data_max - (i-1)*delta_it_data
+    END DO
 
+    readdata = 0
+    t_thres  = 1.0D30
+
+    PRINT *, '==============================='
+    PRINT *, 'START MAIN PROGRAM'
 
     mainloop: DO it = Startit, Maxit
        
-       t = t+dt
-
        !--------------------------------------------------------!
        !     Read Metric and Evolve Data                        !
        !--------------------------------------------------------!
 
-       IF( ABS(t) .GE. ABS(tB) ) THEN
-            tA = tB
-            tB = tB + dt_data
+        IF ( t .LT. t_thresh ) THEN
+            readdata = MAXLOC(it_data)
+            it_data_test = MIN(it_data) - delta_it_data
 
-            alpha = Balpha
-            betaR = BbetaR
-            betaTh = BbetaTh
-            betaPhi = BbetaPhi
-            gRR = BgRR
-            gThTh = BgThTh
-            gPhiPhi = BgPhiPhi
-            gRTh = BgRTh
-            gRPhi = BgRPhi
-            gThPhi = BgThPhi
-
-            it_data = it_data - delta_it_data
-
-            CALL GetMetric(&
-                &M, Mr, NP,&
-                &it_data, nchunks,&
-                &bufsize,&
-                &r, theta, phi,&
-                &Balpha,&
-                &BbetaR, BbetaTh, BbetaPhi,&
-                &BgRR, BgThTh, BgPhiPhi,&
-                &BgRTh, BgRPhi, BgThPhi)      
-       END IF
-
-       CALL TemporalMetricInterpolation(&
-            &NP,&
-            &t, tA, tB,&
-            &alpha, betaR, betaTh, betaPhi,&
-            &gRR, gThTh, gPhiPhi,&
-            &gRTh, gRPhi, gThPhi,&
-            &Balpha, BbetaR, BbetaTh, BbetaPhi,&
-            &BgRR, BgThTh, BgPhiPhi,&
-            &BgRTh, BgRPhi, BgThPhi)
+            IF (it_data_test .LT. it_data_min) THEN
+                readdata = -1
+            ELSE
+                it_data(readdata) = it_data_test
+            END IF
+        END IF
+                
+        CALL GetMetricAtCurrentTime(&
+             &M, Mr, NP, TP,&
+             &readdata,&
+             &t, t_thresh,&
+             &t_data, it_data,&    
+             &nchunks,&
+             &bufsize,&
+             &r, theta, phi,&
+             &Balpha, BbetaR, BbetaTh, BbetaPhi,&
+             &BgRR, BgThTh, BgPhiPhi,&
+             &BgRTh, BgRPhi, BgThPhi,&
+             &alpha, betaR, betaTh, betaPhi,&
+             &gRR, gThTh, gPhiPhi,&
+             &gRTh, gRPhi, gThPhi)
 
        CALL EvolveData(&
             &M, Mr, NP, Lmax,&
@@ -499,7 +478,13 @@
        PRINT *, 'Iteration #:', it
        PRINT *, 'Time= ', t
        PRINT *, 'Average R= ', Uave
+       PRINT *, 'Metric data used: '
+       DO i = 1, TP
+           PRINT *, 'Iteration#:', it_data(i)
+       END DO
        PRINT *, '------------------'
+
+       t = t+dt
 
     END DO mainloop
 

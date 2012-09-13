@@ -1,10 +1,10 @@
 !----------------------------------------------------------!
-!     Temporal metric interpolation  subroutine            !
+!     Get metric at current time subroutine                !
 !----------------------------------------------------------!
 
-    SUBROUTINE TemporalMetricInterpolation(&
-    &NP,&
-    &t, tA, tB,&
+    SUBROUTINE GetMetricAtCurrentTime(&
+    &NP, TP,&
+    &t, t_data,&
     &alpha, betaR, betaTh, betaPhi,&
     &gRR, gThTh, gPhiPhi,&
     &gRTh, gRPhi, gThPhi,&
@@ -12,12 +12,7 @@
     &BgRR, BgThTh, BgPhiPhi,&
     &BgRTh, BgRPhi, BgThPhi)
 
-    !This subroutine does temporal interpolation for metric data
-    !to ensure that dt satisfies the Courant condition.
-    !The subroutine interpolates metric data to time t, which is between
-    !tA and tB by using only first order linear interpolation.
-    !The values of the metric data without the preceding B's will
-    !be altered to the metric data at time t.
+
 
     USE omp_lib
     IMPLICIT  none

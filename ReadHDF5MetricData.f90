@@ -6,6 +6,7 @@
         &Filename, dataset,&
         &DATASETFLAG,&
         &nchunks,&
+        &time,&
         &bufsize,&
         &Xmin, Ymin, Zmin,&
         &Xmax, Ymax, Zmax,&
@@ -38,6 +39,7 @@
         CHARACTER(LEN=*)                    :: Filename(nchunks)
         CHARACTER(LEN=*)                    :: dataset(nchunks)
 
+        REAL*8, INTENT(out)                 :: time
         REAL*8, INTENT(out)                 :: Xmin, Ymin, Zmin
         REAL*8, INTENT(out)                 :: Xmax, Ymax, Zmax
         REAL*8, INTENT(out)                 :: delta(3)
@@ -54,6 +56,7 @@
         INTEGER(HID_T)           :: attr_id      
         INTEGER(HSIZE_T)         :: nxyz(nchunks,3) !The dimensions of the dataset for each chunk
         INTEGER(HSIZE_T)         :: attr_dims(1)=3  !The dimensions of iorigin, origin, and delta are the same
+        INTEGER(HSIZE_T)         :: scalar_dim(1)=1
         INTEGER*4                   hdferr  !Lets us know if there is error in reading the hdf5 files
 
         REAL*8                      buffer(nchunks,bufsize(1),bufsize(2),bufsize(3))
@@ -165,6 +168,15 @@
                 CALL h5aopen_name_f(dset_id, 'delta', attr_id, hdferr)    !For HDF5 version below 1.8.0
                 IF( hdferr .NE. 0 ) STOP "*** ERROR in opening delta attribute***"
                 CALL h5aread_f(attr_id, H5T_IEEE_F64LE, delta, attr_dims, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of dx, dy, dz ***"
+                CALL h5aclose_f(attr_id, hdferr)
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing delta attribute***"
+
+                !All the chunks should also have the same time so just get it from a single dataset
+                !CALL h5aopen_f(dset_id, 'time', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
+                CALL h5aopen_name_f(dset_id, 'time', attr_id, hdferr)    !For HDF5 version below 1.8.0
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening delta attribute***"
+                CALL h5aread_f(attr_id, H5T_IEEE_F64LE, time, scalar_dim, hdferr)
                 IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of dx, dy, dz ***"
                 CALL h5aclose_f(attr_id, hdferr)
                 IF( hdferr .NE. 0 ) STOP "*** ERROR in closing delta attribute***"

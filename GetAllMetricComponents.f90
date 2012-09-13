@@ -6,6 +6,7 @@
 &M, Mr, NP,&
 &iter, nchunks,&
 &bufsize,&
+&time,&
 &r, theta, phi,&
 &alpha,&
 &betaR, betaTh, betaPhi,&
@@ -43,6 +44,8 @@
         REAL*8, INTENT(out)     :: gRPhi(4*NP)
         REAL*8, INTENT(out)     :: gThPhi(4*NP)
 
+        REAL*8, INTENT(out)     :: time
+
 !-----------------------------------------------------------!
 !       Declare local variables                             !
 !-----------------------------------------------------------!
@@ -76,6 +79,7 @@
         REAL*8                  gcart(4,4)
         REAL*8                  gsph(4,4)
         REAL*8                  dt_ratio
+        REAL*8                  timeofdata(10)
 
         INTEGER*4               i, j, k
         INTEGER*4               crow
@@ -115,6 +119,7 @@
         CALL GetMetricComponent(&
             &M, Mr, NP,&
             &bufsize,&
+            &timeofdata(1),&
             &iter, nchunks,&
             &0,&
             &alphafilename,&
@@ -125,6 +130,7 @@
         CALL GetMetricComponent(&
             &M, Mr, NP,&
             &bufsize,&
+            &timeofdata(2),&
             &iter, nchunks,&
             &1,&
             &beta1filename,&
@@ -135,6 +141,7 @@
         CALL GetMetricComponent(&
             &M, Mr, NP,&
             &bufsize,&
+            &timeofdata(3),&
             &iter, nchunks,&
             &2,&
             &beta2filename,&
@@ -145,6 +152,7 @@
         CALL GetMetricComponent(&
             &M, Mr, NP,&
             &bufsize,&
+            &timeofdata(4),&
             &iter, nchunks,&
             &3,&
             &beta3filename,&
@@ -155,6 +163,7 @@
         CALL GetMetricComponent(&
             &M, Mr, NP,&
             &bufsize,&
+            &timeofdata(5),&
             &iter, nchunks,&
             &4,&
             &gxxfilename,&
@@ -165,6 +174,7 @@
         CALL GetMetricComponent(&
             &M, Mr, NP,&
             &bufsize,&
+            &timeofdata(6),&
             &iter, nchunks,&
             &5,&
             &gyyfilename,&
@@ -175,6 +185,7 @@
         CALL GetMetricComponent(&
             &M, Mr, NP,&
             &bufsize,&
+            &timeofdata(7),&
             &iter, nchunks,&
             &6,&
             &gzzfilename,&
@@ -185,6 +196,7 @@
         CALL GetMetricComponent(&
             &M, Mr, NP,&
             &bufsize,&
+            &timeofdata(8),&
             &iter, nchunks,&
             &7,&
             &gxyfilename,&
@@ -195,6 +207,7 @@
         CALL GetMetricComponent(&
             &M, Mr, NP,&
             &bufsize,&
+            &timeofdata(9),&    
             &iter, nchunks,&
             &8,&
             &gxzfilename,&
@@ -205,11 +218,19 @@
         CALL GetMetricComponent(&
             &M, Mr, NP,&
             &bufsize,&
+            &timeofdata(10),&
             &iter, nchunks,&
             &9,&
             &gyzfilename,&
             &r, theta, phi,&
             &gYZ)
+
+
+        DO i = 1, 9
+            IF( timeofdata(i) .NE. timeofdata(10) ) STOP "Metric components time discrepancy."
+        END DO
+
+        time = timeofdata(10)
 
         !Now we need to perform coordinate transformation from (t,x,y,z) to (t,r,th,phi)
         !Both g_sph and g_cart are of down indices
@@ -267,5 +288,5 @@
         PRINT *, 'DONE!'
 
         RETURN
-      END SUBROUTINE GetMetric
+      END SUBROUTINE GetAllMetricComponents
 

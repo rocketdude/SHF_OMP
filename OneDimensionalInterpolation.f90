@@ -82,7 +82,7 @@
 
 !=====================================================================!
 
-    SUBROUTINE PolynomialInterpolation(xa,ya,n,x,y,dy)
+    SUBROUTINE PolynomialInterpolation(xa,ya,n,x,y)
 
       INTEGER*4     n,NMAX  
       PARAMETER (NMAX=10)

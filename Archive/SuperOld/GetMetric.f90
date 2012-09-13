@@ -2,7 +2,7 @@
 !     GetMetric  subroutine                                !
 !----------------------------------------------------------!
 
-      SUBROUTINE GetAllMetricComponents(&
+      SUBROUTINE GetMetric(&
 &M, Mr, NP,&
 &iter, nchunks,&
 &bufsize,&
@@ -47,19 +47,11 @@
 !       Declare local variables                             !
 !-----------------------------------------------------------!
 
-        CHARACTER*32            format_string_LapseShift(nchunks)
-        CHARACTER*32            format_string_SpatMetric(nchunks)
-
-        CHARACTER*32            alphafilename(nchunks)
-        CHARACTER*32            beta1filename(nchunks)
-        CHARACTER*32            beta2filename(nchunks)
-        CHARACTER*32            beta3filename(nchunks)
-        CHARACTER*32            gxxfilename(nchunks)
-        CHARACTER*32            gyyfilename(nchunks)
-        CHARACTER*32            gzzfilename(nchunks)
-        CHARACTER*32            gxyfilename(nchunks)
-        CHARACTER*32            gxzfilename(nchunks)
-        CHARACTER*32            gyzfilename(nchunks)
+        CHARACTER*32            format_string2
+        CHARACTER*32            format_string1
+        CHARACTER*32            Filename10
+        CHARACTER*32            Filename9
+        CHARACTER*32            Filename8
 
         REAL*8                  alphaXYZ(4*NP)
         REAL*8                  betaX(4*NP)
@@ -78,6 +70,8 @@
         REAL*8                  dt_ratio
 
         INTEGER*4               i, j, k
+        INTEGER*4               CFLEN2
+        INTEGER*4               CFLEN1
         INTEGER*4               crow
         INTEGER*4               error
 
@@ -87,127 +81,198 @@
 
         PRINT *, 'Getting Metric Data of it=', iter
 
-        !$OMP PARALLEL DO PRIVATE(j)
-        DO i = 1,nchunks
-            j = i - 1
-            IF( j .LT. 10 ) THEN
-                format_string_LapseShift(i) = '(A11,I1,A3)'
-                format_string_SpatMetric(i) = '(A9,I1,A3)'
-            ELSE
-                format_string_LapseShift(i) = '(A11,I2,A3)'
-                format_string_SpatMetric(i) = '(A9,I2,A3)'
-            END IF
-            
-            WRITE(alphafilename(i), format_string_LapseShift(i)) 'alpha.file_', j, '.h5'
-            WRITE(beta1filename(i), format_string_LapseShift(i)) 'beta1.file_', j, '.h5'
-            WRITE(beta2filename(i), format_string_LapseShift(i)) 'beta2.file_', j, '.h5'
-            WRITE(beta3filename(i), format_string_LapseShift(i)) 'beta3.file_', j, '.h5'
-            WRITE(gxxfilename(i), format_string_SpatMetric(i)) 'gxx.file_', j, '.h5'
-            WRITE(gyyfilename(i), format_string_SpatMetric(i)) 'gyy.file_', j, '.h5'
-            WRITE(gzzfilename(i), format_string_SpatMetric(i)) 'gzz.file_', j, '.h5'
-            WRITE(gxyfilename(i), format_string_SpatMetric(i)) 'gxy.file_', j, '.h5'
-            WRITE(gxzfilename(i), format_string_SpatMetric(i)) 'gxz.file_', j, '.h5'
-            WRITE(gyzfilename(i), format_string_SpatMetric(i)) 'gyz.file_', j, '.h5'
-        END DO
-        !$OMP END PARALLEL DO
-                
+        !The filenames for the metric correspond to the ones defined in the
+        !shell program: process-hdf-metric.sh
+        
+        SELECT CASE(iter)
+            CASE( 0:9 )
+                CFLEN1 = 9+1+8
+                CFLEN2 = 9+1+9
+                format_string1 = '(A9,I1,A8)'
+                format_string2 = '(A9,I1,A9)'
+            CASE( 10:99 )
+                CFLEN1 = 9+2+8
+                CFLEN2 = 9+2+9
+                format_string1 = '(A9,I2,A8)'
+                format_string2 = '(A9,I2,A9)'
+            CASE( 100:999 )
+                CFLEN1 = 9+3+8
+                CFLEN2 = 9+3+9
+                format_string1 = '(A9,I3,A8)'
+                format_string2 = '(A9,I3,A9)'
+            CASE( 1000:9999 )
+                CFLEN1 = 9+4+8
+                CFLEN2 = 9+4+9
+                format_string1 = '(A9,I4,A8)'
+                format_string2 = '(A9,I4,A9)'
+            CASE DEFAULT
+                PRINT *, 'Iteration number is too large'
+                STOP
+        END SELECT
+
         !ALPHA
+        WRITE(Filename9, format_string1) 'alpha.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'alpha.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'alpha.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &0,&
-            &alphafilename,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &alphaXYZ)
 
         !BETA1
+        WRITE(Filename9, format_string1) 'beta1.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'beta1.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'beta1.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &1,&
-            &beta1filename,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &betaX)
 
         !BETA2
+        WRITE(Filename9, format_string1) 'beta2.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'beta2.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'beta2.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &2,&
-            &beta2filename,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &betaY)
 
         !BETA3
+        WRITE(Filename9, format_string1) 'beta3.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'beta3.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'beta3.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &3,&
-            &beta3filename,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &betaZ)
 
+        SELECT CASE(iter)
+            CASE( 0:9 )
+                CFLEN1 = 7+1+8
+                CFLEN2 = 7+1+9
+                format_string1 = '(A7,I1,A8)'
+                format_string2 = '(A7,I1,A9)'
+            CASE( 10:99 )
+                CFLEN1 = 7+2+8
+                CFLEN2 = 7+2+9
+                format_string1 = '(A7,I2,A8)'
+                format_string2 = '(A7,I2,A9)'
+            CASE( 100:999 )
+                CFLEN1 = 7+3+8
+                CFLEN2 = 7+3+9
+                format_string1 = '(A7,I3,A8)'
+                format_string2 = '(A7,I3,A9)'
+            CASE( 1000:9999 )
+                CFLEN1 = 7+4+8
+                CFLEN2 = 7+4+9
+                format_string1 = '(A7,I4,A8)'
+                format_string2 = '(A7,I4,A9)'
+            CASE DEFAULT
+                PRINT *, 'Iteration number is too large'
+                STOP
+        END SELECT
+
         !GXX
+        WRITE(Filename9, format_string1) 'gxx.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'gxx.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'gxx.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &4,&
-            &gxxfilename,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &gXX)
 
         !GYY
+        WRITE(Filename9, format_string1) 'gyy.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'gyy.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'gyy.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &5,&
-            &gyyfilename,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &gYY)
 
         !GZZ
+        WRITE(Filename9, format_string1) 'gzz.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'gzz.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'gzz.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &6,&
-            &gzzfilename,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &gZZ)
 
         !GXY
+        WRITE(Filename9, format_string1) 'gxy.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'gxy.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'gxy.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &7,&
-            &gxyfilename,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &gXY)
 
         !GXZ
+        WRITE(Filename9, format_string1) 'gxz.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'gxz.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'gxz.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &8,&
-            &gxzfilename,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &gXZ)
 
         !GYZ
+        WRITE(Filename9, format_string1) 'gyz.it=',iter,'.rl=9.h5'
+        WRITE(Filename8, format_string1) 'gyz.it=',iter,'.rl=8.h5'
+        WRITE(Filename10, format_string2) 'gyz.it=',iter,'.rl=10.h5' 
         CALL GetMetricComponent(&
             &M, Mr, NP,&
+            &CFLEN2, CFLEN1,&
             &bufsize,&
             &iter, nchunks,&
             &9,&
-            &gyzfilename,&
+            &Filename10, Filename9, Filename8,&
             &r, theta, phi,&
             &gYZ)
 
