@@ -175,11 +175,11 @@
                 !All the chunks should also have the same time so just get it from a single dataset
                 !CALL h5aopen_f(dset_id, 'time', attr_id, hdferr)         !For HDF5 version 1.8.0 and beyond
                 CALL h5aopen_name_f(dset_id, 'time', attr_id, hdferr)    !For HDF5 version below 1.8.0
-                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening delta attribute***"
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in opening time attribute***"
                 CALL h5aread_f(attr_id, H5T_IEEE_F64LE, time, scalar_dim, hdferr)
-                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the values of dx, dy, dz ***"
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in getting the value of time ***"
                 CALL h5aclose_f(attr_id, hdferr)
-                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing delta attribute***"
+                IF( hdferr .NE. 0 ) STOP "*** ERROR in closing time attribute***"
             END IF
 
             !Close dataset

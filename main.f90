@@ -204,7 +204,7 @@
     tdir = -1.0D0                   !Direction of time, choose +1.0D0 or -1.0D0
     reinit = 15
 
-    IFLAG =-1                       !IFLAG = 0 ==> calculate AFinv (slow)
+    IFLAG = 1                       !IFLAG = 0 ==> calculate AFinv (slow)
                                     !IFLAG = 1 ==> read AFinv from AFinv.dat
                                     !IFLAG = -1 ==> calculate AFinv and write it into AFinv.dat
     !Note:LWORK needs to be changed everytime we change M or Mr, AFinv has to be recalculated

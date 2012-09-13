@@ -288,16 +288,19 @@
         DEALLOCATE( hdfmetric, STAT=error )
         IF( error .NE. 0 ) STOP "*** Trouble deallocating ***" 
 
+
+!!!        IF( (time10 .NE. time9) .OR. (time10 .NE. time8) ) THEN
+!!!            STOP "***ERROR*** Time discrepancy"
+!!!        ELSE
+!!!            time = time10
+!!!        END IF
+
+        time = time10
+        
         !----------------------------------------------------------!
         !      Interpolate metric using                            !
         !      Lekien-Marsden tricubic interpolation routine       !
         !----------------------------------------------------------!
-
-        IF( (time10 .NE. time9) .OR. (time10 .NE. time8) ) THEN
-            STOP "***ERROR*** Time discrepancy"
-        ELSE
-            time = time10
-        END IF
 
         IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) .AND. ALLOCATED(metric8) ) THEN
         !$OMP PARALLEL DO &
