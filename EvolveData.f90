@@ -9,7 +9,7 @@
 &betaR, betaTh, betaPhi,&
 &gRR, gThTh, gPhiPhi,&
 &gRTh, gRPhi, gThPhi,&
-&dt,&
+&t, dt,&
 &AF, AFinv, Dth, Dphi, F,&
 &a)
 
@@ -44,6 +44,7 @@
         REAL*8                  :: gRPhi(4*NP)
         REAL*8                  :: gThPhi(4*NP)
 
+        REAL*8                  :: t
         REAL*8                  :: dt
         REAL*8                  :: F(NP)
         COMPLEX*16              :: AF(4*NP,NP)
@@ -415,6 +416,8 @@
         a = 0.517231671970585D0 * aaRK(:,3) + 0.096059710526147D0 * aaRK(:,4)&
             & + 0.063692468666290D0 * dt * dadt3 + 0.386708617503269D0 * aaRK(:,5)&
             & + 0.226007483236906D0 * dt * dadt
+
+        t = t + dt
         
         RETURN
       END SUBROUTINE EvolveData

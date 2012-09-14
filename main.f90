@@ -434,10 +434,10 @@
             &betaR, betaTh, betaPhi,&
             &gRR, gThTh, gPhiPhi,&
             &gRTh, gRPhi, gThPhi,&
-            &dt,&
+            &t, dt,&
             &AF, AFinv, Dth, Dphi, F,&
             &a)
-
+ 
        CALL FindU(&
             &M, Mr, NP,&
             &r,&
@@ -487,8 +487,6 @@
            PRINT *, 'Iteration#:', it_data(i)
        END DO
        PRINT *, '------------------'
-
-       t = t+dt
 
        IF( ((t .LT. tfinal) .AND. (tdir .LT. 0.0D0)) .OR.&
           &((t .GT. tfinal) .AND. (tdir .GT. 0.0D0)) ) THEN
