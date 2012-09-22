@@ -911,6 +911,51 @@
       END SUBROUTINE WriteU
 
 !========================================================!
+!    Write gRR*U^2 Array Subroutine                      !
+!========================================================!
+
+      SUBROUTINE WriteGRRUU(nx, ny, Array, i)
+
+        IMPLICIT none
+
+!-----------------------------------------------------------!
+!     Declare passed variables                              !
+!-----------------------------------------------------------!
+
+        INTEGER*4, INTENT(IN)::   nx, ny, i
+        REAL*8, INTENT(IN)::    Array(nx,ny)
+
+!-----------------------------------------------------------!
+!     Declare local variables                               !
+!-----------------------------------------------------------!
+        
+        CHARACTER*32            format_string
+        CHARACTER*32            TestFile
+
+!-----------------------------------------------------------!
+!     Write                                                 !
+!-----------------------------------------------------------!
+
+        IF (i < 10) THEN
+           format_string = '(A8,I1,A4)'
+        ELSE IF (i .ge. 10 .and. i < 100) THEN
+           format_string = '(A8,I2,A4)'
+        ELSE IF (i < 1000 .and. i .ge. 100) THEN
+           format_string = '(A8,I3,A4)'
+        ELSE IF (i .ge. 1000 .and. i < 10000) THEN
+           format_string = '(A8,I4,A4)'
+        ELSE
+           format_string = '(A8,I5,A4)'
+        END IF
+
+        WRITE(TestFile, format_string) 'gRRUsqrd',i,'.dat'
+
+        CALL WRITE2d(nx, ny, Array, TestFile)
+
+        RETURN
+      END SUBROUTINE WriteGRRUU
+      
+!========================================================!
 !    Write a_nlm Array Subroutine                        !
 !========================================================!
 

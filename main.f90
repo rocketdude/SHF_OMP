@@ -39,9 +39,10 @@
     CHARACTER*32      aFile
     LOGICAL           FileExist
 
-    INTEGER*4           WriteUit !iteration at which we output U into file
-    INTEGER*4           WriteSit !iteration at which we output S into file
-    INTEGER*4           Writeait !iteration at which we output the coefficients a_nlm into file
+    INTEGER*4           WriteUit        !iteration at which we output U into file
+    INTEGER*4           WritegRRUsqrdit !Iteration at which we output gRR*U^2
+    INTEGER*4           WriteSit        !iteration at which we output S into file
+    INTEGER*4           Writeait        !iteration at which we output the coef. a_nlm
 
 !--------------------------------------------------------!
 !     Declare Numerical Inputs                           ! 
@@ -95,6 +96,9 @@
 
     REAL*8            U(2*M,2*M)  !Radial distance of the light cone in each theta and phi direction
     REAL*8            Uave        !Average radial distance of the light cone at a specific time step
+
+    REAL*8            gRRUsqrd(2*M,2*M) !gRR * U^2 in each theta and phi direction
+    REAL*8            gRRUsqrdAve       !Average gRR * U^2 at a specific time step
 
     COMPLEX*16        a(NP)       !Values of the time-dependent coefficients a_nlm(t)
                                   !vectorized in loop n:l:m
@@ -181,18 +185,18 @@
     
     !Parameters related to initial conditions
     SFLAG = 0                       !If SFLAG = 1, we are continuing previous run: change t, Startit and aFile
-    t = -8.1617491479814266D0       !Last time from previous run
+    t = 50.0D0                      !Last time from previous run
     Startit = 6751                  !Startit = last iteration + 1
     aFile = 'a10.dat'
 
     !Termination conditions
-    Maxit = 22000
-    tfinal = 12.5D0
+    Maxit = 20000
+    tfinal = 5.0D0
 
     IF( SFLAG .EQ. 0 ) THEN
        Startit = 1                  !Starting from iteration 1
     END IF
-    R0 = 0.975D0                    !Initial radius of the null surface
+    R0 = 1.0D0                    !Initial radius of the null surface
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, and negative tdir give EH finder
@@ -225,7 +229,7 @@
     bufsize(2) = 50
     bufsize(3) = 50
     it_data_max = 8000
-    it_data_min = 2000
+    it_data_min = 400
     delta_it_data = 4
 
     !Schwarzschild metric parameter (preliminary tests only)
@@ -235,9 +239,10 @@
 !     Output Parameters                                  !
 !--------------------------------------------------------!
 
-    WriteUit = 10
-    WriteSit = 10000
-    Writeait = 500
+    WriteUit        = 1000
+    WritegRRUsqrdit = 1000
+    WriteSit        = 100000
+    Writeait        = 1000
 
 !--------------------------------------------------------!
 !     Echo certain parameters                            !
@@ -373,11 +378,12 @@
        !Initialize output files and write values for iteration 0
        CTemp = 'Time.dat'
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
-       WRITE(7,*) t
        CLOSE(7)
        CTemp = 'Uave.dat'
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
-       WRITE(7,*) R0
+       CLOSE(7)
+       CTemp = 'gRRUsqrdAve.dat'
+       OPEN(7, FILE = CTemp, STATUS = 'NEW')
        CLOSE(7)
     ELSE IF( SFLAG .EQ. 1 ) THEN
         t = t+dt
@@ -443,7 +449,8 @@
             &r,&
             &AF,a,&
             &it, WriteSit,&
-            &U, Uave)
+            &U, Uave,&
+            &gRRUsqrd, gRRUsqrdAve)
 
 
        !--------------------------------------------------------!
@@ -451,6 +458,7 @@
        !--------------------------------------------------------!
 
        IF( MOD(it,WriteUit) .EQ. 0 ) CALL WriteU(2*M, 2*M, U, it)
+       IF( MOD(it,WritegRRUsqrdit) .EQ. 0 ) CALL WriteGRRUU(2*M, 2*M, gRRUsqrd, it)
        IF( MOD(it,Writeait) .EQ. 0 .OR. (it .EQ. Maxit) ) CALL Writea(NP, a, it)
        
        CTemp = 'Time.dat'
@@ -463,6 +471,11 @@
        WRITE(7,*) Uave
        CLOSE(7)
 
+       CTemp = 'gRRUsqrdAve.dat'
+       OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
+       WRITE(7,*) gRRUsqrdAve
+       CLOSE(7)
+    
        !--------------------------------------------------------!
        !     SMOOTHING: Reinitializing S                        !
        !--------------------------------------------------------!
