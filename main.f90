@@ -15,9 +15,9 @@
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Mr = 40
-    INTEGER*4, PARAMETER ::        M = 8
+    INTEGER*4, PARAMETER ::        M = 1
     INTEGER*4, PARAMETER ::        NP = (Mr+1)*(M*M)
-    INTEGER*4, PARAMETER ::        TP = 4
+    INTEGER*4, PARAMETER ::        TP = 2
 
     ! Mr is the degree of the radial Chebyshev polynomial
     ! M is the degree of angular spherical harmonics with maximum L = M-1
@@ -209,7 +209,7 @@
     tdir = -1.0D0                   !Direction of time, choose +1.0D0 or -1.0D0
     reinit = 15
 
-    IFLAG = 1                       !IFLAG = 0 ==> calculate AFinv (slow)
+    IFLAG = 0                       !IFLAG = 0 ==> calculate AFinv (slow)
                                     !IFLAG = 1 ==> read AFinv from AFinv.dat
                                     !IFLAG = -1 ==> calculate AFinv and write it into AFinv.dat
     !Note:LWORK needs to be changed everytime we change M or Mr, AFinv has to be recalculated
@@ -446,6 +446,7 @@
  
        CALL FindU(&
             &M, Mr, NP,&
+            &gRR,&
             &r,&
             &AF,a,&
             &it, WriteSit,&
