@@ -3,13 +3,14 @@
 !========================================================!
 
      SUBROUTINE FindU(&
-&M, Mr, NP,&
+&M, Mr, NP, Lmax, SpM,&
 &gRR, gThTh, gPhiPhi,&
 &gRTh, gRPhi, gThPhi,&
-&r,&
+&r, rho,&
 &AF,a,&
 &it, WriteSit,&
-&U, Uave,&
+&U, Uave, USp,&
+&thetaSp, phiSp,&
 &gRRUsqrd, gRRUsqrdAve)
 
 !This subroutine finds U(theta, phi) using cubic spline interpolation
@@ -22,9 +23,13 @@
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-       INTEGER*4            :: M, Mr, NP, it, WriteSit
+       INTEGER*4            :: M, Mr, NP, Lmax, SpM, it, WriteSit
 
        REAL*8               :: r(Mr+1)
+       REAL*8               :: rho(Mr+1)
+
+       REAL*8               :: thetaSp(Mr+1)
+       REAL*8               :: phiSp(Mr+1)
 
        REAL*8               :: gRR(4*NP)
        REAL*8               :: gThTh(4*NP)
@@ -38,6 +43,7 @@
 
        REAL*8, INTENT(out)  :: U(2*M, 2*M)
        REAL*8, INTENT(out)  :: Uave
+       REAL*8, INTENT(out)  :: USp(SpM)
        REAL*8, INTENT(out)  :: gRRUsqrd(2*M, 2*M)
        REAL*8, INTENT(out)  :: gRRUsqrdAve
 
@@ -49,13 +55,16 @@
 
        INTEGER*4, PARAMETER ::  SP=1000 !Number of points to be calculated on the spline
        INTEGER*4, PARAMETER ::  PolyInterpOrder=6 !Number of points for poly. interp.
-       INTEGER*4                i, j, k, ii, dii, jj
+       INTEGER*4                i, j, k, ii, dii, jj, ss
+       INTEGER*4                n, l, ml
+       INTEGER*4                crow
        INTEGER*4                iindex, jkindex
        INTEGER*4                ilow, ilow2, flag
        INTEGER*4                error
 
        COMPLEX*16             S(4*NP)
-
+       COMPLEX*16             TnYlm
+    
        REAL*8                 U_r(Mr+1)
        REAL*8                 U_r2(Mr+1) !Second derivatives of U_r at points along r
 
@@ -191,5 +200,80 @@
        !Calculate the average g_rr*U^2 (the above premise applies here as well)
        gRRUsqrdAve = SUM( gRRUsqrd ) / (4*M*M)
 
+
+       !Calculate the values of U at the requested directions
+       !$OMP PARALLEL DO &
+       !$OMP PRIVATE(i, n, l, ml, ss, U_r, U_r2, flag,&
+       !$OMP         ilow, ilow2, deltar, rr, UU, crow, TnYlm)
+       DO ss = 1, SpM
+
+            !First we need to get the values of S in this direction
+            DO i = 1, Mr+1
+                U_r(i) = 0.0D0
+
+                DO n = 0, Mr
+                    DO l = 0, Lmax
+                        DO ml = -l, l
+                            CALL EvaluateF(n, l, ml,&
+                                          &rho(i), thetaSp(ss), phiSp(ss),&
+                                          &M, Mr, TnYlm)
+                            crow = n*(Lmax+1)**2 + l**2 + (ml+l+1)
+                            U_r(i) = U_r(i) + ABS(a(crow)*TnYlm)
+                        END DO
+                    END DO
+                END DO
+            END DO
+                            
+             !Calculate the second derivatives and store it into U_r2
+             CALL ComputeSpline2ndDeriv(r, U_r, Mr+1, 1.0D31, 1.0D31, U_r2) !Natural cubic spline
+
+             !Find ilow and ilow+1 which are the indices that bound where TargetedSValue is located
+             flag = 0
+             DO i=(1+10), (Mr+1-10)
+                IF( U_r(i) .GE. TargetedSValue ) THEN
+                   ilow = i-1
+                   flag = 1
+                   EXIT
+                END IF
+             END DO
+
+             IF( flag .EQ. 0) THEN           
+                WRITE(*,*) 'Error in hunting'
+                READ(*, '()')
+             END IF
+
+             !Calculate the equispaced points rr--between r(ilow) and r(ilow+1)
+             !and, calculate the values of ABS(S) at those points
+             deltar = (r(ilow+1) - r(ilow))/DBLE(SP-1)
+             DO i = 1, SP
+                rr(i) = r(ilow) + DBLE(i-1)*deltar
+                CALL CubicSplineInterpolation(r, U_r, U_r2, ilow, Mr+1, rr(i), UU(i))
+
+             END DO
+
+             !Perform HUNT again, finding ilow2 and ilow2+1 which are the indices that bound
+             !where TargetedSValue is located
+             flag = 0
+             DO i=1, SP
+                IF( UU(i) .GE. TargetedSValue ) THEN
+                   ilow2 = i-1
+                   flag = 1
+                   EXIT
+                END IF
+             END DO
+
+             IF( flag .EQ. 0) THEN           
+                WRITE(*,*) 'Error in hunting'
+                READ(*, '()')
+             END IF
+
+             !Find the value of r where TargetedSValue is located by performing linear interpolation
+             USp(ss) = rr(ilow2) + &
+                  &( rr(ilow2+1) - rr(ilow2) )/( UU(ilow2+1) - UU(ilow2) ) *&
+                  &(TargetedSValue - UU(ilow2) )
+
+       END DO
+       !$OMP END PARALLEL DO 
+    
        RETURN
      END SUBROUTINE FindU

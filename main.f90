@@ -18,12 +18,14 @@
     INTEGER*4, PARAMETER ::        M = 8
     INTEGER*4, PARAMETER ::        NP = (Mr+1)*(M*M)
     INTEGER*4, PARAMETER ::        TP = 4
+    INTEGER*4, PARAMETER ::        SpM = 6
 
     ! Mr is the degree of the radial Chebyshev polynomial
     ! M is the degree of angular spherical harmonics with maximum L = M-1
     ! M has to be multiples of two
     ! NP is the number of coefficients, 4*NP is the number of collocation points
     ! TP-1 is the temporal interpolation order
+    ! SpM is the number of additional directions we'd like to compute U for
 
     REAL*8, PARAMETER ::         PI = 3.141592653589793238462643383279502884197D0
 
@@ -91,14 +93,16 @@
 
     REAL*8            theta(2*M)  !The angle theta according to the usual sph. coordinate system
     REAL*8            phi(2*M)    !The angle phi according to the usual sph. coordinate system
+    REAL*8            thetaSp(SpM)!The angle theta in specific requested directions
+    REAL*8            phiSp(SpM)  !The angle phi in specific requested directions
 
     REAL*8            R0          !Initial radius of the light 'cone'
 
     REAL*8            U(2*M,2*M)  !Radial distance of the light cone in each theta and phi direction
     REAL*8            Uave        !Average radial distance of the light cone at a specific time step
-
     REAL*8            g_rrUsqrd(2*M,2*M) !g_rr * U^2 in each theta and phi direction
     REAL*8            g_rrUsqrdAve       !Average g_rr * U^2 at a specific time step
+    REAL*8            USp(SpM)    !The values of U in specific requested directions
 
     COMPLEX*16        a(NP)       !Values of the time-dependent coefficients a_nlm(t)
                                   !vectorized in loop n:l:m
@@ -222,6 +226,10 @@
     !Spherical grid parameters
     rmax = 1.20D0                   !maximum value of r
     rmin = 0.20D0                   !minimum value of r
+
+    !Additional directions we'd like to compute U
+    thetaSp = (/ 0.0D0, PI, PI/2.0D0, PI/2.0D0, PI/2.0D0, PI/2.0D0 /)
+    phiSp = (/ 0.0D0, 0.0D0, 0.0D0, PI/2.0D0, PI, 1.5D0*PI /)
 
     !Parameters related to reading HDF5 files--do h5dump to check these
     nchunks = 4
@@ -382,6 +390,9 @@
        CTemp = 'Uave.dat'
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
        CLOSE(7)
+       CTemp = 'USp.dat' 
+       OPEN(7, FILE = CTemp, STATUS = 'NEW')
+       CLOSE(7)
        CTemp = 'g_rrUsqrdAve.dat'
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
        CLOSE(7)
@@ -445,12 +456,14 @@
             &a)
  
        CALL FindU(&
-            &M, Mr, NP,&
-            &gRR,&
-            &r,&
+            &M, Mr, NP, Lmax, SpM,&
+            &gRR, gThTh, gPhiPhi,&
+            &gRTh, gRPhi, gThPhi,&
+            &r, rho,&
             &AF,a,&
             &it, WriteSit,&
-            &U, Uave,&
+            &U, Uave, USp,&
+            &thetaSp, phiSp,&
             &g_rrUsqrd, g_rrUsqrdAve)
 
 
@@ -472,6 +485,13 @@
        WRITE(7,*) Uave
        CLOSE(7)
 
+       CTemp = 'USp.dat'
+       OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
+       DO i = 1,SpM
+            WRITE(7,*) USp(i)
+       END DO
+       CLOSE(7)
+    
        CTemp = 'g_rrTimesUsqrd.dat'
        OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
        WRITE(7,*) g_rrUsqrdAve
