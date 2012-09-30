@@ -1,0 +1,4 @@
+# Ignore make products
+*.o
+*.mod
+SHF
