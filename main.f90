@@ -40,7 +40,7 @@
     LOGICAL           FileExist
 
     INTEGER*4           WriteUit        !iteration at which we output U into file
-    INTEGER*4           WritegRRUsqrdit !Iteration at which we output gRR*U^2
+    INTEGER*4           Writeg_rrUsqrdit !Iteration at which we output gRR*U^2
     INTEGER*4           WriteSit        !iteration at which we output S into file
     INTEGER*4           Writeait        !iteration at which we output the coef. a_nlm
 
@@ -97,8 +97,8 @@
     REAL*8            U(2*M,2*M)  !Radial distance of the light cone in each theta and phi direction
     REAL*8            Uave        !Average radial distance of the light cone at a specific time step
 
-    REAL*8            gRRUsqrd(2*M,2*M) !gRR * U^2 in each theta and phi direction
-    REAL*8            gRRUsqrdAve       !Average gRR * U^2 at a specific time step
+    REAL*8            g_rrUsqrd(2*M,2*M) !g_rr * U^2 in each theta and phi direction
+    REAL*8            g_rrUsqrdAve       !Average g_rr * U^2 at a specific time step
 
     COMPLEX*16        a(NP)       !Values of the time-dependent coefficients a_nlm(t)
                                   !vectorized in loop n:l:m
@@ -239,10 +239,10 @@
 !     Output Parameters                                  !
 !--------------------------------------------------------!
 
-    WriteUit        = 1000
-    WritegRRUsqrdit = 1000
-    WriteSit        = 100000
-    Writeait        = 1000
+    WriteUit         = 1000
+    Writeg_rrUsqrdit = 1000
+    WriteSit         = 100000
+    Writeait         = 1000
 
 !--------------------------------------------------------!
 !     Echo certain parameters                            !
@@ -382,7 +382,7 @@
        CTemp = 'Uave.dat'
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
        CLOSE(7)
-       CTemp = 'gRRUsqrdAve.dat'
+       CTemp = 'g_rrUsqrdAve.dat'
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
        CLOSE(7)
     ELSE IF( SFLAG .EQ. 1 ) THEN
@@ -451,7 +451,7 @@
             &AF,a,&
             &it, WriteSit,&
             &U, Uave,&
-            &gRRUsqrd, gRRUsqrdAve)
+            &g_rrUsqrd, g_rrUsqrdAve)
 
 
        !--------------------------------------------------------!
@@ -459,7 +459,7 @@
        !--------------------------------------------------------!
 
        IF( MOD(it,WriteUit) .EQ. 0 ) CALL WriteU(2*M, 2*M, U, it)
-       IF( MOD(it,WritegRRUsqrdit) .EQ. 0 ) CALL WriteGRRUU(2*M, 2*M, gRRUsqrd, it)
+       IF( MOD(it,Writeg_rrUsqrdit) .EQ. 0 ) CALL WriteGRRUU(2*M, 2*M, g_rrUsqrd, it)
        IF( MOD(it,Writeait) .EQ. 0 .OR. (it .EQ. Maxit) ) CALL Writea(NP, a, it)
        
        CTemp = 'Time.dat'
@@ -472,9 +472,9 @@
        WRITE(7,*) Uave
        CLOSE(7)
 
-       CTemp = 'gRRUsqrdAve.dat'
+       CTemp = 'g_rrTimesUsqrd.dat'
        OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
-       WRITE(7,*) gRRUsqrdAve
+       WRITE(7,*) g_rrUsqrdAve
        CLOSE(7)
     
        !--------------------------------------------------------!
