@@ -200,7 +200,7 @@
     IF( SFLAG .EQ. 0 ) THEN
        Startit = 1                  !Starting from iteration 1
     END IF
-    R0 = 1.0D0                    !Initial radius of the null surface
+    R0 = 0.675D0                    !Initial radius of the null surface
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, and negative tdir give EH finder
@@ -213,7 +213,7 @@
     tdir = -1.0D0                   !Direction of time, choose +1.0D0 or -1.0D0
     reinit = 15
 
-    IFLAG = 1                       !IFLAG = 0 ==> calculate AFinv (slow)
+    IFLAG = 0                       !IFLAG = 0 ==> calculate AFinv (slow)
                                     !IFLAG = 1 ==> read AFinv from AFinv.dat
                                     !IFLAG = -1 ==> calculate AFinv and write it into AFinv.dat
     !Note:LWORK needs to be changed everytime we change M or Mr, AFinv has to be recalculated
@@ -230,14 +230,14 @@
     !Additional directions we'd like to compute U
     thetaSp = (/ 0.0D0, PI, PI/2.0D0, PI/2.0D0, PI/2.0D0, PI/2.0D0 /)
     phiSp = (/ 0.0D0, 0.0D0, 0.0D0, PI/2.0D0, PI, 1.5D0*PI /)
-
+    
     !Parameters related to reading HDF5 files--do h5dump to check these
-    nchunks = 4
+    nchunks = 16
     bufsize(1) = 50                 !Buffer size; has to be bigger than the size of each dataset
     bufsize(2) = 50
     bufsize(3) = 50
     it_data_max = 8000
-    it_data_min = 400
+    it_data_min = 0
     delta_it_data = 4
 
     !Schwarzschild metric parameter (preliminary tests only)
@@ -492,7 +492,7 @@
        END DO
        CLOSE(7)
     
-       CTemp = 'g_rrTimesUsqrd.dat'
+       CTemp = 'g_rrUsqrdAve.dat'
        OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
        WRITE(7,*) g_rrUsqrdAve
        CLOSE(7)

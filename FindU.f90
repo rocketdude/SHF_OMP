@@ -94,8 +94,8 @@
        IF( MOD(it, WriteSit) .EQ. 0 ) CALL WriteS(4*NP, ABS(S), it)
 
        !$OMP PARALLEL DO &
-       !$OMP PRIVATE(k, i, iindex, jkindex, U_r, U_r2, flag, gDD, gUU,&
-       !$OMP         g_r, rPolyInt, gPolyInt, jj, dii, ilow, ilow2, deltar, rr, UU)
+       !$OMP &PRIVATE(k, i, iindex, jkindex, U_r, U_r2, flag, gDD, gUU,&
+       !$OMP &       g_r, rPolyInt, gPolyInt, jj, dii, ilow, ilow2, deltar, rr, UU)
        DO j = 1, 2*M
           DO k = 1, 2*M
 
@@ -200,23 +200,23 @@
        !Calculate the average g_rr*U^2 (the above premise applies here as well)
        gRRUsqrdAve = SUM( gRRUsqrd ) / (4*M*M)
 
-
        !Calculate the values of U at the requested directions
        !$OMP PARALLEL DO &
-       !$OMP PRIVATE(i, n, l, ml, ss, U_r, U_r2, flag,&
-       !$OMP         ilow, ilow2, deltar, rr, UU, crow, TnYlm)
+       !$OMP &PRIVATE(i, n, l, ml, U_r, U_r2, flag,&
+       !$OMP &        ilow, ilow2, deltar, rr, UU, crow, TnYlm)
        DO ss = 1, SpM
 
             !First we need to get the values of S in this direction
             DO i = 1, Mr+1
                 U_r(i) = 0.0D0
-
+                
                 DO n = 0, Mr
                     DO l = 0, Lmax
                         DO ml = -l, l
                             CALL EvaluateF(n, l, ml,&
                                           &rho(i), thetaSp(ss), phiSp(ss),&
-                                          &M, Mr, TnYlm)
+                                          &TnYlm)
+
                             crow = n*(Lmax+1)**2 + l**2 + (ml+l+1)
                             U_r(i) = U_r(i) + ABS(a(crow)*TnYlm)
                         END DO
