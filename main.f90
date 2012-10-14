@@ -274,8 +274,10 @@
 
     !Compute sizes required for the lm part of a_nlm
     CALL SHTNS_CALC_NLM(Mlm, Lmax, Mmax, 1)
-    !Initialize SHT with the Gauss points
-    CALL SHTNS_INIT_SH_GAUSS(layout, Lmax, Mmax, 1, Nth, Nphi)
+    !Initialize SHT with regular points
+    CALL SHTNS_INIT_SH_REG_FAST(layout, Lmax, Mmax, 1, Nth, Nphi)
+!!$    !Initialize SHT with the Gauss points
+!!$    CALL SHTNS_INIT_SH_GAUSS(layout, Lmax, Mmax, 1, Nth, Nphi)
     
     !Get the r, theta, and phi array
     CALL SHTNS_COS_ARRAY(theta)
@@ -286,6 +288,12 @@
     DO i = 0, Mr
        rho(i+1) = -COS(PI*DBLE(2*i + 1) / DBLE(2*(Mr+1)) )
        r(i+1) = 0.5D0*( (rmax + rmin) + (rmax - rmin)*rho(i+1) )
+    END DO
+    !$OMP END DO
+    
+    !$OMP DO
+    DO j = 1, Nth
+       theta(j) = DBLE(j-1)*PI/Nth
     END DO
     !$OMP END DO
     
