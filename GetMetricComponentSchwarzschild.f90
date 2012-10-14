@@ -3,7 +3,7 @@
 !----------------------------------------------------------!
 
     SUBROUTINE GetMetricComponent(&
-    &M, Mr, NP,&
+    &Nr, Nth, Nphi,&
     &bufsize,&
     &time,&
     &iter, nchunks,&
@@ -39,20 +39,20 @@
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-        INTEGER*4                   :: M, Mr, NP
+        INTEGER*4                   :: Nr, Nth, Nphi
         INTEGER*4                   :: iter         !iteration number in the CarpetCode simulation (iter != it)
         INTEGER*4                   :: nchunks      !number of chunks
         INTEGER*4                   :: DATASETFLAG
 
         INTEGER(HSIZE_T)            :: bufsize(3)        
 
-        REAL*8                      :: r(Mr+1)
-        REAL*8                      :: theta(2*M)
-        REAL*8                      :: phi(2*M)
+        REAL*8                      :: r(Nr)
+        REAL*8                      :: theta(Nth)
+        REAL*8                      :: phi(Nphi)
 
         CHARACTER*32                :: Filename(nchunks)
 
-        REAL*8, INTENT(out)         :: MetricData(4*NP)
+        REAL*8, INTENT(out)         :: MetricData(Nr,Nth,Nphi)
         REAL*8, INTENT(out)         :: time
 
 !-----------------------------------------------------------!
@@ -304,13 +304,11 @@
 
         IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) .AND. ALLOCATED(metric8) ) THEN
         !$OMP PARALLEL DO &
-        !$OMP &PRIVATE(j, k, crow, x, y, z, Inside10, Inside9, dx, dy, dz, ni, nj, nk, x0, y0, z0, cube, fatxyz)
-        DO i =  1, (Mr+1)
-            DO j = 1, (2*M)
-                DO k = 1, (2*M)
-                
-                    crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
-                
+        !$OMP &PRIVATE(j, k, x, y, z, Inside10, Inside9, dx, dy, dz, ni, nj, nk, x0, y0, z0, cube, fatxyz)
+        DO i =  1, Nr
+            DO j = 1, Nth
+                DO k = 1, Nphi
+                 
                     x = r(i) * SIN( theta(j) ) * COS( phi(k) )
                     y = r(i) * SIN( theta(j) ) * SIN( phi(k) )
                     z = r(i) * COS( theta(j) ) 
@@ -399,7 +397,7 @@
                             &x0, y0, z0,&
                             &fatxyz)
 
-                    MetricData(crow) = fatxyz
+                    MetricData(i,j,k) = fatxyz
 
                 END DO
             END DO

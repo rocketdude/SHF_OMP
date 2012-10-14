@@ -4,7 +4,7 @@
 
       SUBROUTINE GetSchwarzschildMetric(&
 &Mass,&
-&M, Mr, NP,&
+&Nr, Nth, Nphi,&
 &r, theta, phi,&
 &alpha,&
 &betaR, betaTh, betaPhi,&
@@ -22,32 +22,31 @@
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-        INTEGER*4            :: M, Mr, NP
+        INTEGER*4            :: Nr,Nth,Nphi
 
         REAL*8               :: Mass
-        REAL*8               :: r(Mr+1)
-        REAL*8               :: theta(2*M)
-        REAL*8               :: phi(2*M)
+        REAL*8               :: r(Nr)
+        REAL*8               :: theta(Nth)
+        REAL*8               :: phi(Nphi)
 
-        REAL*8, INTENT(out)  :: alpha(4*NP)
-        REAL*8, INTENT(out)  :: betaR(4*NP)
-        REAL*8, INTENT(out)  :: betaTh(4*NP)
-        REAL*8, INTENT(out)  :: betaPhi(4*NP)
+        REAL*8, INTENT(out)  :: alpha(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)  :: betaR(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)  :: betaTh(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)  :: betaPhi(Nr,Nth,Nphi)
 
-        REAL*8, INTENT(out)  :: gRR(4*NP)
-        REAL*8, INTENT(out)  :: gThTh(4*NP)
-        REAL*8, INTENT(out)  :: gPhiPhi(4*NP)
+        REAL*8, INTENT(out)  :: gRR(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)  :: gThTh(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)  :: gPhiPhi(Nr,Nth,Nphi)
 
-        REAL*8, INTENT(out)  :: gRTh(4*NP)
-        REAL*8, INTENT(out)  :: gRPhi(4*NP)
-        REAL*8, INTENT(out)  :: gThPhi(4*NP)
+        REAL*8, INTENT(out)  :: gRTh(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)  :: gRPhi(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)  :: gThPhi(Nr,Nth,Nphi)
 
 !-----------------------------------------------------------!
 !       Declare local variables                             !
 !-----------------------------------------------------------!
 
         INTEGER*4                 i, j, k
-        INTEGER*4                 crow    !Row counter
 
 !----------------------------------------------------------!
 !      Main                                                !
@@ -55,27 +54,25 @@
 
         PRINT *, 'Evaluating Metric'
 
-        !$OMP PARALLEL DO SHARED(M, Mass, r, theta, phi)&
-        !$OMP &PRIVATE(crow, j, k)
-        DO i = 1, Mr+1
-           DO j = 1, 2*M
-              DO k = 1, 2*M
+        !$OMP PARALLEL DO SHARED(Nr, Nth, Nphi, Mass, r, theta, phi)&
+        !$OMP &PRIVATE(j, k)
+        DO i = 1, Nr
+           DO j = 1, Nth
+              DO k = 1, Nphi
 
-                 crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
-
-                 alpha(crow) = SQRT( r(i) / ( r(i) + 2.0D0*Mass ) )
+                 alpha(i,j,k) = SQRT( r(i) / ( r(i) + 2.0D0*Mass ) )
                  
-                 betaR(crow) = 2.0D0*Mass / (2.0D0*Mass + r(i) )
-                 betaTh(crow) = 0.0D0
-                 betaPhi(crow) = 0.0D0
+                 betaR(i,j,k) = 2.0D0*Mass / (2.0D0*Mass + r(i) )
+                 betaTh(i,j,k) = 0.0D0
+                 betaPhi(i,j,k) = 0.0D0
 
-                 gRR(crow) = 1.0D0 / ( 1.0D0 + 2.0D0*Mass / r(i) )
-                 gThTh(crow) = 1.0D0/(r(i)**2)
-                 gPhiPhi(crow) = 1.0D0/( r(i) * SIN( theta(j) ) )**2
+                 gRR(i,j,k) = 1.0D0 / ( 1.0D0 + 2.0D0*Mass / r(i) )
+                 gThTh(i,j,k) = 1.0D0/(r(i)**2)
+                 gPhiPhi(i,j,k) = 1.0D0/( r(i) * SIN( theta(j) ) )**2
 
-                 gRTh(crow) = 0.0D0
-                 gRPhi(crow) = 0.0D0
-                 gThPhi(crow) = 0.0D0
+                 gRTh(i,j,k) = 0.0D0
+                 gRPhi(i,j,k) = 0.0D0
+                 gThPhi(i,j,k) = 0.0D0
 
               END DO
            END DO

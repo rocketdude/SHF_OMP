@@ -823,7 +823,7 @@
 !    Write S Array Subroutine                            !
 !========================================================!
 
-      SUBROUTINE WriteS(nx, Array,i)
+      SUBROUTINE WriteS(nx,ny,nz,Array,i)
 
         IMPLICIT none
 
@@ -831,8 +831,8 @@
 !     Declare passed variables                              !
 !-----------------------------------------------------------!
 
-        INTEGER*4, INTENT(IN)::   nx, i
-        REAL*8, INTENT(IN)::    Array(nx)
+        INTEGER*4, INTENT(IN)::   nx,ny,nz,i
+        REAL*8, INTENT(IN)::    Array(nx,ny,nz)
 
 !-----------------------------------------------------------!
 !     Declare local variables                               !
@@ -859,7 +859,7 @@
 
         WRITE(TestFile, format_string) 'S',i,'.dat'
 
-        CALL WRITE1d(nx, Array, TestFile)
+        CALL WRITE3d(nx, ny, nz, Array, TestFile)
 
         RETURN
       END SUBROUTINE WriteS
@@ -959,7 +959,7 @@
 !    Write a_nlm Array Subroutine                        !
 !========================================================!
 
-      SUBROUTINE Writea(nx, Array, i)
+      SUBROUTINE Writea(nx, ny, Array, i)
 
         IMPLICIT none
 
@@ -967,8 +967,8 @@
 !     Declare passed variables                              !
 !-----------------------------------------------------------!
 
-        INTEGER*4, INTENT(IN)::   nx, i
-        COMPLEX*16, INTENT(IN)::    Array(nx)
+        INTEGER*4, INTENT(IN)::   nx, ny, i
+        COMPLEX*16, INTENT(IN)::    Array(nx,ny)
 
 !-----------------------------------------------------------!
 !     Declare local variables                               !
@@ -995,7 +995,7 @@
 
         WRITE(TestFile, format_string) 'a',i,'.dat'
 
-        CALL WRITE1dC(nx, Array, TestFile)
+        CALL WRITE2dC(nx, ny, Array, TestFile)
 
         RETURN
       END SUBROUTINE Writea

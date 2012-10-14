@@ -3,7 +3,7 @@
 !----------------------------------------------------------!
 
       SUBROUTINE GetAllMetricComponents(&
-&M, Mr, NP,&
+&Nr, Nth, Nphi,&
 &iter, nchunks,&
 &bufsize,&
 &time,&
@@ -21,28 +21,28 @@
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-        INTEGER*4               :: M, Mr, NP
+        INTEGER*4               :: Nr, Nth, Nphi
         INTEGER*4               :: iter
         INTEGER*4               :: nchunks
 
         INTEGER(HSIZE_T)        :: bufsize(3)        
 
-        REAL*8                  :: r(Mr+1)
-        REAL*8                  :: theta(2*M)
-        REAL*8                  :: phi(2*M)
+        REAL*8                  :: r(Nr)
+        REAL*8                  :: theta(Nth)
+        REAL*8                  :: phi(Nphi)
 
-        REAL*8, INTENT(out)     :: alpha(4*NP)
-        REAL*8, INTENT(out)     :: betaR(4*NP)
-        REAL*8, INTENT(out)     :: betaTh(4*NP)
-        REAL*8, INTENT(out)     :: betaPhi(4*NP)
+        REAL*8, INTENT(out)     :: alpha(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)     :: betaR(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)     :: betaTh(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)     :: betaPhi(Nr,Nth,Nphi)
 
-        REAL*8, INTENT(out)     :: gRR(4*NP)
-        REAL*8, INTENT(out)     :: gThTh(4*NP)
-        REAL*8, INTENT(out)     :: gPhiPhi(4*NP)
+        REAL*8, INTENT(out)     :: gRR(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)     :: gThTh(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)     :: gPhiPhi(Nr,Nth,Nphi)
 
-        REAL*8, INTENT(out)     :: gRTh(4*NP)
-        REAL*8, INTENT(out)     :: gRPhi(4*NP)
-        REAL*8, INTENT(out)     :: gThPhi(4*NP)
+        REAL*8, INTENT(out)     :: gRTh(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)     :: gRPhi(Nr,Nth,Nphi)
+        REAL*8, INTENT(out)     :: gThPhi(Nr,Nth,Nphi)
 
         REAL*8, INTENT(out)     :: time
 
@@ -64,16 +64,16 @@
         CHARACTER*32            gxzfilename(nchunks)
         CHARACTER*32            gyzfilename(nchunks)
 
-        REAL*8                  alphaXYZ(4*NP)
-        REAL*8                  betaX(4*NP)
-        REAL*8                  betaY(4*NP)
-        REAL*8                  betaZ(4*NP)
-        REAL*8                  gXX(4*NP)
-        REAL*8                  gYY(4*NP)
-        REAL*8                  gZZ(4*NP)
-        REAL*8                  gXY(4*NP)
-        REAL*8                  gXZ(4*NP)
-        REAL*8                  gYZ(4*NP)
+        REAL*8                  alphaXYZ(Nr,Nth,Nphi)
+        REAL*8                  betaX(Nr,Nth,Nphi)
+        REAL*8                  betaY(Nr,Nth,Nphi)
+        REAL*8                  betaZ(Nr,Nth,Nphi)
+        REAL*8                  gXX(Nr,Nth,Nphi)
+        REAL*8                  gYY(Nr,Nth,Nphi)
+        REAL*8                  gZZ(Nr,Nth,Nphi)
+        REAL*8                  gXY(Nr,Nth,Nphi)
+        REAL*8                  gXZ(Nr,Nth,Nphi)
+        REAL*8                  gYZ(Nr,Nth,Nphi)
 
         REAL*8                  JMatrix(4,4)
         REAL*8                  gcart(4,4)
@@ -82,7 +82,6 @@
         REAL*8                  timeofdata(10)
 
         INTEGER*4               i, j, k
-        INTEGER*4               crow
         INTEGER*4               error
 
 !----------------------------------------------------------!
@@ -117,7 +116,7 @@
                 
         !ALPHA
         CALL GetMetricComponent(&
-            &M, Mr, NP,&
+            &Nr, Nth, Nphi,&
             &bufsize,&
             &timeofdata(1),&
             &iter, nchunks,&
@@ -128,7 +127,7 @@
 
         !BETA1
         CALL GetMetricComponent(&
-            &M, Mr, NP,&
+            &Nr, Nth, Nphi,&
             &bufsize,&
             &timeofdata(2),&
             &iter, nchunks,&
@@ -139,7 +138,7 @@
 
         !BETA2
         CALL GetMetricComponent(&
-            &M, Mr, NP,&
+            &Nr, Nth, Nphi,&
             &bufsize,&
             &timeofdata(3),&
             &iter, nchunks,&
@@ -150,7 +149,7 @@
 
         !BETA3
         CALL GetMetricComponent(&
-            &M, Mr, NP,&
+            &Nr, Nth, Nphi,&
             &bufsize,&
             &timeofdata(4),&
             &iter, nchunks,&
@@ -161,7 +160,7 @@
 
         !GXX
         CALL GetMetricComponent(&
-            &M, Mr, NP,&
+            &Nr, Nth, Nphi,&
             &bufsize,&
             &timeofdata(5),&
             &iter, nchunks,&
@@ -172,7 +171,7 @@
 
         !GYY
         CALL GetMetricComponent(&
-            &M, Mr, NP,&
+            &Nr, Nth, Nphi,&
             &bufsize,&
             &timeofdata(6),&
             &iter, nchunks,&
@@ -183,7 +182,7 @@
 
         !GZZ
         CALL GetMetricComponent(&
-            &M, Mr, NP,&
+            &Nr, Nth, Nphi,&
             &bufsize,&
             &timeofdata(7),&
             &iter, nchunks,&
@@ -194,7 +193,7 @@
 
         !GXY
         CALL GetMetricComponent(&
-            &M, Mr, NP,&
+            &Nr, Nth, Nphi,&
             &bufsize,&
             &timeofdata(8),&
             &iter, nchunks,&
@@ -205,7 +204,7 @@
 
         !GXZ
         CALL GetMetricComponent(&
-            &M, Mr, NP,&
+            &Nr, Nth, Nphi,&
             &bufsize,&
             &timeofdata(9),&    
             &iter, nchunks,&
@@ -216,7 +215,7 @@
 
         !GYZ
         CALL GetMetricComponent(&
-            &M, Mr, NP,&
+            &Nr, Nth, Nphi,&
             &bufsize,&
             &timeofdata(10),&
             &iter, nchunks,&
@@ -227,29 +226,30 @@
 
 
         DO i = 1, 9
-            IF( timeofdata(i) .NE. timeofdata(10) ) STOP "Metric components time discrepancy."
+            IF( timeofdata(i) .NE. timeofdata(10) ) &
+            & STOP "Metric components time discrepancy."
         END DO
 
         time = timeofdata(10)
 
-        !Now we need to perform coordinate transformation from (t,x,y,z) to (t,r,th,phi)
+        !Now we need to perform coordinate transformation 
+        !from (t,x,y,z) to (t,r,th,phi)
         !Both g_sph and g_cart are of down indices
  
-        !$OMP PARALLEL DO PRIVATE(j, k, JMatrix, crow, gcart, gsph, error)
-        DO i = 1, (Mr+1)        
-            DO j = 1, (2*M)
-                DO k = 1, (2*M)
+        !$OMP PARALLEL DO PRIVATE(j, k, JMatrix, gcart, gsph, error)
+        DO i = 1, Nr
+            DO j = 1, Nth
+                DO k = 1, Nphi
             
                     !Build the Jacobian matrix JMatrix
                     CALL EvaluateJacobian(r(i),theta(j),phi(k),JMatrix)
-
-                    crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
-                   
+ 
                     ! Build the matrix g_cart
                     CALL EvaluateMatrixofMetric(&
-                         &alphaXYZ(crow), betaX(crow), betaY(crow), betaZ(crow),&
-                         &gXX(crow), gYY(crow), gZZ(crow),&
-                         &gXY(crow), gXZ(crow), gYZ(crow),&
+                         &alphaXYZ(i,j,k),&
+                         &betaX(i,j,k), betaY(i,j,k), betaZ(i,j,k),&
+                         &gXX(i,j,k), gYY(i,j,k), gZZ(i,j,k),&
+                         &gXY(i,j,k), gXZ(i,j,k), gYZ(i,j,k),&
                          &gcart)
 
                     !  g_sph = (J^T) * g_cart * J
@@ -257,10 +257,10 @@
 
                     ! Get the 3-metric by inverting the 3-matric part of g_sph
                     CALL Invert3Metric(gsph(2,2), gsph(3,3), gsph(4,4),&
-                                      &gsph(2,3), gsph(2,4), gsph(3,4),&
-                                      &gRR(crow), gThTh(crow), gPhiPhi(crow),&
-                                      &gRTh(crow), gRPhi(crow), gThPhi(crow),&
-                                      &error)
+                                    &gsph(2,3), gsph(2,4), gsph(3,4),&
+                                    &gRR(i,j,k), gThTh(i,j,k), gPhiPhi(i,j,k),&
+                                    &gRTh(i,j,k), gRPhi(i,j,k), gThPhi(i,j,k),&
+                                    &error)
 
                     IF( error .NE. 0 ) THEN
                         PRINT *, 'Determinant is zero, error in inverting metric'
@@ -269,15 +269,25 @@
                     END IF
 
                     ! Get beta^r, beta^th, beta^phi
-                    ! gsph(1,2) = g_01 = beta_r, gsph(1,3) = g_02 = beta_th, gsph(1,4) = g_03 = beta_phi
-                    betaR(crow) = gRR(crow)*gsph(1,2) + gRTh(crow)*gsph(1,3) + gRPhi(crow)*gsph(1,4)
-                    betaTh(crow) = gRTh(crow)*gsph(1,2) + gThTh(crow)*gsph(1,3) + gThPhi(crow)*gsph(1,4)
-                    betaPhi(crow) = gRPhi(crow)*gsph(1,2) + gThPhi(crow)*gsph(1,3) + gPhiPhi(crow)*gsph(1,4)
+                    ! gsph(1,2) = g_01 = beta_r, gsph(1,3) = g_02 = beta_th, 
+                    ! gsph(1,4) = g_03 = beta_phi
+                    betaR(i,j,k) = gRR(i,j,k)*gsph(1,2) &
+                                &+ gRTh(i,j,k)*gsph(1,3) &
+                                &+ gRPhi(i,j,k)*gsph(1,4)
+                    betaTh(i,j,k)= gRTh(i,j,k)*gsph(1,2) &
+                                &+ gThTh(i,j,k)*gsph(1,3) &
+                                &+ gThPhi(i,j,k)*gsph(1,4)
+                    betaPhi(i,j,k)= gRPhi(i,j,k)*gsph(1,2) & 
+                                &+ gThPhi(i,j,k)*gsph(1,3) & 
+                                &+ gPhiPhi(i,j,k)*gsph(1,4)
 
                     ! Get alpha
                     ! alpha = sqrt( beta^i beta_i - g_00 )
-                    ! beta^r = betaR, beta^th = betaTh, beta^phi = betaPhi, gsph(1,1) = g_00
-                    alpha(crow) = SQRT( gsph(1,2) * betaR(crow) + gsph(1,3) * betaTh(crow) + gsph(1,4) * betaPhi(crow) &
+                    ! beta^r = betaR, beta^th = betaTh, beta^phi = betaPhi, 
+                    ! gsph(1,1) = g_00
+                    alpha(i,j,k) = SQRT( gsph(1,2) * betaR(i,j,k) + &
+                                    &gsph(1,3) * betaTh(i,j,k) + &
+                                    &gsph(1,4) * betaPhi(i,j,k) &
                                 & - gsph(1,1) )
 
                 END DO

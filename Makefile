@@ -8,16 +8,13 @@ MODS = dynmetricarray.mod
 OBJS = DynMetricArray.o \
        IO.o \
        main.o \
-       EvaluatedSdr.o \
        EvaluateJacobian.o \
        EvaluateMatrixofMetric.o \
        EvolveData.o \
        FindU.o \
        Functions.o \
        GetAllMetricComponents.o \
-       GetFilter.o \
        GetInitialData.o \
-       GetMatrices.o \
        GetMetricAtCurrentTime.o \
        GetMetricComponent.o \
        GetSchwarzschildMetric.o \
@@ -25,7 +22,7 @@ OBJS = DynMetricArray.o \
        OneDimensionalInterpolation.o \
        ReadHDF5MetricData.o \
        ReinitializeData.o \
-       SphHarmonicY.o \
+       SpectralTransform.o \
        TricubicInterpolation.o
 
 F90 = mpif90
@@ -35,14 +32,21 @@ CC = mpicc
 SWITCH = -O3 -xW -mcmodel=large -openmp
 LIBS = -Wl,-rpath,$$TACC_MKL_LIB \
    -L$$TACC_MKL_LIB -lmkl -lguide \
-   -I$$TACC_HDF5_INC -I$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB -lhdf5_fortran -lhdf5 -lz
+   -I$$TACC_HDF5_INC -I$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB \
+   -lhdf5_fortran -lhdf5 -lz \
+   -I$$TACC_FFTW3_INC -L$$TACC_FFTW3_LIB -lfftw3 -lm \
+   -L/work/01682/bunandar/lib -I/work/01682/bunandar/include -lshtns \
+   -debug
 FLAGS = -fpp
 
 #C++ DEPENDENCIES
 CCSWITCH = -O3 -xW -mcmodel=large -openmp
 CCLIBS = -I$$TACC_MKL_INC -Wl,-rpath,$$TACC_MKL_LIB \
    -L$$TACC_MKL_LIB -lmkl -lguide \
-   -I$$TACC_HDF5_INC -Wl,-rpath,$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB -lhdf5 -lz
+   -I$$TACC_HDF5_INC -Wl,-rpath,$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB -lhdf5 -lz \
+   -I$$TACC_FFTW3_INC -L$$TACC_FFTW3_LIB -lfftw3 -lm \
+   -L/work/01682/bunandar/lib -I/work/01682/bunandar/include -lshtns \
+   -debug
 CCFLAGS =
 
 all: $(PROG)

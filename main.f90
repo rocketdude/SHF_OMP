@@ -5,29 +5,36 @@
 ! This program is an event horizon finder using the pseudospectral methods.
 ! The eikonal data S(t, r, theta, phi) is represented as orthogonal functions 
 ! of Chebyshev polynomials & spherical harmonics.
-! In other words, we are approximating S(t, r, theta, phi) ~= a_nlm(t) T_n (rho) Y_lm (theta, phi).
+! In other words, we are approximating 
+! S(t, r, theta, phi) ~= a_nlm(t) T_n (rho) Y_lm (theta, phi).
+! This is an improvement to the old SHF with the use of FFT and SHTns.
+! For more information about SHTns: arXiv 1202.6522 (Schaeffer).
 
 
   PROGRAM              SHF
     USE                omp_lib
     USE                HDF5
-
     IMPLICIT           none
 
-    INTEGER*4, PARAMETER ::        Mr = 40
-    INTEGER*4, PARAMETER ::        M = 8
-    INTEGER*4, PARAMETER ::        NP = (Mr+1)*(M*M)
-    INTEGER*4, PARAMETER ::        TP = 4
-    INTEGER*4, PARAMETER ::        SpM = 6
+    INCLUDE            'shtns.f'
+
+    INTEGER*4, PARAMETER ::        Mr   = 40
+    INTEGER*4, PARAMETER ::        Lmax = 2
+    INTEGER*4, PARAMETER ::        Mmax = 2
+    INTEGER*4, PARAMETER ::        Nr = Mr+1
+    INTEGER*4, PARAMETER ::        Nth  = 64
+    INTEGER*4, PARAMETER ::        Nphi = 64
+    !Generally for anti-aliasing, Nphi > 3*Mmax, Nth > 2*Lmax
+    INTEGER*4, PARAMETER ::        TP   = 4
+    INTEGER*4, PARAMETER ::        SpM  = 6
 
     ! Mr is the degree of the radial Chebyshev polynomial
-    ! M is the degree of angular spherical harmonics with maximum L = M-1
-    ! M has to be multiples of two
-    ! NP is the number of coefficients, 4*NP is the number of collocation points
+    ! Lmax and Mmax are the maximum values of l and m of the spherical harmonics
+    ! Nr, Nth, and Nphi are the # of points in r, theta, phi directions
     ! TP-1 is the temporal interpolation order
     ! SpM is the number of additional directions we'd like to compute U for
 
-    REAL*8, PARAMETER ::         PI = 3.141592653589793238462643383279502884197D0
+    REAL*8, PARAMETER ::    PI = 3.141592653589793238462643383279502884197D0
 
 !-------------------------------------------------------!
 !     Declare Commons                                   !
@@ -41,10 +48,14 @@
     CHARACTER*32      aFile
     LOGICAL           FileExist
 
-    INTEGER*4           WriteUit        !iteration at which we output U into file
-    INTEGER*4           Writeg_rrUsqrdit !Iteration at which we output gRR*U^2
-    INTEGER*4           WriteSit        !iteration at which we output S into file
-    INTEGER*4           Writeait        !iteration at which we output the coef. a_nlm
+    INTEGER*4           WriteUit    
+    !iteration at which we output U into file
+    INTEGER*4           Writeg_rrUsqrdit 
+    !Iteration at which we output gRR*U^2
+    INTEGER*4           WriteSit        
+    !iteration at which we output S into file
+    INTEGER*4           Writeait        
+    !iteration at which we output the coef. a_nlm
 
 !--------------------------------------------------------!
 !     Declare Numerical Inputs                           ! 
@@ -54,9 +65,8 @@
     INTEGER*4           Startit!Starting iteration
     INTEGER*4           Maxit  !Maximum iteration
 
-    INTEGER*4           SFLAG  !If SFLAG = 1, then we are continuing previous run
-    INTEGER*4           LWORK  !Size of the WORK matrix, used for inverting matrices
-    INTEGER*4           IFLAG  !IFLAG is inverse flag. IFLAG = 1, AFinv.dat is available
+    INTEGER*4           SFLAG  
+    !If SFLAG = 1, then we are continuing previous run
 
     REAL*8            cfl    !Courant-Friedrich-Lewy factor
     REAL*8            c      !Steepness of the initial tanh function
@@ -71,124 +81,116 @@
     ! X = r*sin(theta)*cos(phi)
     ! Y = r*sin(theta)*sin(phi)
     ! Z = r*cos(theta)
-    ! Here we note that the coordinate locations do not correspond to the collocation points
-    ! We only use half of the theta coordinates for the collocation points
 
+    ! Things that need to be allocated due to sph. harmonic FFTW
+    COMPLEX*16,ALLOCATABLE,DIMENSION(:,:) ::  a        
+                                             !time-dependent coefficients a_nlm(t)
+    
     REAL*8            t           !Current time
     REAL*8            tfinal      !Final time
-    REAL*8            tdir        !Direction of time (+1 for forward, -1 for backward)
+    REAL*8            tdir        !Direction of time
     REAL*8            dt          !Time increment
-    REAL*8            dx          !Smallest distance between two points (used to determine dt)
+    REAL*8            dx          !Smallest distance between two points
     REAL*8            rdtheta     !Smallest distance in the theta direction
     REAL*8            rsinthdphi  !Smallest distance in the phi direction
-    REAL*8            walltime_start, walltime_stop  !used for calculating the total wall time
-    REAL*8            cputime_start, cputime_stop    !used for calculating the program speed
-    REAL*8            eps         !Machine epsilon (needs to be calculated before running this)
+    REAL*8            walltime_start, walltime_stop  !calc. total wall time
+    REAL*8            cputime_start, cputime_stop    !calc. program speed
+    REAL*8            eps         !Machine epsilon (needs to be pre-computed)
     REAL*8            rootsign    !Choose the sign of the root (+/-)
 
-    REAL*8            rho(Mr+1)   !Canonical radial coordinate for Chebyshev polynomials
-    REAL*8            r(Mr+1)     !The radial coordinate r according to the usual sph. coord. system
-    REAL*8            rmax, rmin  !rmax and rmin define the radial domain in this program,
-                                  !used to calculate the canonical radial coordinate rho
+    REAL*8            rho(Nr)   !Canonical radial coord. for Chebyshev poly.
+    REAL*8            r(Nr)     !The radial coordinate r
+    REAL*8            rmax, rmin  !rmax and rmin define the radial domain,
+                                  !used to calculate rho
 
-    REAL*8            theta(2*M)  !The angle theta according to the usual sph. coordinate system
-    REAL*8            phi(2*M)    !The angle phi according to the usual sph. coordinate system
-    REAL*8            thetaSp(SpM)!The angle theta in specific requested directions
-    REAL*8            phiSp(SpM)  !The angle phi in specific requested directions
+    REAL*8              theta(Nth)      !The angle theta
+    REAL*8              phi(Nphi)        !The angle phi
+    REAL*8              thetaSp(SpM)!The angle theta in specific directions
+    REAL*8              phiSp(SpM)  !The angle phi in specific directions
 
-    REAL*8            R0          !Initial radius of the light 'cone'
+    REAL*8              R0          !Initial radius of the light 'cone'
 
-    REAL*8            U(2*M,2*M)  !Radial distance of the light cone in each theta and phi direction
-    REAL*8            Uave        !Average radial distance of the light cone at a specific time step
-    REAL*8            g_rrUsqrd(2*M,2*M) !g_rr * U^2 in each theta and phi direction
-    REAL*8            g_rrUsqrdAve       !Average g_rr * U^2 at a specific time step
-    REAL*8            USp(SpM)    !The values of U in specific requested directions
+    REAL*8              U(Nth,Nphi) !Radial distance of the light cone
+    REAL*8              Uave        !Average radial distance of the light cone
+    REAL*8              g_rrUsqrd(Nth,Nphi)!g_rr * U^2
+    REAL*8              g_rrUsqrdAve  !Average g_rr * U^2
+    REAL*8              USp(SpM)      !The values of U in specified directions
 
-    COMPLEX*16        a(NP)       !Values of the time-dependent coefficients a_nlm(t)
-                                  !vectorized in loop n:l:m
-    COMPLEX*16        AF(4*NP, NP) !Matrix of Tn(r)Ylm(theta, phi)
-    COMPLEX*16        AFinv(NP, 4*NP) !Inverse of matrix AF
-    COMPLEX*16        B(NP, 4*NP) !Matrix of quadrature
-    COMPLEX*16        Dth(4*NP, NP) !Matrix used to take derivative of S w.r.t. theta
-    COMPLEX*16        Dphi(4*NP, NP)!Matrix used to take derivative of S w.r.t phi
-    REAL*8            F(NP)       !Exponential filter for the Chebyshev polynomials
-
-    INTEGER*4           Lmax        !Maximum degree of l of the spherical harmonics
+    INTEGER*4           Mlm         !Size of l, m coefficients needed
+    INTEGER*4           layout      !How th & phi are arranged
     INTEGER*4           n           !Degree of Chebyshev polynomial
     INTEGER*4           l, ml       !Degree of spherical harmonics
-    INTEGER*4           reinit      !Iteration at which we smooth the data by reinitializing
+    INTEGER*4           reinit      !Iteration at which we reinitialize
 
 !--------------------------------------------------------!
 !     Declare Metric Data                                !
 !--------------------------------------------------------!
 
-    ! Values of the upper index metric at t = t0, at the different collocation points
-    ! The collocation points are (r, theta, phi)
+    ! Values of the upper index metric
 
     ! Spatial metric (gamma's)--all upper indices
     ! Remember that gamma^ij is the inverse of the SPATIAL metric alone
-    REAL*8        gRR(4*NP)
-    REAL*8        gThTh(4*NP)
-    REAL*8        gPhiPhi(4*NP)
-    REAL*8        gRTh(4*NP)      
-    REAL*8        gRPhi(4*NP)
-    REAL*8        gThPhi(4*NP)
+    REAL*8              gRR(Nr,Nth,Nphi)
+    REAL*8              gThTh(Nr,Nth,Nphi)
+    REAL*8              gPhiPhi(Nr,Nth,Nphi)
+    REAL*8              gRTh(Nr,Nth,Nphi)      
+    REAL*8              gRPhi(Nr,Nth,Nphi)
+    REAL*8              gThPhi(Nr,Nth,Nphi)
 
-    REAL*8        alpha(4*NP)    !Lapse function
-    REAL*8        betaR(4*NP)    !Shift function beta^{r}
-    REAL*8        betaTh(4*NP)   !Shift function beta^{theta}
-    REAL*8        betaPhi(4*NP)  !Shift function beta^{phi}
+    REAL*8              alpha(Nr,Nth,Nphi)    !Lapse function
+    REAL*8              betaR(Nr,Nth,Nphi)    !Shift function beta^{r}
+    REAL*8              betaTh(Nr,Nth,Nphi)   !Shift function beta^{theta}
+    REAL*8              betaPhi(Nr,Nth,Nphi)  !Shift function beta^{phi}
 
     ! Values of the upper index metric at different times
-    REAL*8        BgRR(TP, 4*NP)
-    REAL*8        BgThTh(TP, 4*NP)
-    REAL*8        BgPhiPhi(TP, 4*NP)
-    REAL*8        BgRTh(TP, 4*NP)
-    REAL*8        BgRPhi(TP, 4*NP)
-    REAL*8        BgThPhi(TP, 4*NP)
+    REAL*8              BgRR(TP,Nr,Nth,Nphi)
+    REAL*8              BgThTh(TP,Nr,Nth,Nphi)
+    REAL*8              BgPhiPhi(TP,Nr,Nth,Nphi)
+    REAL*8              BgRTh(TP,Nr,Nth,Nphi)
+    REAL*8              BgRPhi(TP,Nr,Nth,Nphi)
+    REAL*8              BgThPhi(TP,Nr,Nth,Nphi)
 
-    REAL*8        Balpha(TP, 4*NP)
-    REAL*8        BbetaR(TP, 4*NP)
-    REAL*8        BbetaTh(TP, 4*NP)
-    REAL*8        BbetaPhi(TP, 4*NP)
+    REAL*8              Balpha(TP,Nr,Nth,Nphi)
+    REAL*8              BbetaR(TP,Nr,Nth,Nphi)
+    REAL*8              BbetaTh(TP,Nr,Nth,Nphi)
+    REAL*8              BbetaPhi(TP,Nr,Nth,Nphi)
 
     ! Schwarzschild metric parameters
-    REAL*8            Mass   !Mass of Schwarzschild black hole located at the center
+    REAL*8            Mass   !Mass of Schwarzschild black hole (for testing)
 
     ! Parameters to read metric from HDF5 files
-    INTEGER(HSIZE_T)  bufsize(3)    !Buffer size to read the metric from HDF5 files
-    INTEGER*4         nchunks       !Number of chunks that the metric is divided into
-    INTEGER*4         it_data(TP)   !The Einstein Toolkit iteration value for the metric data
-    INTEGER*4         it_data_max   !Maximum Einstein Toolkit iteration value for the metric data
-    INTEGER*4         it_data_min   !Minimum Einstein Toolkit iteration value for the metric data
+    INTEGER(HSIZE_T)  bufsize(3)    !Buffer size to read the metric from HDF5
+    INTEGER*4         nchunks       !Number of chunks that output the metric
+    INTEGER*4         it_data(TP)   !The Einstein Toolkit iteration value
+    INTEGER*4         it_data_max   !Maximum Einstein Toolkit iteration value
+    INTEGER*4         it_data_min   !Minimum Einstein Toolkit iteration value
     INTEGER*4         delta_it_data !Difference in it_data between metric values
     INTEGER*4         readdata      !Index of it_data that needs to be read
     INTEGER*4         it_data_test
 
     REAL*8            t_data(TP)    !Data times
     REAL*8            t_thresh      !Threshold time, beyond this read new data
-
-    INTEGER*4         Maxit_allowed !The amount of iterations that we can have with the available metric data
-
+    INTEGER*4         Maxit_allowed !The amount of iterations that we can have
+    
 !--------------------------------------------------------!
 !     Declare Local Parameters                           !
 !--------------------------------------------------------!
 
     INTEGER*4           i,j,k       !Counters for DO loops
-    INTEGER*4           crow        !Row counter
     INTEGER*4           nthreads    !Number of threads
 
 !========================================================!
 !     MAIN PROGRAM                                       !
 !========================================================!
 
-    Lmax = M - 1
 !--------------------------------------------------------!
 !     Parameters                                         !
 !--------------------------------------------------------!
     
     !Parameters related to initial conditions
-    SFLAG = 0                       !If SFLAG = 1, we are continuing previous run: change t, Startit and aFile
+    SFLAG = 0                       !If SFLAG = 1, 
+                                    !we are continuing previous run: 
+                                    !change t, Startit and aFile
     t = 50.0D0                      !Last time from previous run
     Startit = 6751                  !Startit = last iteration + 1
     aFile = 'a10.dat'
@@ -203,29 +205,27 @@
     R0 = 0.675D0                    !Initial radius of the null surface
 
     !Simulation parameters                              
-    !Note: negative rootsign, positive lapse & shift functions, and negative tdir give EH finder
-    eps =  2.22044604925031308D-016 !Machine epsilon (calculate everytime you change machine)
+    !Note: negative rootsign, positive lapse & shift functions, 
+    !      and negative tdir give EH finder
+    eps =  2.22044604925031308D-016 !Machine epsilon (precalculate)
     c = 0.1D0
-    cfl = 1.508D0                   !Depends on which SSP-Runge-Kutta you're using.
-                                    !SSPRK(5,4)=>cfl=1.508 and SSPRK(3,3)=>cfl=1.0
-    rootsign = -1.0D0               !Choose the root sign, either 1.0D0 or -1.0D0 (depends on the metric)
-                                    !for alpha=(+), beta=(+), dt=(-), -1.0D0 is an event horizon finder
+    cfl = 1.508D0                   !Depends on which SSP-Runge-Kutta used
+                                    !SSPRK(5,4)=>cfl=1.508 and 
+                                    !SSPRK(3,3)=>cfl=1.0
+    rootsign = -1.0D0               !Choose the root sign, 
+                                    !either 1.0D0 or -1.0D0 (depends on metric)
+                                    !e.g. for alpha=(+), beta=(+), dt=(-), 
+                                    !     -1.0D0 is an event horizon finder
     tdir = -1.0D0                   !Direction of time, choose +1.0D0 or -1.0D0
     reinit = 15
-
-    IFLAG = 0                       !IFLAG = 0 ==> calculate AFinv (slow)
-                                    !IFLAG = 1 ==> read AFinv from AFinv.dat
-                                    !IFLAG = -1 ==> calculate AFinv and write it into AFinv.dat
-    !Note:LWORK needs to be changed everytime we change M or Mr, AFinv has to be recalculated
-    LWORK = 7139904                 !Optimized size of the WORK matrix, Put LWORK = -1 to query for the optimal size
-                                    !Some optimized values for LWORK:
-                                    !If Mr=40 & M=8, LWORK=7139904
-                                    !If Mr=100 & M=8, LWORK=42617152
-                                    !If Mr=100 & M=2, LWORK=189880
 
     !Spherical grid parameters
     rmax = 1.20D0                   !maximum value of r
     rmin = 0.20D0                   !minimum value of r
+
+    !Setup how theta and phi are stored
+    layout = sht_phi_contiguous !Choices: SHT_PHI_CONTIGUOUS or
+                                !         SHF_THETA_CONTIGUOUS
 
     !Additional directions we'd like to compute U
     thetaSp = (/ 0.0D0, PI, PI/2.0D0, PI/2.0D0, PI/2.0D0, PI/2.0D0 /)
@@ -233,7 +233,7 @@
     
     !Parameters related to reading HDF5 files--do h5dump to check these
     nchunks = 16
-    bufsize(1) = 50                 !Buffer size; has to be bigger than the size of each dataset
+    bufsize(1) = 50 !Buffer sizes need to be bigger than datasets
     bufsize(2) = 50
     bufsize(3) = 50
     it_data_max = 8000
@@ -253,22 +253,6 @@
     Writeait         = 1000
 
 !--------------------------------------------------------!
-!     Echo certain parameters                            !
-!--------------------------------------------------------!
-
-    IF( (MOD(M,2) .EQ. 0) .OR. (M .EQ. 1) ) THEN
-       PRINT *, 'M =', M
-       PRINT *, 'Maximum L =', Lmax
-    ELSE
-       PRINT *, 'M has to be a multiple of two (or M=1)'
-       STOP
-    END IF
-
-!!$    PRINT *, 'Mass of blackhole =', Mass
-    PRINT *, '# of iterations =', (Maxit-Startit+1)
-    PRINT *, 'Reinitializing every ', reinit, 'iterations'
-
-!--------------------------------------------------------!
 !     Timer Start                                        !
 !--------------------------------------------------------!	  
 
@@ -285,7 +269,18 @@
     !Inquire number of threads
     nthreads = omp_get_max_threads()
     WRITE(*,*) 'No. of threads = ', nthreads
+    !Optimize SHTns with nthreads
+    CALL SHTNS_USE_THREADS(nthreads)
 
+    !Compute sizes required for the lm part of a_nlm
+    CALL SHTNS_CALC_NLM(Mlm, Lmax, Mmax, 1)
+    !Initialize SHT with the Gauss points
+    CALL SHTNS_INIT_SH_GAUSS(layout, Lmax, Mmax, 1, Nth, Nphi)
+    
+    !Get the r, theta, and phi array
+    CALL SHTNS_COS_ARRAY(theta)
+    theta = ACOS(theta)
+    
     !$OMP PARALLEL
     !$OMP DO
     DO i = 0, Mr
@@ -293,14 +288,30 @@
        r(i+1) = 0.5D0*( (rmax + rmin) + (rmax - rmin)*rho(i+1) )
     END DO
     !$OMP END DO
-
+    
     !$OMP DO
-    DO j = 0, (2*M-1)
-       theta(j+1) = PI*(DBLE(j) + 0.5D0 )/DBLE(2*M)
-       phi(j+1) = PI*2.0D0*(DBLE(j) + 0.5D0)/DBLE(2*M)
+    DO k = 1, Nphi
+       phi(k) = DBLE(k-1)*2.0D0*PI/Nphi
     END DO
     !$OMP END DO
     !$OMP END PARALLEL
+    
+    !Allocate a_nlm
+    ALLOCATE( a(Mr+1,Mlm) )
+    
+!--------------------------------------------------------!
+!     Echo certain parameters                            !
+!--------------------------------------------------------!
+
+!!$    PRINT *, 'Mass of blackhole =', Mass
+    PRINT *, 'Mr = ', Mr
+    PRINT *, 'Mlm = ', Mlm
+    PRINT *, 'Lmax = ', Lmax
+    PRINT *, 'Mmax = ', Mmax
+    PRINT *, '(Nr, Nth, Nphi) = ', Nr, ',', Nth, ',', Nphi
+    PRINT *, '# of iterations =', (Maxit-Startit+1)
+    PRINT *, 'Reinitializing every ', reinit, 'iterations'
+    PRINT *, 'Number of metric data chunks =', nchunks
 
 !--------------------------------------------------------!
 !     Find smallest spatial increment                    !
@@ -312,16 +323,8 @@
           dx = r(i+1) - r(i)
        END IF
     END DO
-
-!!$    rdtheta = MINVAL(r)*PI/DBLE(2*M)
-!!$    rsinthdphi = MINVAL(r)*MINVAL(SIN(theta))*PI/DBLE(M)
-!!$
-!!$    IF( rdtheta .LT. dx ) THEN
-!!$       dx = rdtheta
-!!$    ELSEIF( rsinthdphi .LT. dx ) THEN
-!!$       dx = rsinthdphi
-!!$    END IF
-
+    
+    !then set the value of dt
     dt = tdir * cfl * dx
     
 !--------------------------------------------------------!
@@ -331,35 +334,22 @@
     PRINT *, '==============================='
     PRINT *, 'INITIALIZING PROGRAM'
 
-    PRINT *, 'Number of metric data chunks =', nchunks
-
-    CALL GetMatrices(& 
-         & M, Mr, NP, Lmax, LWORK, IFLAG,&
-         & r, rho, theta, phi,&
-         & AF, AFinv, B, Dth, Dphi)
-
     IF( SFLAG .EQ. 1 ) THEN
        PRINT *, 'Continuing run'
        PRINT *, 'Previous iteration=' ,(Startit-1)
 
-       CALL Read1dC(NP, a, aFile)
+       CALL Read1dC(Mr+1, Mlm, a, aFile)
 
     ELSE
 
        CALL GetInitialData(& 
-            & M, Mr, NP,&
+            & Nr, Nth, Nphi,&
+            & Mr, Mlm,&
             & c,&
             & R0,&
             & r, theta, phi,&
-            & B,&
             & a)
-
     END IF
-
-    CALL GetFilter(& 
-         & M, Mr, NP, Lmax,&
-         & eps,&
-         & F)
 
 !--------------------------------------------------------!
 !     Evaluate Metric                                    !
@@ -430,7 +420,7 @@
         END IF
                 
         CALL GetMetricAtCurrentTime(&
-             &M, Mr, NP, TP,&
+             &Nr, Nth, Nphi, TP,&
              &readdata,&
              &t, t_thresh, tdir,&
              &t_data, it_data,&    
@@ -445,22 +435,22 @@
              &gRTh, gRPhi, gThPhi)
 
        CALL EvolveData(&
-            &M, Mr, NP, Lmax,&
+            &Nr, Nth, Nphi, Mr, Mlm,&
             &rootsign, rmin, rmax,&
+            &rho, theta, phi,&
             &alpha,&
             &betaR, betaTh, betaPhi,&
             &gRR, gThTh, gPhiPhi,&
             &gRTh, gRPhi, gThPhi,&
             &t, dt,&
-            &AF, AFinv, Dth, Dphi, F,&
             &a)
  
        CALL FindU(&
-            &M, Mr, NP, Lmax, SpM,&
+            &Nr, Nth, Nphi, Mr, Mlm, SpM,&
             &gRR, gThTh, gPhiPhi,&
             &gRTh, gRPhi, gThPhi,&
-            &r, rho,&
-            &AF,a,&
+            &r, rho, theta, phi,&
+            &a,&
             &it, WriteSit,&
             &U, Uave, USp,&
             &thetaSp, phiSp,&
@@ -471,9 +461,11 @@
        !     Writing OUTPUTS into files                         !
        !--------------------------------------------------------!
 
-       IF( MOD(it,WriteUit) .EQ. 0 ) CALL WriteU(2*M, 2*M, U, it)
-       IF( MOD(it,Writeg_rrUsqrdit) .EQ. 0 ) CALL WriteGRRUU(2*M, 2*M, g_rrUsqrd, it)
-       IF( MOD(it,Writeait) .EQ. 0 .OR. (it .EQ. Maxit) ) CALL Writea(NP, a, it)
+       IF( MOD(it,WriteUit) .EQ. 0 ) CALL WriteU(Nth, Nphi, U, it)
+       IF( MOD(it,Writeg_rrUsqrdit) .EQ. 0 ) &
+         & CALL WriteGRRUU(Nth, Nphi, g_rrUsqrd, it)
+       IF( MOD(it,Writeait) .EQ. 0 .OR. (it .EQ. Maxit) ) &
+         & CALL Writea(Mr+1, Mlm, a, it)
        
        CTemp = 'Time.dat'
        OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
@@ -502,14 +494,11 @@
        !--------------------------------------------------------!
 
        IF( MOD(it, reinit) .EQ. 0 ) THEN
-
-          CALL ReinitializeData(& 
-               & M, Mr, NP,&
-               & c,&
-               & U,&
-               & r, theta, phi,&
-               & B,&
-               & a)
+           
+           CALL ReinitializeData(&
+                   &Nr, Nth, Nphi, Mr, Mlm,&
+                   &r, rho, theta, phi,&
+                   &c, U, a)
 
        END IF
 
@@ -524,7 +513,7 @@
 
        IF( ((t .LT. tfinal) .AND. (tdir .LT. 0.0D0)) .OR.&
           &((t .GT. tfinal) .AND. (tdir .GT. 0.0D0)) ) THEN
-           CALL Writea(NP, a, it)
+           CALL Writea(Mr+1, Mlm, a, it)
            EXIT
        END IF
 

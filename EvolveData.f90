@@ -3,19 +3,20 @@
 !--------------------------------------------------------!
 
       SUBROUTINE EvolveData(&
-&M, Mr, NP, Lmax,&
+&Nr, Nth, Nphi, Mr, Mlm,&
 &rootsign, rmin, rmax,&
+&rho, theta, phi,&
 &alpha,&
 &betaR, betaTh, betaPhi,&
 &gRR, gThTh, gPhiPhi,&
 &gRTh, gRPhi, gThPhi,&
 &t, dt,&
-&AF, AFinv, Dth, Dphi, F,&
 &a)
 
-        !EvolveData subroutine uses the Strong-Stability Preserving Runge-Kutta (SSPRK (5,4))
-        !An outline of the integrator can be found on "Spectral Methods for Time-Dependent
-        !Problems" by Jan Hesthaven, pg 201
+        !EvolveData subroutine uses the SSPRK (5,4)
+        !An outline of the integrator can be found on 
+        !"Spectral Methods for Time-Dependent Problems" 
+        !by Jan Hesthaven, pg 201
         !with CFL coefficient of 1.508
         
         USE             omp_lib
@@ -25,36 +26,30 @@
 !     Declare calling variables                          !
 !--------------------------------------------------------!
 
-        INTEGER*4               :: M, Mr, NP, Lmax
+        INTEGER*4               :: Nr,Nth,Nphi,Mr,Mlm
 
         REAL*8                  :: rootsign
         REAL*8                  :: rmin
         REAL*8                  :: rmax
+        REAL*8                  :: rho(Nr), theta(Nth), phi(Nphi)
 
-        REAL*8                  :: alpha(4*NP)
-        REAL*8                  :: betaR(4*NP)
-        REAL*8                  :: betaTh(4*NP)
-        REAL*8                  :: betaPhi(4*NP)
+        REAL*8                  :: alpha(Nr,Nth,Nphi)
+        REAL*8                  :: betaR(Nr,Nth,Nphi)
+        REAL*8                  :: betaTh(Nr,Nth,Nphi)
+        REAL*8                  :: betaPhi(Nr,Nth,Nphi)
 
-        REAL*8                  :: gRR(4*NP)
-        REAL*8                  :: gThTh(4*NP)
-        REAL*8                  :: gPhiPhi(4*NP)
+        REAL*8                  :: gRR(Nr,Nth,Nphi)
+        REAL*8                  :: gThTh(Nr,Nth,Nphi)
+        REAL*8                  :: gPhiPhi(Nr,Nth,Nphi)
 
-        REAL*8                  :: gRTh(4*NP)
-        REAL*8                  :: gRPhi(4*NP)
-        REAL*8                  :: gThPhi(4*NP)
+        REAL*8                  :: gRTh(Nr,Nth,Nphi)
+        REAL*8                  :: gRPhi(Nr,Nth,Nphi)
+        REAL*8                  :: gThPhi(Nr,Nth,Nphi)
 
         REAL*8                  :: t
         REAL*8                  :: dt
-        REAL*8                  :: F(NP)
-        COMPLEX*16              :: AF(4*NP,NP)
-        COMPLEX*16              :: AFinv(NP, 4*NP)
-        COMPLEX*16              :: Dth(4*NP,NP)
-        COMPLEX*16              :: Dphi(4*NP,NP)
 
-        COMPLEX*16              :: a(NP)
-
-        COMPLEX*16                 SphHarmonicY
+        COMPLEX*16              :: a(Mr+1,Mlm)
 
 !--------------------------------------------------------!
 !     Declare Locals                                     !
@@ -62,18 +57,18 @@
 
         CHARACTER*32    CTemp
         INTEGER*4         i, j, k
-        INTEGER*4         ccol, crow
+        INTEGER*4         n
         
         COMPLEX*16      sqrtterm
 
-        COMPLEX*16      dSdr(4*NP)
-        COMPLEX*16      dSdth(4*NP)
-        COMPLEX*16      dSdphi(4*NP)
-        COMPLEX*16      dSdt(4*NP)
+        COMPLEX*16      dSdr(Nr,Nth,Nphi)
+        COMPLEX*16      dSdth(Nr,Nth,Nphi)
+        COMPLEX*16      dSdphi(Nr,Nth,Nphi)
+        COMPLEX*16      dSdt(Nr,Nth,Nphi)
 
-        COMPLEX*16      aaRK(NP,5)
-        COMPLEX*16      dadt(NP)
-        COMPLEX*16      dadt3(NP)
+        COMPLEX*16      aaRK(Mr+1,Mlm,5)
+        COMPLEX*16      dadt(Mr+1,Mlm)
+        COMPLEX*16      dadt3(Mr+1,Mlm)
 
 !--------------------------------------------------------!
 !      Main Subroutine                                   !
@@ -83,57 +78,52 @@
 !      STEP 1                                            !
 !--------------------------------------------------------!
 
-!!$        !Filter coefficients a with an exponential fitler
-!!$        a = F*a
-
-        !Store the coefficients inside aaRK which will be used in the Runge-Kutta method
-        aaRK(:,1) = a
+        !Store the coefficients inside aaRK 
+        !which will be used in the Runge-Kutta method
+        !$OMP PARALLEL DO
+        DO n=1,(Mr+1)
+            aaRK(n,:,1) = a(n,:)
+        END DO
+        !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(&
-             &M, Mr, NP, Lmax,&
-             &rmin, rmax,&
-             &a, AF,&
-             &dSdr)
-
-        dSdphi = MATMUL(Dphi, a)
-        dSdth = MATMUL(Dth, a)
-
-        !$OMP PARALLEL DO PRIVATE(j, k, crow, sqrtterm)
-        DO i = 1, (Mr+1)
-           DO j = 1, 2*M
-              DO k = 1, 2*M
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,a,dSdphi)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,a,dSdth)
+        
+        !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
+        DO i = 1,Nr
+           DO j = 1,Nth
+              DO k = 1,Nphi
                  
-                 crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
-
                  IF( i .EQ. (Mr+1) ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
                     sqrtterm = SQRT(&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
+                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
+                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
-                    dSdt(crow) = &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
+                    dSdt(i,j,k) = &
+                         &betaTh(i,j,k)*dSdth(i,j,k) + &
+                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
+                         &rootsign*alpha(i,j,k)*sqrtterm
                  ELSE
                     !INNER POINTS
                     sqrtterm = SQRT(&
-                         &gRR(crow)*dSdr(crow)*dSdr(crow) +&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gRTh(crow)*dSdr(crow)*dSdth(crow) +&
-                         &2.0D0*gRPhi(crow)*dSdr(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
+                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
+                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
+                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
+                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
-                    dSdt(crow) = &
-                         &betaR(crow)*dSdr(crow) + &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
+                    dSdt(i,j,k) = &
+                         &betaR(i,j,k)*dSdr(i,j,k) + &
+                         &betaTh(i,j,k)*dSdth(i,j,k) + &
+                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
+                         &rootsign*alpha(i,j,k)*sqrtterm
                  END IF
 
               END DO
@@ -141,281 +131,292 @@
         END DO
         !$OMP END PARALLEL DO
         
-        dadt = MATMUL( AFinv, dSdt)
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,&
+                                       &dSdt,dadt)
 
-        a = aaRK(:,1) + 0.391752226571890D0 * dt * dadt
+        !$OMP PARALLEL DO
+        DO n=1,(Mr+1)
+            a(n,:) = aaRK(n,:,1) + 0.391752226571890D0 * dt * dadt(n,:)
+        END DO
+        !$OMP END PARALLEL DO
 
 
 !--------------------------------------------------------!
 !      STEP 2                                            !
 !--------------------------------------------------------!
 
-!!$        !Filter coefficients a with an exponential fitler
-!!$        a = F*a
-
-        !Store the coefficients inside aaRK which will be used in the Runge-Kutta method
-        aaRK(:,2) = a
+        !Store the coefficients inside aaRK 
+        !which will be used in the Runge-Kutta method
+        !$OMP PARALLEL DO
+        DO n=1,(Mr+1)
+            aaRK(n,:,2) = a(n,:)
+        END DO
+        !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(&
-             &M, Mr, NP, Lmax,&
-             &rmin, rmax,&
-             &a, AF,&
-             &dSdr)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,a,dSdphi)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,a,dSdth)
 
-        dSdphi = MATMUL(Dphi, a)
-        dSdth = MATMUL(Dth, a)
-
-        !$OMP PARALLEL DO PRIVATE(j, k, crow, sqrtterm)
-        DO i = 1, (Mr+1)
-           DO j = 1, 2*M
-              DO k = 1, 2*M
+        !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
+        DO i = 1,Nr
+           DO j = 1,Nth
+              DO k = 1,Nphi
                  
-                 crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
-
                  IF( i .EQ. (Mr+1) ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
                     sqrtterm = SQRT(&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
+                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
+                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
-                    dSdt(crow) = &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
+                    dSdt(i,j,k) = &
+                         &betaTh(i,j,k)*dSdth(i,j,k) + &
+                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
+                         &rootsign*alpha(i,j,k)*sqrtterm
                  ELSE
                     !INNER POINTS
                     sqrtterm = SQRT(&
-                         &gRR(crow)*dSdr(crow)*dSdr(crow) +&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gRTh(crow)*dSdr(crow)*dSdth(crow) +&
-                         &2.0D0*gRPhi(crow)*dSdr(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
+                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
+                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
+                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
+                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
-                    dSdt(crow) = &
-                         &betaR(crow)*dSdr(crow) + &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
+                    dSdt(i,j,k) = &
+                         &betaR(i,j,k)*dSdr(i,j,k) + &
+                         &betaTh(i,j,k)*dSdth(i,j,k) + &
+                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
+                         &rootsign*alpha(i,j,k)*sqrtterm
                  END IF
 
               END DO
            END DO
         END DO
         !$OMP END PARALLEL DO
-        
-        dadt = MATMUL( AFinv, dSdt)
+ 
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,&
+                                       &dSdt,dadt)
 
-        a = 0.444370493651235D0 * aaRK(:,1) + 0.555629506348765D0 * aaRK(:,2)&
-            &+ 0.368410593050371D0 * dt * dadt
+        !$OMP PARALLEL DO
+        DO n=1,(Mr+1)
+            a(n,:) = 0.444370493651235D0 * aaRK(n,:,1) + &
+              & 0.555629506348765D0 * aaRK(n,:,2) + &
+              & 0.368410593050371D0 * dt * dadt(n,:)
+        END DO
+        !$OMP END PARALLEL DO
+
 
 !--------------------------------------------------------!
 !      STEP 3                                            !
 !--------------------------------------------------------!
 
-!!$        !Filter coefficients a with an exponential fitler
-!!$        a = F*a
-
-        !Store the coefficients inside aaRK which will be used in the Runge-Kutta method
-        aaRK(:,3) = a
+        !Store the coefficients inside aaRK 
+        !which will be used in the Runge-Kutta method
+        !$OMP PARALLEL DO
+        DO n=1,(Mr+1)
+            aaRK(n,:,3) = a(n,:)
+        END DO
+        !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(&
-             &M, Mr, NP, Lmax,&
-             &rmin, rmax,&
-             &a, AF,&
-             &dSdr)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,a,dSdphi)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,a,dSdth)
 
-        dSdphi = MATMUL(Dphi, a)
-        dSdth = MATMUL(Dth, a)
-
-        !$OMP PARALLEL DO PRIVATE(j, k, crow, sqrtterm)
-        DO i = 1, (Mr+1)
-           DO j = 1, 2*M
-              DO k = 1, 2*M
+        !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
+        DO i = 1,Nr
+           DO j = 1,Nth
+              DO k = 1,Nphi
                  
-                 crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
-
                  IF( i .EQ. (Mr+1) ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
                     sqrtterm = SQRT(&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
+                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
+                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
-                    dSdt(crow) = &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
+                    dSdt(i,j,k) = &
+                         &betaTh(i,j,k)*dSdth(i,j,k) + &
+                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
+                         &rootsign*alpha(i,j,k)*sqrtterm
                  ELSE
                     !INNER POINTS
                     sqrtterm = SQRT(&
-                         &gRR(crow)*dSdr(crow)*dSdr(crow) +&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gRTh(crow)*dSdr(crow)*dSdth(crow) +&
-                         &2.0D0*gRPhi(crow)*dSdr(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
+                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
+                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
+                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
+                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
-                    dSdt(crow) = &
-                         &betaR(crow)*dSdr(crow) + &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
+                    dSdt(i,j,k) = &
+                         &betaR(i,j,k)*dSdr(i,j,k) + &
+                         &betaTh(i,j,k)*dSdth(i,j,k) + &
+                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
+                         &rootsign*alpha(i,j,k)*sqrtterm
                  END IF
 
               END DO
            END DO
         END DO
         !$OMP END PARALLEL DO
-        
-        dadt = MATMUL( AFinv, dSdt)
+ 
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,&
+                                       &dSdt,dadt)
 
-        a = 0.620101851488403D0 * aaRK(:,1) + 0.379898148511597D0 * aaRK(:,3)&
-            & + 0.251891774271694D0 * dt * dadt
+        !$OMP PARALLEL DO
+        DO n=1,(Mr+1)
+            a(n,:) = 0.620101851488403D0 * aaRK(n,:,1) +&
+                   & 0.379898148511597D0 * aaRK(n,:,3) +&
+                   & 0.251891774271694D0 * dt * dadt(n,:)
+        END DO
+        !$OMP END PARALLEL DO
+
 
 !--------------------------------------------------------!
 !      STEP 4                                            !
 !--------------------------------------------------------!
 
-!!$        !Filter coefficients a with an exponential fitler
-!!$        a = F*a
-
-        !Store the coefficients inside aaRK which will be used in the Runge-Kutta method
-        aaRK(:,4) = a
+        !Store the coefficients inside aaRK 
+        !which will be used in the Runge-Kutta method
+        !$OMP PARALLEL DO
+        DO n=1,(Mr+1)
+            aaRK(n,:,4) = a(n,:)
+        END DO
+        !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(&
-             &M, Mr, NP, Lmax,&
-             &rmin, rmax,&
-             &a, AF,&
-             &dSdr)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,a,dSdphi)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,a,dSdth)
 
-        dSdphi = MATMUL(Dphi, a)
-        dSdth = MATMUL(Dth, a)
-
-        !$OMP PARALLEL DO PRIVATE(j, k, crow, sqrtterm)
-        DO i = 1, (Mr+1)
-           DO j = 1, 2*M
-              DO k = 1, 2*M
+        !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
+        DO i = 1,Nr
+           DO j = 1,Nth
+              DO k = 1,Nphi
                  
-                 crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
-
                  IF( i .EQ. (Mr+1) ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
                     sqrtterm = SQRT(&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
+                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
+                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
-                    dSdt(crow) = &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
+                    dSdt(i,j,k) = &
+                         &betaTh(i,j,k)*dSdth(i,j,k) + &
+                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
+                         &rootsign*alpha(i,j,k)*sqrtterm
                  ELSE
                     !INNER POINTS
                     sqrtterm = SQRT(&
-                         &gRR(crow)*dSdr(crow)*dSdr(crow) +&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gRTh(crow)*dSdr(crow)*dSdth(crow) +&
-                         &2.0D0*gRPhi(crow)*dSdr(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
+                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
+                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
+                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
+                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
-                    dSdt(crow) = &
-                         &betaR(crow)*dSdr(crow) + &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
+                    dSdt(i,j,k) = &
+                         &betaR(i,j,k)*dSdr(i,j,k) + &
+                         &betaTh(i,j,k)*dSdth(i,j,k) + &
+                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
+                         &rootsign*alpha(i,j,k)*sqrtterm
                  END IF
 
               END DO
            END DO
         END DO
         !$OMP END PARALLEL DO
-        
-        dadt = MATMUL( AFinv, dSdt)
+ 
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,&
+                                       &dSdt,dadt)
 
-        a = 0.178079954393132D0 * aaRK(:,1) + 0.821920045606868D0 * aaRK(:,4)&
-            & + 0.544974750228521D0 * dt * dadt
-
+        !$OMP PARALLEL DO
+        DO n=1,(Mr+1)
+            a(n,:) = 0.178079954393132D0 * aaRK(n,:,1) +& 
+                   & 0.821920045606868D0 * aaRK(n,:,4) +&
+                   & 0.544974750228521D0 * dt * dadt(n,:)
+        END DO
+        !$OMP END PARALLEL DO
 
 !--------------------------------------------------------!
 !      STEP 5                                            !
 !--------------------------------------------------------!
 
-!!$        !Filter coefficients a with an exponential fitler
-!!$        a = F*a
-
-        !Store the coefficients inside aaRK which will be used in the Runge-Kutta method
-        aaRK(:,5) = a
-        dadt3 = dadt
+        !Store the coefficients inside aaRK 
+        !which will be used in the Runge-Kutta method
+        !$OMP PARALLEL DO
+        DO n=1,(Mr+1)
+            aaRK(n,:,5) = a(n,:)
+            dadt3(n,:) = dadt(n,:)
+        END DO
+        !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(&
-             &M, Mr, NP, Lmax,&
-             &rmin, rmax,&
-             &a, AF,&
-             &dSdr)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,a,dSdphi)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,a,dSdth)
 
-        dSdphi = MATMUL(Dphi, a)
-        dSdth = MATMUL(Dth, a)
-
-        !$OMP PARALLEL DO PRIVATE(j, k, crow, sqrtterm)
-        DO i = 1, (Mr+1)
-           DO j = 1, 2*M
-              DO k = 1, 2*M
+        !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
+        DO i = 1,Nr
+           DO j = 1,Nth
+              DO k = 1,Nphi
                  
-                 crow = (i-1)*(2*M)*(2*M) + (j-1)*(2*M) + k
-
                  IF( i .EQ. (Mr+1) ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
                     sqrtterm = SQRT(&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
+                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
+                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
-                    dSdt(crow) = &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
+                    dSdt(i,j,k) = &
+                         &betaTh(i,j,k)*dSdth(i,j,k) + &
+                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
+                         &rootsign*alpha(i,j,k)*sqrtterm
                  ELSE
                     !INNER POINTS
                     sqrtterm = SQRT(&
-                         &gRR(crow)*dSdr(crow)*dSdr(crow) +&
-                         &gThTh(crow)*dSdth(crow)*dSdth(crow) +&
-                         &gPhiPhi(crow)*dSdphi(crow)*dSdphi(crow) +&
-                         &2.0D0*gRTh(crow)*dSdr(crow)*dSdth(crow) +&
-                         &2.0D0*gRPhi(crow)*dSdr(crow)*dSdphi(crow) +&
-                         &2.0D0*gThPhi(crow)*dSdth(crow)*dSdphi(crow)&
+                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
+                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
+                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
+                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
-                    dSdt(crow) = &
-                         &betaR(crow)*dSdr(crow) + &
-                         &betaTh(crow)*dSdth(crow) + &
-                         &betaPhi(crow)*dSdphi(crow) + &
-                         &rootsign*alpha(crow)*sqrtterm
+                    dSdt(i,j,k) = &
+                         &betaR(i,j,k)*dSdr(i,j,k) + &
+                         &betaTh(i,j,k)*dSdth(i,j,k) + &
+                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
+                         &rootsign*alpha(i,j,k)*sqrtterm
                  END IF
 
               END DO
            END DO
         END DO
         !$OMP END PARALLEL DO
-        
-        dadt = MATMUL( AFinv, dSdt)
+ 
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,&
+                                       &dSdt,dadt)
 
-        a = 0.517231671970585D0 * aaRK(:,3) + 0.096059710526147D0 * aaRK(:,4)&
-            & + 0.063692468666290D0 * dt * dadt3 + 0.386708617503269D0 * aaRK(:,5)&
-            & + 0.226007483236906D0 * dt * dadt
+        !$OMP PARALLEL DO
+        DO n=1,(Mr+1)
+            a(n,:) = 0.517231671970585D0 * aaRK(n,:,3) + &
+                   & 0.096059710526147D0 * aaRK(n,:,4) + &
+                   & 0.063692468666290D0 * dt * dadt3(n,:) + &
+                   & 0.386708617503269D0 * aaRK(n,:,5) + &
+                   & 0.226007483236906D0 * dt * dadt(n,:)
+        END DO
+        !$OMP END PARALLEL DO
 
         t = t + dt
         
