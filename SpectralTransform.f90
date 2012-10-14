@@ -65,7 +65,7 @@
         !$OMP DO PRIVATE(i)
         DO n=0,Mr
             DO i=1,Nr
-                Spec2Spat(n+1,i) = wi * COS( n*ACOS(rho(i)) )
+                Spec2Spat(n+1,i) = wi*COS( DBLE(n)*ACOS(rho(i)) )
             END DO
         END DO
         !$OMP END DO
@@ -162,8 +162,8 @@
         !Calling variables
         INTEGER*4                   K, Nr, Mr
         REAL*8                      rho(Nr)
-        COMPLEX*16                  f(Nr,K)
-        COMPLEX*16, INTENT(out)  :: a(Mr+1,K)
+        COMPLEX*16                  a(Mr+1,K)
+        COMPLEX*16, INTENT(out)  :: f(Nr,K)
         
         !Local variables
         INTEGER*4               i,j,p,n
@@ -182,7 +182,7 @@
                     const = 1.0D0
                 END IF
                 
-                Spec2Spat(i,n+1) = COS( n*ACOS(rho(i)) )
+                Spec2Spat(i,n+1) = COS( DBLE(n)*ACOS(rho(i)) )
 
             END DO
         END DO
