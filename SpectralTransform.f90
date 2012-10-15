@@ -258,7 +258,7 @@
         ader(Mr,:) = CMPLX(2.0D0*DBLE(Mr), 0.0D0)*a(Mr,:)
         DO nder = 1,(Mr-1)
             nn = Mr-nder+1
-            ader(:,nn-1) = ader(:,nn+1) + &
+            ader(nn-1,:) = ader(nn+1,:) + &
                          & CMPLX(2.0D0*DBLE(nn-1),0.0D0)*a(nn,:)
         END DO
         ader = const*ader

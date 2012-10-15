@@ -36,7 +36,6 @@ LIBS = -Wl,-rpath,$$TACC_MKL_LIB \
    -lhdf5_fortran -lhdf5 -lz \
    -I$$TACC_FFTW3_INC -L$$TACC_FFTW3_LIB -lfftw3 -lm \
    -L/work/01682/bunandar/lib -I/work/01682/bunandar/include -lshtns \
-   -debug
 FLAGS = -fpp
 
 #C++ DEPENDENCIES
@@ -46,7 +45,6 @@ CCLIBS = -I$$TACC_MKL_INC -Wl,-rpath,$$TACC_MKL_LIB \
    -I$$TACC_HDF5_INC -Wl,-rpath,$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB -lhdf5 -lz \
    -I$$TACC_FFTW3_INC -L$$TACC_FFTW3_LIB -lfftw3 -lm \
    -L/work/01682/bunandar/lib -I/work/01682/bunandar/include -lshtns \
-   -debug
 CCFLAGS =
 
 all: $(PROG)
