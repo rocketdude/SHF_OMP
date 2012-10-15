@@ -125,7 +125,8 @@
 
              IF( flag .EQ. 0) THEN           
                 WRITE(*,*) 'Error in hunting'
-                READ(*, '()')
+                !READ(*, '()')
+                STOP
              END IF
 
              !Calculate the equispaced points rr--between r(ilow) and r(ilow+1)
@@ -151,7 +152,8 @@
 
              IF( flag .EQ. 0) THEN           
                 WRITE(*,*) 'Error in hunting'
-                READ(*, '()')
+                !READ(*, '()')
+                STOP
              END IF
 
              !Find the value of r where TargetedSValue is located by interp.
@@ -228,8 +230,9 @@
              END DO
 
              IF( flag .EQ. 0) THEN           
-                WRITE(*,*) 'Error in hunting'
-                READ(*, '()')
+                WRITE(*,*) 'Error in hunting for special points'
+                !READ(*, '()')
+                STOP
              END IF
 
              !Calculate the equispaced points rr--between r(ilow) and r(ilow+1)
@@ -255,8 +258,9 @@
              END DO
 
              IF( flag .EQ. 0) THEN           
-                WRITE(*,*) 'Error in hunting'
-                READ(*, '()')
+                WRITE(*,*) 'Error in hunting for special points'
+                !READ(*, '()')
+                STOP
              END IF
 
              !Find the value of r where TargetedSValue is located 

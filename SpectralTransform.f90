@@ -182,7 +182,7 @@
                     const = 1.0D0
                 END IF
                 
-                Spec2Spat(i,n+1) = COS( DBLE(n)*ACOS(rho(i)) )
+                Spec2Spat(i,n+1) = const*COS( DBLE(n)*ACOS(rho(i)) )
 
             END DO
         END DO
