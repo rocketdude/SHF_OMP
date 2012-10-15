@@ -49,6 +49,7 @@
         REAL*8                      d3fdxdydz(8)
 
         REAL*8                      xx, yy, zz
+        REAL*8                      err
 
         INTEGER*4                   LM(64,64)
         INTEGER*4                   Temp(64*64)
@@ -318,8 +319,10 @@
         yy = (y-y0)/dy
         zz = (z-z0)/dz
         !make sure that we're within range
-        IF( (xx .GT. 1.0D0) .OR. (yy .GT. 1.0D0) .OR. (zz .GT. 1.0D0) .OR.&
-           &(xx .LT. 0.0D0) .OR. (yy .LT. 0.0D0) .OR. (zz .LT. 0.0D0) ) THEN
+        err = 1.0D-8
+        IF( (xx .GT. (1.0D0+err)) .OR. (yy .GT. (1.0D0+err)) .OR. &
+           &(zz .GT. (1.0D0+err)) .OR. (xx .LT. (0.0D0-err)) .OR. &
+           &(yy .LT. (0.0D0-err)) .OR. (zz .LT. (0.0D0-err)) ) THEN
            PRINT *, 'ERROR in interpolation: out-of-bounds'
            STOP
         END IF

@@ -73,9 +73,12 @@
         CHARACTER*100               dataset9(nchunks)
         CHARACTER*100               dataset8(nchunks)
 
-        INTEGER*4                   Ox10, Oy10, Oz10    !Index for the origin for rl=10
-        INTEGER*4                   Ox9, Oy9, Oz9       !Index for the origin for rl=9
-        INTEGER*4                   Ox8, Oy8, Oz8       !Index for the origin for rl=8
+        INTEGER*4                   Ox10, Oy10, Oz10    
+        !Index for the origin for rl=10
+        INTEGER*4                   Ox9, Oy9, Oz9       
+        !Index for the origin for rl=9
+        INTEGER*4                   Ox8, Oy8, Oz8       
+        !Index for the origin for rl=8
 
         REAL*8                      Xmin10, Ymin10, Zmin10
         REAL*8                      Xmax10, Ymax10, Zmax10
@@ -83,9 +86,12 @@
         REAL*8                      Xmax9, Ymax9, Zmax9
         REAL*8                      Xmin8, Ymin8, Zmin8
         REAL*8                      Xmax8, Ymax8, Zmax8
-        REAL*8                      delta10(3)          !Spatial discretization for rl=10
-        REAL*8                      delta9(3)           !Spatial discretization for rl=9
-        REAL*8                      delta8(3)           !Spatial discretization for rl=8
+        REAL*8                      delta10(3)          
+        !Spatial discretization for rl=10
+        REAL*8                      delta9(3)           
+        !Spatial discretization for rl=9
+        REAL*8                      delta8(3)           
+        !Spatial discretization for rl=8
         REAL*8                      time10, time9, time8
 
         !Used for tricubic interpolation
@@ -120,13 +126,16 @@
                 IF( (cnum .LE. 10) .AND. (iter .LT. 10) ) THEN
                     format_string2 = '(A30,I1,A14,I1)'
                     format_string1 = '(A30,I1,A13,I1)'
-                ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 10) .AND. (iter .LT. 100) ) THEN
+                ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 10) &
+                        &.AND. (iter .LT. 100) ) THEN
                     format_string2 = '(A30,I2,A14,I1)'
                     format_string1 = '(A30,I2,A13,I1)'
-                ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 1000) ) THEN
+                ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) &
+                        &.AND. (iter .LT. 1000) ) THEN
                     format_string2 = '(A30,I3,A14,I1)'
                     format_string1 = '(A30,I3,A13,I1)'
-                ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 10000) ) THEN
+                ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) &
+                        &.AND. (iter .LT. 10000) ) THEN
                     format_string2 = '(A30,I4,A14,I1)'
                     format_string1 = '(A30,I4,A13,I1)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .LT. 10) ) THEN
@@ -301,7 +310,8 @@
         !      Lekien-Marsden tricubic interpolation routine       !
         !----------------------------------------------------------!
         
-        IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) .AND. ALLOCATED(metric8) ) THEN
+        IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) &
+                &.AND. ALLOCATED(metric8) ) THEN
         !$OMP PARALLEL DO &
         !$OMP &PRIVATE(j, k, x, y, z, Inside10, Inside9, dx, dy, dz, ni, nj, nk, x0, y0, z0, cube, fatxyz)
         DO i =  1, Nr
@@ -342,9 +352,11 @@
                         y0 = (nj-Oy10)*dy
                         z0 = (nk-Oz10)*dz
 
-                        cube = metric10( (ni-1):(ni+2), (nj-1):(nj+2), (nk-1):(nk+2) )
+                        cube = metric10( (ni-1):(ni+2), (nj-1):(nj+2), &
+                                &(nk-1):(nk+2) )
 
-                    ELSEIF( (Inside10 .EQV. .FALSE.) .AND. (Inside9 .EQV. .TRUE.) ) THEN
+                    ELSEIF( (Inside10 .EQV. .FALSE.) &
+                            &.AND. (Inside9 .EQV. .TRUE.) ) THEN
 
                         dx = delta9(1)
                         dy = delta9(2)
@@ -362,9 +374,11 @@
                         y0 = (nj-Oy9)*dy
                         z0 = (nk-Oz9)*dz
 
-                        cube = metric9( (ni-1):(ni+2), (nj-1):(nj+2), (nk-1):(nk+2) )
+                        cube = metric9( (ni-1):(ni+2), (nj-1):(nj+2), &
+                                &(nk-1):(nk+2) )
 
-                    ELSEIF( (Inside9 .EQV. .FALSE.) .AND. (Inside8 .EQV. .TRUE.) ) THEN
+                    ELSEIF( (Inside9 .EQV. .FALSE.) &
+                            &.AND. (Inside8 .EQV. .TRUE.) ) THEN
 
                         dx = delta8(1)
                         dy = delta8(2)
@@ -382,7 +396,8 @@
                         y0 = (nj-Oy8)*dy
                         z0 = (nk-Oz8)*dz
 
-                        cube = metric8( (ni-1):(ni+2), (nj-1):(nj+2), (nk-1):(nk+2) )
+                        cube = metric8( (ni-1):(ni+2), (nj-1):(nj+2), &
+                                &(nk-1):(nk+2) )
 
                     ELSE
                         PRINT *, 'ERROR: The spherical grid is larger than the grid for the metric'
