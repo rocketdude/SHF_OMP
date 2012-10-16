@@ -103,7 +103,7 @@
         !Main subroutine
         
         !f_lm(r) = Sum(over n) a_nlm T_n(r)
-        CALL ChebyshevSpectralToSpatial(Mlm,Nr,Mr,rho,f,a)
+        CALL ChebyshevSpectralToSpatial(Mlm,Nr,Mr,rho,a,f)
     
         !Use SHTns to find get the spatial values
         DO i=1,Nr
@@ -138,7 +138,7 @@
         !Main subroutine
         
         !f_lm(r) = Sum(over n) a_nlm T_n(r)
-        CALL ChebyshevSpectralToSpatial(Mlm,Nr,Mr,rho,f,a)
+        CALL ChebyshevSpectralToSpatial(Mlm,Nr,Mr,rho,a,f)
     
         !Use SHTns to find get the spatial values
         DO i=1,Nr
@@ -151,7 +151,7 @@
     SUBROUTINE ChebyshevSpectralToSpatial(&
             & K, Nr, Mr,&
             & rho,&
-            & f, a)
+            & a, f)
 
         !Using Chebyshev-Gauss quadrature assuming that rho is a grid
         !of Chebyshev roots
