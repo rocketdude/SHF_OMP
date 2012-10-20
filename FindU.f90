@@ -3,7 +3,7 @@
 !========================================================!
 
      SUBROUTINE FindU(&
-&Nr, Nth, Nphi, Mr, Mlm, SpM,&
+&Nr, Nth, Nphi, Mr, Lmax, SpM,&
 &gRR, gThTh, gPhiPhi,&
 &gRTh, gRPhi, gThPhi,&
 &r, rho, theta, phi,&
@@ -23,7 +23,7 @@
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-       INTEGER*4            :: Nr, Nth, Nphi, Mr, Mlm, SpM, it, WriteSit
+       INTEGER*4            :: Nr, Nth, Nphi, Mr, Lmax, SpM, it, WriteSit
 
        REAL*8               :: r(Nr), rho(Nr), theta(Nth), phi(Nphi)
 
@@ -37,7 +37,7 @@
        REAL*8               :: gRPhi(Nr,Nth,Nphi)
        REAL*8               :: gThPhi(Nr,Nth,Nphi)
     
-       COMPLEX*16           :: a(Mr+1, Mlm)
+       COMPLEX*16           :: a(Mr+1,2,Lmax+1,Lmax+1)
 
        REAL*8, INTENT(out)  :: U(Nth, Nphi)
        REAL*8, INTENT(out)  :: Uave
@@ -89,7 +89,7 @@
        TargetedSValue = 100.0D0
 
        !Evaluate the eikonal data S
-       CALL SpectralToSpatialTransform(Nr, Nth, Nphi, Mr, Mlm,&
+       CALL SpectralToSpatialTransform(Nr, Nth, Nphi, Mr, Lmax,&
                                       &rho, theta, phi, a, S)
 
        !Writing S into file (only at certain iterations)
@@ -210,10 +210,10 @@
        !$OMP &        ilow, ilow2, deltar, rr, UU, crow, TnYlm)
        DO ss = 1, SpM
 
-             CALL SpectralToSpatialOnARadialLine(Nr,Nth,Nphi,Mr,Mlm,&
-                                                &rho,theta,phi,&
-                                                &thetaSp(ss), phiSp(ss),&
-                                                &a, U_r)
+             CALL GetRealSpatialValueOnRadialLine(Nr,Nth,Nphi,Mr,Lmax,&
+                                                 &rho,theta,phi,&
+                                                 &thetaSp(ss), phiSp(ss),&
+                                                 &S, U_r)
                             
              !Calculate the second derivatives and store it into U_r2
              CALL ComputeSpline2ndDeriv(r, U_r, Nr, 1.0D31, 1.0D31, U_r2)

@@ -7,29 +7,24 @@
 ! of Chebyshev polynomials & spherical harmonics.
 ! In other words, we are approximating 
 ! S(t, r, theta, phi) ~= a_nlm(t) T_n (rho) Y_lm (theta, phi).
-! This is an improvement to the old SHF with the use of FFT and SHTns.
-! For more information about SHTns: arXiv 1202.6522 (Schaeffer).
-
+! This is an improvement to the old SHF with the use of FFT and SHTOOLS.
 
   PROGRAM              SHF
     USE                omp_lib
+    USE                SHTOOLS
     USE                HDF5
     IMPLICIT           none
 
-    INCLUDE            'shtns.f'
-
     INTEGER*4, PARAMETER ::        Mr   = 40
     INTEGER*4, PARAMETER ::        Lmax = 2
-    INTEGER*4, PARAMETER ::        Mmax = 2
-    INTEGER*4, PARAMETER ::        Nr = Mr+1
-    INTEGER*4, PARAMETER ::        Nth  = 64
-    INTEGER*4, PARAMETER ::        Nphi = 64
-    !Generally for anti-aliasing, Nphi > 3*Mmax, Nth > 2*Lmax
     INTEGER*4, PARAMETER ::        TP   = 4
     INTEGER*4, PARAMETER ::        SpM  = 6
 
+    INTEGER*4, PARAMETER ::        Nr   = Mr+1
+    INTEGER*4, PARAMETER ::        Nth  = 2*Lmax+2
+    INTEGER*4, PARAMETER ::        Nphi = 4*Lmax+4
     ! Mr is the degree of the radial Chebyshev polynomial
-    ! Lmax and Mmax are the maximum values of l and m of the spherical harmonics
+    ! Lmax is the maximum values of l and m of the spherical harmonics
     ! Nr, Nth, and Nphi are the # of points in r, theta, phi directions
     ! TP-1 is the temporal interpolation order
     ! SpM is the number of additional directions we'd like to compute U for
@@ -83,8 +78,8 @@
     ! Z = r*cos(theta)
 
     ! Things that need to be allocated due to sph. harmonic FFTW
-    COMPLEX*16,ALLOCATABLE,DIMENSION(:,:) ::  a        
-                                             !time-dependent coefficients a_nlm(t)
+    COMPLEX*16        a(Mr+1,2,Lmax+1,Lmax+1) 
+            !time-dependent coefficients a_nlm(t)
     
     REAL*8            t           !Current time
     REAL*8            tfinal      !Final time
@@ -116,8 +111,6 @@
     REAL*8              g_rrUsqrdAve  !Average g_rr * U^2
     REAL*8              USp(SpM)      !The values of U in specified directions
 
-    INTEGER*4           Mlm         !Size of l, m coefficients needed
-    INTEGER*4           layout      !How th & phi are arranged
     INTEGER*4           n           !Degree of Chebyshev polynomial
     INTEGER*4           l, ml       !Degree of spherical harmonics
     INTEGER*4           reinit      !Iteration at which we reinitialize
@@ -223,10 +216,6 @@
     rmax = 1.20D0                   !maximum value of r
     rmin = 0.20D0                   !minimum value of r
 
-    !Setup how theta and phi are stored
-    layout = sht_phi_contiguous !Choices: SHT_PHI_CONTIGUOUS or
-                                !         SHF_THETA_CONTIGUOUS
-
     !Additional directions we'd like to compute U
     thetaSp = (/ 0.0D0, PI, PI/2.0D0, PI/2.0D0, PI/2.0D0, PI/2.0D0 /)
     phiSp = (/ 0.0D0, 0.0D0, 0.0D0, PI/2.0D0, PI, 1.5D0*PI /)
@@ -269,18 +258,8 @@
     !Inquire number of threads
     nthreads = omp_get_max_threads()
     WRITE(*,*) 'No. of threads = ', nthreads
-    !Optimize SHTns with nthreads
-    CALL SHTNS_USE_THREADS(nthreads)
 
-    !Compute sizes required for the lm part of a_nlm
-    CALL SHTNS_CALC_NLM(Mlm, Lmax, Mmax, 1)
-    !Initialize SHT with the Gauss points
-    CALL SHTNS_INIT_SH_GAUSS(layout, Lmax, Mmax, 1, Nth, Nphi)
-    
-    !Get the r, theta, and phi array
-    CALL SHTNS_COS_ARRAY(theta)
-    theta = ACOS(theta)
-    
+    !Set up Chebyshev roots and DH collocation points
     !$OMP PARALLEL
     !$OMP DO
     DO i = 0, Mr
@@ -288,31 +267,27 @@
        r(i+1) = 0.5D0*( (rmax + rmin) + (rmax - rmin)*rho(i+1) )
     END DO
     !$OMP END DO
-    
-    CALL ComputeGaussNodes(theta, Nth) !This is in cos(theta)
-    PRINT *, 'Cos(theta) = ', theta
-    theta = ACOS(theta)
-    PRINT *, 'theta = ', theta
-    
+
     !$OMP DO
-    DO k = 1, Nphi
-       phi(k) = DBLE(k-1)*2.0D0*PI/Nphi
+    DO j = 0, (2*Lmax+1)
+       theta(j+1) = PI*DBLE(j)/(2.0D0*(Lmax+1))
     END DO
     !$OMP END DO
-    !$OMP END PARALLEL
-    
-    !Allocate a_nlm
-    ALLOCATE( a(Mr+1,Mlm) )
-    
+
+    !$OMP DO
+    DO k = 0, (4*Lmax+3)
+       phi(k+1) = PI*k/(Lmax+1)
+    END DO
+    !$OMP END DO
+    !$OMP END PARALLEL     
+     
 !--------------------------------------------------------!
 !     Echo certain parameters                            !
 !--------------------------------------------------------!
 
 !!$    PRINT *, 'Mass of blackhole =', Mass
     PRINT *, 'Mr = ', Mr
-    PRINT *, 'Mlm = ', Mlm
     PRINT *, 'Lmax = ', Lmax
-    PRINT *, 'Mmax = ', Mmax
     PRINT *, '(Nr, Nth, Nphi) = ', Nr, ',', Nth, ',', Nphi
     PRINT *, '# of iterations =', (Maxit-Startit+1)
     PRINT *, 'Reinitializing every ', reinit, 'iterations'
@@ -343,13 +318,13 @@
        PRINT *, 'Continuing run'
        PRINT *, 'Previous iteration=' ,(Startit-1)
 
-       CALL Read1dC(Mr+1, Mlm, a, aFile)
+       CALL Read4dC(Mr+1, 2, Lmax+1, Lmax+1, a, aFile)
 
     ELSE
 
        CALL GetInitialData(& 
             & Nr, Nth, Nphi,&
-            & Mr, Mlm,&
+            & Mr, Lmax,&
             & c,&
             & R0,&
             & r, rho, theta, phi,&
@@ -440,7 +415,7 @@
              &gRTh, gRPhi, gThPhi)
 
        CALL EvolveData(&
-            &Nr, Nth, Nphi, Mr, Mlm,&
+            &Nr, Nth, Nphi, Mr, Lmax,&
             &rootsign, rmin, rmax,&
             &rho, theta, phi,&
             &alpha,&
@@ -451,7 +426,7 @@
             &a)
  
        CALL FindU(&
-            &Nr, Nth, Nphi, Mr, Mlm, SpM,&
+            &Nr, Nth, Nphi, Mr, Lmax, SpM,&
             &gRR, gThTh, gPhiPhi,&
             &gRTh, gRPhi, gThPhi,&
             &r, rho, theta, phi,&
@@ -470,7 +445,7 @@
        IF( MOD(it,Writeg_rrUsqrdit) .EQ. 0 ) &
          & CALL WriteGRRUU(Nth, Nphi, g_rrUsqrd, it)
        IF( MOD(it,Writeait) .EQ. 0 .OR. (it .EQ. Maxit) ) &
-         & CALL Writea(Mr+1, Mlm, a, it)
+         & CALL Writea(Mr+1, 2, Lmax+1, Lmax+1, a, it)
        
        CTemp = 'Time.dat'
        OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
@@ -501,7 +476,7 @@
        IF( MOD(it, reinit) .EQ. 0 ) THEN
            
            CALL ReinitializeData(&
-                   &Nr, Nth, Nphi, Mr, Mlm,&
+                   &Nr, Nth, Nphi, Mr, Lmax,&
                    &r, rho, theta, phi,&
                    &c, U, a)
 
@@ -518,7 +493,7 @@
 
        IF( ((t .LT. tfinal) .AND. (tdir .LT. 0.0D0)) .OR.&
           &((t .GT. tfinal) .AND. (tdir .GT. 0.0D0)) ) THEN
-           CALL Writea(Mr+1, Mlm, a, it)
+           CALL Writea(Mr+1, 2, Lmax+1, Lmax+1, a, it)
            EXIT
        END IF
 

@@ -29,5 +29,5 @@ Event Horizon Finder using Pseudospectral methods.
 -       Made the functions that get and read the metric data much nicer; 
         there's no need for using the HDF5 tools
 
-10/11/2012
--       Optimize using SHTns: http://users.isterre.fr/nschaeff/SHTns/
+10/18/2012
+-       Optimize using SHTOOLS: http://shtools.ipgp.fr/

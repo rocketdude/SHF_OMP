@@ -451,6 +451,88 @@
       end subroutine Write1d
 
 !========================================================!
+!    Write 4D Complex Array Subroutine                   !
+!========================================================!
+
+      subroutine Write4dC(n1, n2, n3, n4, Array, FileName)
+
+        implicit none
+
+!-----------------------------------------------------------!
+!      Declare passed variables                             !
+!-----------------------------------------------------------!
+        
+        integer*4, intent(in) :: n1,n2,n3,n4
+        complex*16, intent(in) ::  Array(n1,n2,n3,n4)
+        character*32, intent(in) :: FileName
+
+!-------------------------------------------------------------!
+!      Local variables                                        !
+!-------------------------------------------------------------!
+
+        integer*4   i, j, k, l
+        integer*4   rank
+        integer*4, parameter :: lu = 20 ! I/O unit for disk I/O
+
+        integer*4 ierror        !Iostat variable
+        logical :: lexist       !True if file exists
+        integer*4 :: lopen      !1 if file is open
+
+!-------------------------------------------------------------!
+!      Write                                                  !
+!-------------------------------------------------------------!
+
+        write(*,1200) FileName
+1200    format (' ', 'Writing: ', A, 'now')
+
+        !Does the file already exist?
+        lopen = 0
+
+        inquire( FILE=FileName, EXIST=lexist)
+
+        exist:if (.not. lexist) then
+
+           open( UNIT=lu, FILE=FileName, STATUS='NEW', ACTION='WRITE', &
+                &IOSTAT=ierror)
+           lopen = 1
+
+        else
+
+           !File exists but still replace the file
+           open( UNIT=lu, FILE=FileName, STATUS='REPLACE', ACTION='WRITE', &
+                &IOSTAT=ierror)
+           lopen = 1
+        end if exist
+		
+		
+        !Start writing files		
+        errorcheck: if (lopen == 0) then
+
+           write(*,1020) FileName
+1020       format (' ', 'ERROR: ', A,' cannot be written!')
+
+        else
+
+           do i = 1, n1
+              do j = 1, n2
+                 do k = 1, n3
+                    do l = 1, n4
+                        write(lu, *, iostat=ierror) Array(i,j,k,l)
+                        if( ierror /= 0 ) return            !exit if not valid
+                    end do
+                 end do
+              end do
+           end do
+    
+    
+        end if errorcheck
+
+        write(*,1100) FileName
+1100    FORMAT(' ', 'Writing ', A, ' successful!')
+    
+        return
+      end subroutine Write4dC
+!========================================================!
 !    Write 3D Complex Array Subroutine                   !
 !========================================================!
 
@@ -686,6 +768,77 @@
         return
       end subroutine Write1dC
 
+!========================================================!
+!    Read 4D Complex Array Subroutine                    !
+!========================================================!
+
+       subroutine Read4dC(n1,n2,n3,n4,Array,FileName)
+        implicit none
+
+!-----------------------------------------------------------!
+!      Declare passed variables                             !
+!-----------------------------------------------------------!
+         
+        integer*4, intent(in) :: n1,n2,n3,n4
+        complex*16, intent(out) ::   Array(n1,n2,n3,n4)
+        character*32, intent(in) :: FileName
+
+!-----------------------------------------------------------!
+!      Locals                                               !
+!-----------------------------------------------------------!
+
+         integer*4   i, j, k, l
+         integer*4   dummy
+         integer*4, parameter :: lu = 20 !I/O Unit for Disk I/O
+         complex*16  temp(n1*n2*n3*n4)
+
+         integer*4 ierror
+
+!-------------------------------------------------------------!
+!      Read                                                   !
+!-------------------------------------------------------------!
+
+         write(*,1200) FileName
+1200     format (' ', 'Reading: ', A, 'now')
+
+         open( UNIT=lu, FILE = FileName, STATUS='OLD', ACTION='READ', &
+              &IOSTAT=ierror)
+        
+         ! Check to see if OPEN failed
+         errorcheck: if (ierror == 6) then
+         
+            write (*,1020) FileName
+1020        format (1X, 'ERROR: File ', A,' does not exist!')
+        
+         else
+                           
+         ! File opened successfully, so start reading a 1-D array 'temp'
+            readloop: do
+               read(lu, *, iostat = ierror) temp        !Get the value
+               if ( ierror /= 0 ) exit                  !Exit if not valid
+            end do readloop
+                                            
+         end if errorcheck
+
+         dummy = 1
+
+         do i = 1, n1
+            do j = 1, n2
+               do k = 1, n3
+                  do l = 1, n4
+                     Array(i,j,k,l) = temp(dummy)
+                     dummy = dummy + 1
+                  end do
+               end do
+            end do
+         end do
+
+         write (*,1050) FileName
+1050     format (' ', 'Reading ', A,' successful')
+         
+         return
+       end subroutine Read4dC
+       
 !========================================================!
 !    Read 2D Complex Array Subroutine                    !
 !========================================================!
@@ -959,7 +1112,7 @@
 !    Write a_nlm Array Subroutine                        !
 !========================================================!
 
-      SUBROUTINE Writea(nx, ny, Array, i)
+      SUBROUTINE Writea(n1, n2, n3, n4, Array, i)
 
         IMPLICIT none
 
@@ -967,8 +1120,8 @@
 !     Declare passed variables                              !
 !-----------------------------------------------------------!
 
-        INTEGER*4, INTENT(IN)::   nx, ny, i
-        COMPLEX*16, INTENT(IN)::    Array(nx,ny)
+        INTEGER*4, INTENT(IN)::   n1,n2,n3,n4, i
+        COMPLEX*16, INTENT(IN)::    Array(n1,n2,n3,n4)
 
 !-----------------------------------------------------------!
 !     Declare local variables                               !
@@ -995,7 +1148,7 @@
 
         WRITE(TestFile, format_string) 'a',i,'.dat'
 
-        CALL WRITE2dC(nx, ny, Array, TestFile)
+        CALL WRITE4dC(n1, n2, n3, n4, Array, TestFile)
 
         RETURN
       END SUBROUTINE Writea

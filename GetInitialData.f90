@@ -4,7 +4,7 @@
 
       SUBROUTINE GetInitialData(& 
 & Nr, Nth, Nphi,&
-& Mr, Mlm,&
+& Mr, Lmax,&
 & c,&
 & R0,&
 & r, rho, theta, phi,&
@@ -20,7 +20,7 @@
 !--------------------------------------------------------!
 
         INTEGER*4               :: Nr, Nth, Nphi
-        INTEGER*4               :: Mr, Mlm
+        INTEGER*4               :: Mr, Lmax
         
         REAL*8                  :: c
         REAL*8                  :: R0
@@ -29,7 +29,7 @@
         REAL*8                  :: theta(Nth)
         REAL*8                  :: phi(Nphi)
 
-        COMPLEX*16, INTENT(out) :: a(Mr+1, Mlm)
+        COMPLEX*16, INTENT(out) :: a(Mr+1, 2, Lmax+1, Lmax+1)
 
 !--------------------------------------------------------!
 !     Declare Locals                                     !
@@ -59,7 +59,7 @@
         END DO
         !$OMP END PARALLEL DO
 
-        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Mlm,&
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,&
                                        &rho,theta,phi,&
                                        &S,a )
         

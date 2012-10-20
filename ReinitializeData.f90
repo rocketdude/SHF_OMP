@@ -3,7 +3,7 @@
 !--------------------------------------------------------!
 
       SUBROUTINE ReinitializeData(& 
-& Nr, Nth, Nphi, Mr, Mlm,&
+& Nr, Nth, Nphi, Mr, Lmax,&
 & r, rho, theta, phi,&
 & c, U, a)
 
@@ -16,7 +16,7 @@
 !     Declare calling variables                          !
 !--------------------------------------------------------!
 
-        INTEGER*4               :: Nr, Nth, Nphi, Mr, Mlm
+        INTEGER*4               :: Nr, Nth, Nphi, Mr, Lmax
         
         REAL*8                  :: c
         REAL*8                  :: U(Nth,Nphi)
@@ -24,7 +24,7 @@
         REAL*8                  :: theta(Nth)
         REAL*8                  :: phi(Nphi)
 
-        COMPLEX*16, INTENT(out) :: a(Mr+1,Mlm)
+        COMPLEX*16, INTENT(out) :: a(Mr+1,2,Lmax+1,Lmax+1)
 
 !--------------------------------------------------------!
 !     Declare Locals                                     !
@@ -52,7 +52,7 @@
         END DO
         !$OMP END PARALLEL DO
 
-        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Mlm,rho,theta,phi,S,a)
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,S,a)
 
         RETURN
       END SUBROUTINE ReinitializeData

@@ -30,12 +30,15 @@ CC = mpicc
 
 #F90 DEPENDENCIES
 SWITCH = -O3 -xW -mcmodel=large -openmp
-LIBS = -Wl,-rpath,$$TACC_MKL_LIB \
+LIBS = \
+   -free -I/work/01682/bunandar/SHTOOLS/modules \
+   -L/work/01682/bunandar/SHTOOLS/lib \
+   -lSHTOOLS2.7 \
+   -Wl,-rpath,$$TACC_MKL_LIB \
    -L$$TACC_MKL_LIB -lmkl -lguide \
    -I$$TACC_HDF5_INC -I$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB \
    -lhdf5_fortran -lhdf5 -lz \
-   -I$$TACC_FFTW3_INC -L$$TACC_FFTW3_LIB -lfftw3 -lm \
-   -L/work/01682/bunandar/lib -I/work/01682/bunandar/include -lshtns \
+   -I$$TACC_FFTW3_INC -L$$TACC_FFTW3_LIB -lfftw3 -lm
 FLAGS = -fpp
 
 #C++ DEPENDENCIES
@@ -43,8 +46,7 @@ CCSWITCH = -O3 -xW -mcmodel=large -openmp
 CCLIBS = -I$$TACC_MKL_INC -Wl,-rpath,$$TACC_MKL_LIB \
    -L$$TACC_MKL_LIB -lmkl -lguide \
    -I$$TACC_HDF5_INC -Wl,-rpath,$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB -lhdf5 -lz \
-   -I$$TACC_FFTW3_INC -L$$TACC_FFTW3_LIB -lfftw3 -lm \
-   -L/work/01682/bunandar/lib -I/work/01682/bunandar/include -lshtns \
+   -I$$TACC_FFTW3_INC -L$$TACC_FFTW3_LIB -lfftw3 -lm
 CCFLAGS =
 
 all: $(PROG)
