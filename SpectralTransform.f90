@@ -4,7 +4,8 @@
 
     SUBROUTINE SpatialToSpectralTransform(&
             & Nr, Nth, Nphi,&
-            & Mr, Lmax,&
+            & Mr, Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&
             & rho, theta, phi,&
             & S, a)
 
@@ -12,22 +13,23 @@
         IMPLICIT    none
 
         !Calling variables
-        INTEGER*4                   Nr, Nth, Nphi, Mr, Lmax
+        INTEGER*4                   Nr, Nth, Nphi, Mr, Lmax, Lgrid
         REAL*8                      rho(Nr)
         REAL*8                      theta(Nth), phi(Nphi)
+        REAL*8                      GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
         COMPLEX*16                  S(Nr,Nth,Nphi)
         COMPLEX*16, INTENT(out) ::  a(Mr+1,2,Lmax+1,Lmax+1)
 
         !Local variables
-        INTEGER*4               i, j, Lmax2
+        INTEGER*4               i, j
         COMPLEX*16              f(Nr,2,Lmax+1,Lmax+1)
     
         !Main subroutine
         
         !Use SHTns to find spectral coefficients at different r
         DO i=1,Nr
-            CALL SHExpandDHC(S(i,:,:), 2*Lmax+2, f(i,:,:,:), Lmax2, SAMPLING=2)
-            IF( Lmax .NE. Lmax2 ) STOP "***WRONG Lmax in spatial to spec***"
+            CALL SHExpandGLQC(f(i,:,:,:), Lgrid, &
+                    &S(i,:,:), GLQWeights, ZERO=GLQZeros, LMAX_CALC=Lmax)
         END DO
         !But now: f_lm(r) = Sum(over n) a_nlm T_n(r)
         !Transform to spectral coefficients a
@@ -86,7 +88,8 @@
 !===========================================================!    
     SUBROUTINE SpectralToSpatialTransform(&
             & Nr, Nth, Nphi,&
-            & Mr, Lmax,&
+            & Mr, Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&            
             & rho, theta, phi,&
             & a, S)
 
@@ -94,14 +97,15 @@
         IMPLICIT    none
 
         !Calling variables
-        INTEGER*4                   Nr, Nth, Nphi, Mr, Lmax
+        INTEGER*4                   Nr, Nth, Nphi, Mr, Lmax, Lgrid
+        REAL*8                      GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
         REAL*8                      rho(Nr)
         REAL*8                      theta(Nth), phi(Nphi)
         COMPLEX*16                  a(Mr+1,2,Lmax+1,Lmax+1)
         COMPLEX*16, INTENT(OUT)  :: S(Nr,Nth,Nphi)
 
         !Local variables
-        INTEGER*4               i, j, N2
+        INTEGER*4               i, j
         COMPLEX*16              f(Nr,2,Lmax+1,Lmax+1)
     
         !Main subroutine
@@ -111,8 +115,8 @@
     
         !Use SHTns to find get the spatial values
         DO i=1,Nr
-            CALL MakeGridDHC(S(i,:,:), N2, f(i,:,:,:), Lmax, SAMPLING=2)
-            IF( N2 .NE. (2*Lmax+2) ) STOP "***WRONG Lmax in spec to spatial***"
+            CALL MakeGridGLQC(S(i,:,:), f(i,:,:,:), Lgrid, &
+                    &ZERO=GLQZeros, LMAX_CALC=Lmax)
         END DO
 
         RETURN
@@ -120,7 +124,7 @@
 !===========================================================!    
     SUBROUTINE GetRealSpatialValueOnRadialLine(&
             & Nr, Nth, Nphi,&
-            & Mr, Lmax,&
+            & Mr, SpM, Lmax, Lgrid,&
             & rho, theta, phi,&
             & th0, phi0,&
             & gridS, S)
@@ -129,34 +133,42 @@
         IMPLICIT    none
 
         !Calling variables
-        INTEGER*4                   Nr, Nth, Nphi, Mr, Lmax
+        INTEGER*4                   Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM
         REAL*8                      rho(Nr)
         REAL*8                      theta(Nth), phi(Nphi)
-        REAL*8                      th0, phi0
+        REAL*8                      th0(SpM), phi0(SpM)
         COMPLEX*16                  gridS(Nr,Nth,Nphi)
-        REAL*8, INTENT(OUT)  ::     S(Nr)
+        REAL*8, INTENT(OUT)  ::     S(SpM,Nr)
 
         !Local variables
-        INTEGER*4               i, j, Lmax2
+        INTEGER*4               i, j
         REAL*8                  f(Nr,2,Lmax+1,Lmax+1)
         REAL*8                  SReal(Nr,Nth,Nphi)
-        REAL*8                  th0Degrees, phi0Degrees
+        REAL*8                  Zeros(Lgrid+1), W(Lgrid+1)
+        REAL*8                  th0Degrees(SpM), phi0Degrees(SpM)
         REAL*8, PARAMETER ::    PI = 3.141592653589793238462643383279502884197D0
     
         !Main subroutine
          
         !SHTOOLS only accept degrees
-        th0Degrees = th0 * 180.0D0 / PI
-        phi0Degrees = phi0 * 180.0D0 / PI
+        th0Degrees(:) = th0(:) * 180.0D0 / PI
+        phi0Degrees(:) = phi0(:) * 180.0D0 / PI
         SReal = ABS(gridS)
+
+        CALL PreCompute(Lgrid, Zeros, W)
         
         !Get the real spherical harmonic coefficients
         DO i=1,Nr
-            CALL SHExpandDH(SReal(i,:,:), 2*Lmax+2, f(i,:,:,:), &
-                    &Lmax2, SAMPLING=2)
-            IF(Lmax.NE.Lmax2) STOP "***ERROR*** Wrong Lmax in getting line"
-            !Use this coefficinets f to find the value of S 
-            S(i) = MakeGridPoint(f(i,:,:,:), Lmax, th0Degrees, phi0Degrees) 
+            CALL SHExpandGLQ(f(i,:,:,:), Lgrid, SReal(i,:,:), W, &
+                    &ZERO=Zeros, LMAX_CALC=Lmax)
+        END DO
+
+        DO j=1,SpM
+            DO i=1,Nr
+                !Use these coefficients f to find the value of S 
+                S(j,i) = MakeGridPoint(f(i,:,:,:), Lmax, &
+                        & th0Degrees(j), phi0Degrees(j) )
+            END DO
         END DO
 
         RETURN
@@ -217,7 +229,8 @@
 !===========================================================!
     SUBROUTINE EvaluatedSdphi(&
             & Nr, Nth, Nphi,&
-            & Mr, Lmax,&
+            & Mr, Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&            
             & rho, theta, phi,&
             & a, dSdphi)
 
@@ -225,7 +238,8 @@
         IMPLICIT     none 
 
         !Calling variables
-        INTEGER*4                    Nr,Nth,Nphi,Mr,Lmax
+        INTEGER*4                    Nr,Nth,Nphi,Mr,Lmax,Lgrid
+        REAL*8                       GLQWeights(Lgrid+1),GLQZeros(Lgrid+1)
         REAL*8                       rho(Nr), theta(Nth), phi(Nphi)
         COMPLEX*16                   a(Mr+1,2,Lmax+1,Lmax+1)
         COMPLEX*16, INTENT(out)   :: dSdphi(Nr,Nth,Nphi)
@@ -253,7 +267,9 @@
             END DO
         END DO
 
-        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,&
+        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
                                        &ader,dSdphi)
         
         RETURN
@@ -261,7 +277,8 @@
 !===========================================================!
     SUBROUTINE EvaluatedSdr(&
             & Nr, Nth, Nphi,&
-            & Mr, Lmax,&
+            & Mr, Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&            
             & rho, theta, phi,&
             & rmax, rmin,&
             & a, dSdr)
@@ -269,7 +286,8 @@
         IMPLICIT none
 
         !Calling variables
-        INTEGER*4                    Nr,Nth,Nphi,Mr,Lmax
+        INTEGER*4                    Nr,Nth,Nphi,Mr,Lmax,Lgrid
+        REAL*8                       GLQWeights(Lgrid+1),GLQZeros(Lgrid+1)
         REAL*8                       rmax,rmin
         REAL*8                       rho(Nr), theta(Nth), phi(Nphi)
         COMPLEX*16                   a(Mr+1,2,Lmax+1,Lmax+1)
@@ -293,7 +311,9 @@
         END DO
         ader = const*ader
 
-        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,&
+        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
                                        &ader,dSdr)
 
         RETURN
@@ -301,7 +321,8 @@
 !===========================================================!
     SUBROUTINE EvaluatedSdtheta(&
             & Nr, Nth, Nphi,&
-            & Mr, Lmax,&
+            & Mr, Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&            
             & rho, theta, phi,&
             & a, dSdth)
 
@@ -310,7 +331,8 @@
         IMPLICIT     none 
 
         !Calling variables
-        INTEGER*4                    Nr,Nth,Nphi,Mr,Lmax
+        INTEGER*4                    Nr,Nth,Nphi,Mr,Lmax,Lgrid
+        REAL*8                       GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
         REAL*8                       rho(Nr), theta(Nth), phi(Nphi)
         COMPLEX*16                   a(Mr+1,2,Lmax+1,Lmax+1)
         COMPLEX*16, INTENT(out)   :: dSdth(Nr,Nth,Nphi)
@@ -356,9 +378,13 @@
             END DO
         END DO
 
-        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,&
+        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
                                        &ader1,Term1)
-        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,&
+        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
                                        &ader2,Term2)
 
         !$OMP PARALLEL DO PRIVATE(j,k)
@@ -374,4 +400,20 @@
         !$OMP END PARALLEL DO
 
         RETURN
+    END SUBROUTINE
+!===========================================================!
+    SUBROUTINE GetTheta(GLQzeros, Nth, theta)
+    
+        USE          omp_lib
+        IMPLICIT     none 
+
+        !Calling variables
+        INTEGER*4                    Nth
+        REAL*8                       GLQzeros(Nth), theta(Nth)
+        REAL*8, PARAMETER ::    PI = 3.141592653589793238462643383279502884197D0
+
+        !Main subroutine
+
+        theta(:) = GLQzeros(:)*PI/180
+
     END SUBROUTINE

@@ -15,14 +15,15 @@
     USE                HDF5
     IMPLICIT           none
 
-    INTEGER*4, PARAMETER ::        Mr   = 40
-    INTEGER*4, PARAMETER ::        Lmax = 2
-    INTEGER*4, PARAMETER ::        TP   = 4
-    INTEGER*4, PARAMETER ::        SpM  = 6
+    INTEGER*4, PARAMETER ::        Mr       = 40
+    INTEGER*4, PARAMETER ::        Lmax     = 2
+    INTEGER*4, PARAMETER ::        Lgrid    = 2
+    INTEGER*4, PARAMETER ::        TP       = 4
+    INTEGER*4, PARAMETER ::        SpM      = 6
 
-    INTEGER*4, PARAMETER ::        Nr   = Mr+1
-    INTEGER*4, PARAMETER ::        Nth  = 2*Lmax+2
-    INTEGER*4, PARAMETER ::        Nphi = 4*Lmax+4
+    INTEGER*4, PARAMETER ::        Nr       = Mr+1
+    INTEGER*4, PARAMETER ::        Nth      = Lgrid+1
+    INTEGER*4, PARAMETER ::        Nphi     = 2*Lgrid+1
     ! Mr is the degree of the radial Chebyshev polynomial
     ! Lmax is the maximum values of l and m of the spherical harmonics
     ! Nr, Nth, and Nphi are the # of points in r, theta, phi directions
@@ -80,6 +81,10 @@
     ! Things that need to be allocated due to sph. harmonic FFTW
     COMPLEX*16        a(Mr+1,2,Lmax+1,Lmax+1) 
             !time-dependent coefficients a_nlm(t)
+
+    ! Parameters for FFT using Gauss-Legendre Quadrature
+    REAL*8            GLQWeights(Lgrid+1)  !Gauss-Legendre Quadrature weights
+    REAL*8            GLQZeros(Lgrid+1)    !Gauss-Legendre Quadrature zeros
     
     REAL*8            t           !Current time
     REAL*8            tfinal      !Final time
@@ -247,6 +252,15 @@
 
     CALL cpu_time( cputime_start )
     walltime_start = OMP_GET_WTIME()
+!--------------------------------------------------------!
+!     Compute Spherical Harmonic Transform Parameters    !
+!--------------------------------------------------------!
+
+    IF( Lmax .LT. Lgrid ) THEN
+        STOP "***ERROR*** Not enough collocation points"
+    END IF
+
+    CALL PreCompute(Lgrid, GLQZeros, GLQWeights, CNORM=1)
 
 !--------------------------------------------------------!
 !     Creating mesh & Inquiring Threads                  !
@@ -269,17 +283,13 @@
     !$OMP END DO
 
     !$OMP DO
-    DO j = 0, (2*Lmax+1)
-       theta(j+1) = PI*DBLE(j)/(2.0D0*(Lmax+1))
+    DO k = 0, (Nphi-1)
+       phi(k+1) = PI*k/Nphi
     END DO
     !$OMP END DO
+    !$OMP END PARALLEL
 
-    !$OMP DO
-    DO k = 0, (4*Lmax+3)
-       phi(k+1) = PI*k/(Lmax+1)
-    END DO
-    !$OMP END DO
-    !$OMP END PARALLEL     
+    CALL GetTheta(GLQZeros, Nth, theta)
      
 !--------------------------------------------------------!
 !     Echo certain parameters                            !
@@ -324,7 +334,8 @@
 
        CALL GetInitialData(& 
             & Nr, Nth, Nphi,&
-            & Mr, Lmax,&
+            & Mr, Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&
             & c,&
             & R0,&
             & r, rho, theta, phi,&
@@ -415,7 +426,8 @@
              &gRTh, gRPhi, gThPhi)
 
        CALL EvolveData(&
-            &Nr, Nth, Nphi, Mr, Lmax,&
+            &Nr, Nth, Nphi, Mr, Lmax, Lgrid,&
+            &GLQWeights, GLQZeros,&
             &rootsign, rmin, rmax,&
             &rho, theta, phi,&
             &alpha,&
@@ -426,7 +438,8 @@
             &a)
  
        CALL FindU(&
-            &Nr, Nth, Nphi, Mr, Lmax, SpM,&
+            &Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM,&
+            &GLQWeights, GLQZeros,&
             &gRR, gThTh, gPhiPhi,&
             &gRTh, gRPhi, gThPhi,&
             &r, rho, theta, phi,&
@@ -476,7 +489,9 @@
        IF( MOD(it, reinit) .EQ. 0 ) THEN
            
            CALL ReinitializeData(&
-                   &Nr, Nth, Nphi, Mr, Lmax,&
+                   &Nr, Nth, Nphi,&
+                   &Mr, Lmax, Lgrid,&
+                   &GLQWeights, GLQZeros,&
                    &r, rho, theta, phi,&
                    &c, U, a)
 

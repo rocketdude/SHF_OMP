@@ -3,7 +3,9 @@
 !--------------------------------------------------------!
 
       SUBROUTINE ReinitializeData(& 
-& Nr, Nth, Nphi, Mr, Lmax,&
+& Nr, Nth, Nphi, &
+& Mr, Lmax, Lgrid,&
+& GLQWeights, GLQZeros,&
 & r, rho, theta, phi,&
 & c, U, a)
 
@@ -16,9 +18,10 @@
 !     Declare calling variables                          !
 !--------------------------------------------------------!
 
-        INTEGER*4               :: Nr, Nth, Nphi, Mr, Lmax
+        INTEGER*4               :: Nr, Nth, Nphi, Mr, Lmax, Lgrid
         
         REAL*8                  :: c
+        REAL*8                  :: GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
         REAL*8                  :: U(Nth,Nphi)
         REAL*8                  :: r(Nr), rho(Nr)
         REAL*8                  :: theta(Nth)
@@ -52,7 +55,10 @@
         END DO
         !$OMP END PARALLEL DO
 
-        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,S,a)
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
+                                       &S,a )
 
         RETURN
       END SUBROUTINE ReinitializeData

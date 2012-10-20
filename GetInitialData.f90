@@ -4,7 +4,8 @@
 
       SUBROUTINE GetInitialData(& 
 & Nr, Nth, Nphi,&
-& Mr, Lmax,&
+& Mr, Lmax, Lgrid,&
+& GLQWeights, GLQZeros,&
 & c,&
 & R0,&
 & r, rho, theta, phi,&
@@ -20,10 +21,11 @@
 !--------------------------------------------------------!
 
         INTEGER*4               :: Nr, Nth, Nphi
-        INTEGER*4               :: Mr, Lmax
+        INTEGER*4               :: Mr, Lmax, Lgrid
         
         REAL*8                  :: c
         REAL*8                  :: R0
+        REAL*8                  :: GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
         REAL*8                  :: r(Nr)
         REAL*8                  :: rho(Nr) 
         REAL*8                  :: theta(Nth)
@@ -59,7 +61,8 @@
         END DO
         !$OMP END PARALLEL DO
 
-        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,&
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
                                        &rho,theta,phi,&
                                        &S,a )
         

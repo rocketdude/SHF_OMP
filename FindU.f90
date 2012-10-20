@@ -3,7 +3,8 @@
 !========================================================!
 
      SUBROUTINE FindU(&
-&Nr, Nth, Nphi, Mr, Lmax, SpM,&
+&Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM,&
+&GLQWeights, GLQZeros,&
 &gRR, gThTh, gPhiPhi,&
 &gRTh, gRPhi, gThPhi,&
 &r, rho, theta, phi,&
@@ -23,9 +24,10 @@
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-       INTEGER*4            :: Nr, Nth, Nphi, Mr, Lmax, SpM, it, WriteSit
+       INTEGER*4            :: Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM, it, WriteSit
 
        REAL*8               :: r(Nr), rho(Nr), theta(Nth), phi(Nphi)
+       REAL*8               :: GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
 
        REAL*8               :: thetaSp(SpM)
        REAL*8               :: phiSp(SpM)
@@ -65,6 +67,7 @@
        COMPLEX*16             S(Nr,Nth,Nphi)
        COMPLEX*16             TnYlm
     
+       REAL*8                 SLine(SpM,Nr)
        REAL*8                 U_r(Nr) 
        REAL*8                 U_r2(Nr) 
                               !Second derivatives of U_r at points along r
@@ -89,8 +92,10 @@
        TargetedSValue = 100.0D0
 
        !Evaluate the eikonal data S
-       CALL SpectralToSpatialTransform(Nr, Nth, Nphi, Mr, Lmax,&
-                                      &rho, theta, phi, a, S)
+       CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                      &GLQWeights,GLQZeros,&
+                                      &rho,theta,phi,&
+                                      &a,S)
 
        !Writing S into file (only at certain iterations)
        IF( MOD(it, WriteSit) .EQ. 0 ) CALL WriteS(Nr, Nth, Nphi, ABS(S), it)
@@ -204,25 +209,24 @@
        !Calculate the average g_rr*U^2 (the above premise applies here as well)
        gRRUsqrdAve = SUM( gRRUsqrd ) / (Nth*Nphi)
 
+       CALL GetRealSpatialValueOnRadialLine(Nr,Nth,Nphi,Mr,SpM,Lmax,Lgrid,&
+                                           &rho,theta,phi,thetaSp,phiSp,&
+                                           &S, SLine)
+
        !Calculate the values of U at the requested directions
        !$OMP PARALLEL DO &
-       !$OMP &PRIVATE(i, n, l, ml, U_r, U_r2, flag,&
+       !$OMP &PRIVATE(i, n, l, ml, U_r2, flag,&
        !$OMP &        ilow, ilow2, deltar, rr, UU, crow, TnYlm)
        DO ss = 1, SpM
-
-             CALL GetRealSpatialValueOnRadialLine(Nr,Nth,Nphi,Mr,Lmax,&
-                                                 &rho,theta,phi,&
-                                                 &thetaSp(ss), phiSp(ss),&
-                                                 &S, U_r)
-                            
+ 
              !Calculate the second derivatives and store it into U_r2
-             CALL ComputeSpline2ndDeriv(r, U_r, Nr, 1.0D31, 1.0D31, U_r2)
+             CALL ComputeSpline2ndDeriv(r,SLine(ss,:),Nr,1.0D31,1.0D31,U_r2)
 
              !Find ilow and ilow+1 which are the indices that 
              !bound where TargetedSValue is located
              flag = 0
              DO i=(1+(Nr/10)), (Nr-(Nr/10))
-                IF( U_r(i) .GE. TargetedSValue ) THEN
+                IF( SLine(ss,i) .GE. TargetedSValue ) THEN
                    ilow = i-1
                    flag = 1
                    EXIT
@@ -240,7 +244,7 @@
              deltar = (r(ilow+1) - r(ilow))/DBLE(SP-1)
              DO i = 1, SP
                 rr(i) = r(ilow) + DBLE(i-1)*deltar
-                CALL CubicSplineInterpolation(r, U_r, U_r2, ilow, Nr, &
+                CALL CubicSplineInterpolation(r, SLine(ss,:), U_r2, ilow, Nr, &
                                              &rr(i), UU(i))
 
              END DO

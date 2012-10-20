@@ -3,7 +3,8 @@
 !--------------------------------------------------------!
 
       SUBROUTINE EvolveData(&
-&Nr, Nth, Nphi, Mr, Lmax,&
+&Nr, Nth, Nphi, Mr, Lmax, Lgrid,&
+&GLQWeights, GLQZeros,&
 &rootsign, rmin, rmax,&
 &rho, theta, phi,&
 &alpha,&
@@ -26,11 +27,12 @@
 !     Declare calling variables                          !
 !--------------------------------------------------------!
 
-        INTEGER*4               :: Nr,Nth,Nphi,Mr,Lmax
+        INTEGER*4               :: Nr,Nth,Nphi,Mr,Lmax,Lgrid
 
         REAL*8                  :: rootsign
         REAL*8                  :: rmin
         REAL*8                  :: rmax
+        REAL*8                  :: GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
         REAL*8                  :: rho(Nr), theta(Nth), phi(Nphi)
 
         REAL*8                  :: alpha(Nr,Nth,Nphi)
@@ -87,9 +89,12 @@
         !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,rmax,rmin,a,dSdr)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,a,dSdphi)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,a,dSdth)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,a,dSdphi)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,a,dSdth)
         
         !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
         DO i = 1,Nr
@@ -131,7 +136,9 @@
         END DO
         !$OMP END PARALLEL DO
         
-        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,&
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
                                        &dSdt,dadt)
 
         !$OMP PARALLEL DO
@@ -155,9 +162,12 @@
         !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,rmax,rmin,a,dSdr)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,a,dSdphi)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,a,dSdth)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,a,dSdphi)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,a,dSdth)
 
         !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
         DO i = 1,Nr
@@ -199,7 +209,9 @@
         END DO
         !$OMP END PARALLEL DO
  
-        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,&
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
                                        &dSdt,dadt)
 
         !$OMP PARALLEL DO
@@ -224,9 +236,12 @@
         !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,rmax,rmin,a,dSdr)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,a,dSdphi)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,a,dSdth)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,a,dSdphi)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,a,dSdth)
 
         !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
         DO i = 1,Nr
@@ -268,7 +283,9 @@
         END DO
         !$OMP END PARALLEL DO
  
-        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,&
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
                                        &dSdt,dadt)
 
         !$OMP PARALLEL DO
@@ -293,9 +310,12 @@
         !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,rmax,rmin,a,dSdr)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,a,dSdphi)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,a,dSdth)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,a,dSdphi)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,a,dSdth)
 
         !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
         DO i = 1,Nr
@@ -337,7 +357,9 @@
         END DO
         !$OMP END PARALLEL DO
  
-        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,&
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
                                        &dSdt,dadt)
 
         !$OMP PARALLEL DO
@@ -362,9 +384,12 @@
         !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,rmax,rmin,a,dSdr)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,a,dSdphi)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,a,dSdth)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,a,dSdphi)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,a,dSdth)
 
         !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
         DO i = 1,Nr
@@ -406,7 +431,9 @@
         END DO
         !$OMP END PARALLEL DO
  
-        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,rho,theta,phi,&
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
                                        &dSdt,dadt)
 
         !$OMP PARALLEL DO
