@@ -17,7 +17,7 @@
 
     INTEGER*4, PARAMETER ::        Mr       = 40
     INTEGER*4, PARAMETER ::        Lmax     = 2
-    INTEGER*4, PARAMETER ::        Lgrid    = 2
+    INTEGER*4, PARAMETER ::        Lgrid    = 10
     INTEGER*4, PARAMETER ::        TP       = 4
     INTEGER*4, PARAMETER ::        SpM      = 6
 
@@ -256,7 +256,7 @@
 !     Compute Spherical Harmonic Transform Parameters    !
 !--------------------------------------------------------!
 
-    IF( Lmax .LT. Lgrid ) THEN
+    IF( Lmax .GT. Lgrid ) THEN
         STOP "***ERROR*** Not enough collocation points"
     END IF
 
