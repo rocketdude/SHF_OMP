@@ -260,7 +260,7 @@
         STOP "***ERROR*** Not enough collocation points"
     END IF
 
-    CALL PreCompute(Lgrid, GLQZeros, GLQWeights, CNORM=1)
+    CALL PreCompute(Lgrid, GLQZeros, GLQWeights, NORM=4, CNORM=1)
 
 !--------------------------------------------------------!
 !     Creating mesh & Inquiring Threads                  !
@@ -274,22 +274,15 @@
     WRITE(*,*) 'No. of threads = ', nthreads
 
     !Set up Chebyshev roots and DH collocation points
-    !$OMP PARALLEL
-    !$OMP DO
+    !$OMP PARALLEL DO
     DO i = 0, Mr
        rho(i+1) = -COS(PI*DBLE(2*i + 1) / DBLE(2*(Mr+1)) )
        r(i+1) = 0.5D0*( (rmax + rmin) + (rmax - rmin)*rho(i+1) )
     END DO
-    !$OMP END DO
+    !$OMP END PARALLEL DO
 
-    !$OMP DO
-    DO k = 0, (Nphi-1)
-       phi(k+1) = PI*k/Nphi
-    END DO
-    !$OMP END DO
-    !$OMP END PARALLEL
+    CALL GetThetaAndPhi(Nth,Nphi,Lgrid,theta,phi)
 
-    CALL GetTheta(GLQZeros, Nth, theta)
      
 !--------------------------------------------------------!
 !     Echo certain parameters                            !

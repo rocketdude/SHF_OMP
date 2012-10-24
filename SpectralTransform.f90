@@ -26,10 +26,10 @@
     
         !Main subroutine
         
-        !Use SHTns to find spectral coefficients at different r
+        !Use SHTOOLS to find spectral coefficients at different r
         DO i=1,Nr
             CALL SHExpandGLQC(f(i,:,:,:), Lgrid, &
-                    &S(i,:,:), GLQWeights, ZERO=GLQZeros, LMAX_CALC=Lmax)
+                    &S(i,:,:), GLQWeights, ZERO=GLQZeros,NORM=4,LMAX_CALC=Lmax)
         END DO
         !But now: f_lm(r) = Sum(over n) a_nlm T_n(r)
         !Transform to spectral coefficients a
@@ -113,10 +113,10 @@
         !f_lm(r) = Sum(over n) a_nlm T_n(r)
         CALL ChebyshevSpectralToSpatial(Lmax+1,Nr,Mr,rho,a,f)
     
-        !Use SHTns to find get the spatial values
+        !Use SHTOOLS to find get the spatial values
         DO i=1,Nr
             CALL MakeGridGLQC(S(i,:,:), f(i,:,:,:), Lgrid, &
-                    &ZERO=GLQZeros, LMAX_CALC=Lmax)
+                    &ZERO=GLQZeros, NORM=4, LMAX_CALC=Lmax)
         END DO
 
         RETURN
@@ -151,7 +151,7 @@
         !Main subroutine
          
         !SHTOOLS only accept degrees
-        th0Degrees(:) = th0(:) * 180.0D0 / PI
+        th0Degrees(:) = 90.0D0 - (th0(:)*180.0D0/PI)
         phi0Degrees(:) = phi0(:) * 180.0D0 / PI
         SReal = ABS(gridS)
 
@@ -160,14 +160,16 @@
         !Get the real spherical harmonic coefficients
         DO i=1,Nr
             CALL SHExpandGLQ(f(i,:,:,:), Lgrid, SReal(i,:,:), W, &
-                    &ZERO=Zeros, LMAX_CALC=Lmax)
+                    &ZERO=Zeros, NORM=4, LMAX_CALC=Lmax)
         END DO
 
         DO j=1,SpM
             DO i=1,Nr
                 !Use these coefficients f to find the value of S 
+                PRINT *, "theta=", th0Degrees(j)
+                PRINT *, "phi=", phi0Degrees(j)
                 S(j,i) = MakeGridPoint(f(i,:,:,:), Lmax, &
-                        & th0Degrees(j), phi0Degrees(j) )
+                        & th0Degrees(j), phi0Degrees(j), NORM=4 )
             END DO
         END DO
 
@@ -302,7 +304,8 @@
         const = 2.0D0/(rmax-rmin)
 
         !Find derivatives by using recursion relations
-        ader(Mr+1,:,:,:) = (0.0D0, 0.0D0)
+        !This is similar to chder from Numerical Recipes
+        ader(Mr+1,:,:,:) = DCMPLX(0.0D0, 0.0D0)
         ader(Mr,:,:,:) = DCMPLX(2.0D0*DBLE(Mr), 0.0D0)*a(Mr,:,:,:)
         DO nder = 1,(Mr-1)
             nn = Mr-nder+1
@@ -402,18 +405,29 @@
         RETURN
     END SUBROUTINE
 !===========================================================!
-    SUBROUTINE GetTheta(GLQzeros, Nth, theta)
+    SUBROUTINE GetThetaAndPhi(Nth, Nphi, Lgrid, theta, phi)
     
+        USE          SHTOOLS
         USE          omp_lib
         IMPLICIT     none 
 
         !Calling variables
-        INTEGER*4                    Nth
-        REAL*8                       GLQzeros(Nth), theta(Nth)
+        INTEGER*4                    Nth, Nphi, Lgrid
+        REAL*8                       theta(Nth), phi(Nphi)
         REAL*8, PARAMETER ::    PI = 3.141592653589793238462643383279502884197D0
 
+        !Local variables
+        INTEGER*4                    NthOut, NphiOut, j,k
+        REAL*8                       latitude(Nth), longitude(Nphi)
+        
         !Main subroutine
 
-        theta(:) = GLQzeros(:)*PI/180
+        CALL GLQGridCoord(latitude,longitude,Lgrid,NthOut,NphiOut)
+    
+        IF( NthOut .NE. Nth ) STOP "***ERROR*** Nth is not correct"
+        IF( NphiOut .NE. Nphi ) STOP "***ERROR*** Nphi is not correct"
+
+        theta = ABS( latitude - 90D0 )*PI/180.0D0
+        phi = longitude*PI/180.0D0
 
     END SUBROUTINE
