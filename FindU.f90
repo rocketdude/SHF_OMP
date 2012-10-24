@@ -129,7 +129,7 @@
              END DO
 
              IF( flag .EQ. 0) THEN           
-                WRITE(*,*) 'Error in hunting'
+                WRITE(*,*) 'Error in hunting 1'
                 !READ(*, '()')
                 STOP
              END IF
@@ -156,7 +156,7 @@
              END DO
 
              IF( flag .EQ. 0) THEN           
-                WRITE(*,*) 'Error in hunting'
+                WRITE(*,*) 'Error in hunting 2'
                 !READ(*, '()')
                 STOP
              END IF

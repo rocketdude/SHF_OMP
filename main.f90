@@ -16,8 +16,8 @@
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Mr       = 40
-    INTEGER*4, PARAMETER ::        Lmax     = 2
-    INTEGER*4, PARAMETER ::        Lgrid    = 10
+    INTEGER*4, PARAMETER ::        Lmax     = 16
+    INTEGER*4, PARAMETER ::        Lgrid    = 16
     INTEGER*4, PARAMETER ::        TP       = 4
     INTEGER*4, PARAMETER ::        SpM      = 6
 
@@ -292,6 +292,8 @@
     PRINT *, 'Mr = ', Mr
     PRINT *, 'Lmax = ', Lmax
     PRINT *, '(Nr, Nth, Nphi) = ', Nr, ',', Nth, ',', Nphi
+    PRINT *, 'theta = ', theta
+    PRINT *, 'phi = ', phi
     PRINT *, '# of iterations =', (Maxit-Startit+1)
     PRINT *, 'Reinitializing every ', reinit, 'iterations'
     PRINT *, 'Number of metric data chunks =', nchunks

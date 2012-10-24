@@ -166,8 +166,6 @@
         DO j=1,SpM
             DO i=1,Nr
                 !Use these coefficients f to find the value of S 
-                PRINT *, "theta=", th0Degrees(j)
-                PRINT *, "phi=", phi0Degrees(j)
                 S(j,i) = MakeGridPoint(f(i,:,:,:), Lmax, &
                         & th0Degrees(j), phi0Degrees(j), NORM=4 )
             END DO
