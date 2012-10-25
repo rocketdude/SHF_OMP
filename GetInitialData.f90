@@ -49,7 +49,7 @@
 
         PRINT *, 'Evaluating initial S'
 
-        !$OMP PARALLEL DO SHARED(S, r, R0, c) PRIVATE(j, k)
+        !$OMP PARALLEL DO SHARED(S, r, c) PRIVATE(j,k,x,y,z,r0)
         DO i = 1, Nr
            DO j = 1, Nth
               DO k = 1, Nphi
