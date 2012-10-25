@@ -7,7 +7,7 @@
 & Mr, Lmax, Lgrid,&
 & GLQWeights, GLQZeros,&
 & c,&
-& R0,&
+& X0, Y0, Z0,&
 & r, rho, theta, phi,&
 & a)
 
@@ -24,7 +24,7 @@
         INTEGER*4               :: Mr, Lmax, Lgrid
         
         REAL*8                  :: c
-        REAL*8                  :: R0
+        REAL*8                  :: X0, Y0, Z0
         REAL*8                  :: GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
         REAL*8                  :: r(Nr)
         REAL*8                  :: rho(Nr) 
@@ -40,6 +40,7 @@
         INTEGER*4        i, j, k
         INTEGER*4        n
         COMPLEX*16       S(Nr, Nth, Nphi)
+        REAL*8           x,y,z,r0
 
 
 !--------------------------------------------------------!
@@ -53,7 +54,11 @@
            DO j = 1, Nth
               DO k = 1, Nphi
 
-                 S(i,j,k) = CMPLX( 100.0D0 *( 1 + TANH( ( r(i) - R0 )/c ) ), &
+                 x = X0*SIN(theta(j))*COS(phi(k))
+                 y = Y0*SIN(theta(j))*SIN(phi(k))
+                 z = Z0*COS(theta(j))
+                 r0 = SQRT( x*x + y*y + z*z )
+                 S(i,j,k) = CMPLX( 100.0D0 *( 1 + TANH( ( r(i) - r0 )/c ) ), &
                                  & 0.0D0 )
 
               END DO

@@ -17,7 +17,7 @@
 
     INTEGER*4, PARAMETER ::        Mr       = 40
     INTEGER*4, PARAMETER ::        Lmax     = 16
-    INTEGER*4, PARAMETER ::        Lgrid    = 16
+    INTEGER*4, PARAMETER ::        Lgrid    = 32
     INTEGER*4, PARAMETER ::        TP       = 4
     INTEGER*4, PARAMETER ::        SpM      = 6
 
@@ -108,7 +108,9 @@
     REAL*8              thetaSp(SpM)!The angle theta in specific directions
     REAL*8              phiSp(SpM)  !The angle phi in specific directions
 
-    REAL*8              R0          !Initial radius of the light 'cone'
+    REAL*8              X0,Y0,Z0    !X0,Y0,Z0 are the initial axes of the
+                                    !the spheroids
+                                    !X0=Y0=Z0 is a sphere
 
     REAL*8              U(Nth,Nphi) !Radial distance of the light cone
     REAL*8              Uave        !Average radial distance of the light cone
@@ -200,7 +202,10 @@
     IF( SFLAG .EQ. 0 ) THEN
        Startit = 1                  !Starting from iteration 1
     END IF
-    R0 = 0.675D0                    !Initial radius of the null surface
+
+    X0 = 0.725D0                    !Initial axes of the spheroids in the
+    Y0 = 0.725D0                    !X, Y, and Z directions
+    Z0 = 0.625D0
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, 
@@ -332,7 +337,7 @@
             & Mr, Lmax, Lgrid,&
             & GLQWeights, GLQZeros,&
             & c,&
-            & R0,&
+            & X0, Y0, Z0,&
             & r, rho, theta, phi,&
             & a)
     END IF

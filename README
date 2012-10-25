@@ -31,3 +31,6 @@ Event Horizon Finder using Pseudospectral methods.
 
 10/18/2012
 -       Optimize using SHTOOLS: http://shtools.ipgp.fr/
+
+10/25/2012
+-       Initialize data using spheroids instead of just sphere
