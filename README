@@ -34,3 +34,7 @@ Event Horizon Finder using Pseudospectral methods.
 
 10/25/2012
 -       Initialize data using spheroids instead of just sphere
+
+11/01/2012
+-       Include SHTOOLS in the repo, compile using: make F95=ifort (or whatever
+        compiler that you're using)

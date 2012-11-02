@@ -31,8 +31,8 @@ CC = mpicc
 #F90 DEPENDENCIES
 SWITCH = -O3 -xW -mcmodel=large -openmp
 LIBS = \
-   -free -I/work/01682/bunandar/SHTOOLS/modules \
-   -L/work/01682/bunandar/SHTOOLS/lib \
+   -free -ISHTOOLS/modules \
+   -LSHTOOLS/lib \
    -lSHTOOLS2.7 \
    -Wl,-rpath,$$TACC_MKL_LIB \
    -L$$TACC_MKL_LIB -lmkl -lguide \
