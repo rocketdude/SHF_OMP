@@ -1,0 +1,11 @@
+ Lmax of data file =   110
+ For this test of SHExpandDH, the initial grid will be created with lmax =   89
+ Making grid using MakeGrid2D...
+ nlat, nlong =   181  361
+ Minimum and maximum values of the input grid =   3373526.98553940  3417015.03521318
+ Number of samples in latitude used with SHExpandDH =   180
+ Lmax of Driscoll Heally expansion =   89
+ Maximum relative error between initial and output spherical harmonic coefficients =   6.258188853893979E-009
+ Number of samples in latitude and longitude =   180
+ Maximum error (meters) in the space domain =   2.612359821796417E-007
+

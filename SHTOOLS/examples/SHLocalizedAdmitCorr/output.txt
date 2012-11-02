@@ -1,0 +1,25 @@
+LocalizedAdmitCorr < input.txt
+ Reading = ../ExampleDataFiles/MarsTopo719.shape                                                                                   
+ Lmax of topography file =   110
+ Mean planetary radius (km) =   3389.50011902684
+ Reading = ../ExampleDataFiles/jgmro_110b_sha.tab                                                                                  
+ Lmax of potential file =   110
+ Reference radius of potential coefficients (km) =   3396.00000000000
+ Mass of planet (kg) =   6.417004963291482E+023
+ Surface gravitational acceleration (m/s2) =   3.71360945375353
+ Maximum spherical harmonic degree to be used in calculations =   110
+ Number of tapers to use > 
+ Latitude of feature of interest (degrees) > 
+ Longitude (degrees) > 
+ Angular radius of localization window (degrees) > 
+ Create localization window using
+ (1) Desired concentration factor (alpha^2)
+ (2) Desired (approximate) Shannon number; (Lwin+1) Theta0 / pi)
+ (3) Desired Spectral bandwidth (Lwin)
+ Input desired concentration factor of the Kth taper > 
+ Corresponding spherical harmonic bandwidth =   14
+ Corresponding approximate Shannon number =   1.50000000000000
+ Concentration factor of first taper =   0.992524588591861
+ Taper order =   0
+ Gravity field evaluated at R = (km)   3396.00000000000
+ Name of output admittance and correlation file > 

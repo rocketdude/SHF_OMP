@@ -1,0 +1,19 @@
+# GMT common arguments shelf
+-B0
+-JX10.5l/6.58l
+-R90/3000/0.1/10000
+-X8
+-xr-0.0386557i
+-Y5
+-yr-1.88469i
+-jX10.5l/6.58l
+EOF
+i/-0.669291i
+EOF
+
+-Y5
+-yr-1.86011i
+-jX10.5l/6.58l
+EOF
+
+EOF

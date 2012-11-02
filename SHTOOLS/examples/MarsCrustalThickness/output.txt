@@ -1,0 +1,600 @@
+MarsCrustalThickness < input.txt 
+ rho_crust (kg/m3) > 
+ rho_mantle (kg/m3) > 
+ Input filter type (1) Minimum amplitude, (2) minimum curvature, (0) no filter 
+ Remove degree 1 topo coefficients from Bouguer Correction? (0:no, 1:yes) > 
+ maximum degree to compute Moho relief to >
+ Minimum assumed crustal thickness (km) > 
+ Moho spherical harmonic coeficient output filename > 
+ Grid spacing for output crustal thickness map (degrees) > 
+ gridded crustal thickness output filename >
+ Gravity misfit spherical harmonic filename >
+ Reading data from ../ExampleDataFiles/jgmro_110b_sha.tab                                                                                  
+ Mass (kg) =   6.417004963291482E+023
+ Average surface gravity (m/s2) =   3.71360945375353
+ Lmax of gravitational potential file =   50
+ Reading data from ../ExampleDataFiles/MarsTopo719.shape                                                                                   
+ Lmax of topography file =   50
+ r0 (km) =   3389.50011902684
+ Creating Bouger anomaly
+ Maximum Topo (km) =   3415.81756648234
+ Minimum Topo (km) =   3373.57952663545
+ 
+ Reference depth (km) =   44.0000000000000
+ Maximum Crustal thickness (km) =   89.1015656709201
+ Minimum Crustal thickness (km) =  -4.72020660154615
+ Average depth of Moho (km) =   44.0000000000019
+ Delta (km) =   9.90638863983890
+ Maximum Crustal thickness (km) =   91.2013876353837
+ Minimum Crustal thickness (km) =   4.89464446952008
+ Iteration   1
+ Delta (km) =   4.95319431991968
+ Maximum Crustal thickness (km) =   90.1070028485209
+ Minimum Crustal thickness (km) =   0.232987718373071
+ Iteration   2
+ Average depth of Moho (km) =   44.0000000000005
+ Delta (km) =   2.46832417201204
+ Maximum Crustal thickness (km) =   91.4357057634532
+ Minimum Crustal thickness (km) =   2.70131189038511
+ Iteration   3
+ Delta (km) =   1.23416208600579
+ Maximum Crustal thickness (km) =   90.7713543059872
+ Minimum Crustal thickness (km) =   1.46714980437933
+ Iteration   4
+ Average depth of Moho (km) =   44.0000000000005
+ Delta (km) =   1.11070997804124
+ Maximum Crustal thickness (km) =   91.5868246074701
+ Minimum Crustal thickness (km) =   2.17047455264349
+ Iteration   5
+ Delta (km) =   0.555354989020620
+ Maximum Crustal thickness (km) =   91.1790894567287
+ Minimum Crustal thickness (km) =   1.81881217851164
+ Iteration   6
+ Average depth of Moho (km) =   44.0000000000009
+ Delta (km) =   0.711452368827071
+ Maximum Crustal thickness (km) =   91.6823506054478
+ Minimum Crustal thickness (km) =   2.03691719085723
+ Iteration   7
+ Delta (km) =   0.355726184413768
+ Maximum Crustal thickness (km) =   91.4307200310882
+ Minimum Crustal thickness (km) =   1.92786468468467
+ Iteration   8
+ Average depth of Moho (km) =   43.9999999999995
+ Delta (km) =   0.458461669741198
+ Maximum Crustal thickness (km) =   91.7424178089788
+ Minimum Crustal thickness (km) =   2.00065801448887
+ Iteration   9
+ Delta (km) =   0.229230834870599
+ Maximum Crustal thickness (km) =   91.5865689200335
+ Minimum Crustal thickness (km) =   1.96426134958677
+ Iteration   10
+ Average depth of Moho (km) =   44.0000000000009
+ Delta (km) =   0.296974786866456
+ Maximum Crustal thickness (km) =   91.7801342950789
+ Minimum Crustal thickness (km) =   1.99022726298310
+ Iteration   11
+ Delta (km) =   0.148487393433228
+ Maximum Crustal thickness (km) =   91.6833516075565
+ Minimum Crustal thickness (km) =   1.97724430628493
+ Iteration   12
+ Average depth of Moho (km) =   44.0000000000000
+ Delta (km) =   0.193224304589909
+ Maximum Crustal thickness (km) =   91.8038148063095
+ Minimum Crustal thickness (km) =   1.98705556055950
+ Iteration   13
+ Delta (km) =   9.661215229472145E-002
+ Maximum Crustal thickness (km) =   91.7435832069330
+ Minimum Crustal thickness (km) =   1.98214993342245
+ Iteration   14
+ Average depth of Moho (km) =   44.0000000000009
+ Delta (km) =   0.126200026642066
+ Maximum Crustal thickness (km) =   91.8186893000468
+ Minimum Crustal thickness (km) =   1.98603807779681
+ Iteration   15
+ Delta (km) =   6.310001332079991E-002
+ Maximum Crustal thickness (km) =   91.7811362534901
+ Minimum Crustal thickness (km) =   1.98409400560940
+ Iteration   16
+ Average depth of Moho (km) =   44.0000000000005
+ Delta (km) =   8.269637876236811E-002
+ Maximum Crustal thickness (km) =   91.8280383566036
+ Minimum Crustal thickness (km) =   1.98569603683054
+ Iteration   17
+ Delta (km) =   4.134818938141689E-002
+ Maximum Crustal thickness (km) =   91.8045873050466
+ Minimum Crustal thickness (km) =   1.98489502122020
+ Iteration   18
+ Average depth of Moho (km) =   44.0000000000009
+ Delta (km) =   5.434372382750734E-002
+ Maximum Crustal thickness (km) =   91.8339185613594
+ Minimum Crustal thickness (km) =   1.98557712496119
+ Iteration   19
+ Delta (km) =   2.717186191352084E-002
+ Maximum Crustal thickness (km) =   91.8192529332032
+ Minimum Crustal thickness (km) =   1.98523607309069
+ Iteration   20
+ Average depth of Moho (km) =   44.0000000000009
+ Delta (km) =   3.579995843255892E-002
+ Maximum Crustal thickness (km) =   91.8376195386406
+ Minimum Crustal thickness (km) =   1.98553523057746
+ Iteration   21
+ Delta (km) =   1.789997921651229E-002
+ Maximum Crustal thickness (km) =   91.8284362359219
+ Minimum Crustal thickness (km) =   1.98538565183384
+ Iteration   22
+ Average depth of Moho (km) =   44.0000000000009
+ Delta (km) =   2.363437522295862E-002
+ Maximum Crustal thickness (km) =   91.8399504736792
+ Minimum Crustal thickness (km) =   1.98552073609177
+ Iteration   23
+ Delta (km) =   1.181718761147931E-002
+ Maximum Crustal thickness (km) =   91.8341933548004
+ Minimum Crustal thickness (km) =   1.98545319396304
+ Iteration   24
+ Average depth of Moho (km) =   44.0000000000005
+ Delta (km) =   1.563227938860655E-002
+ Maximum Crustal thickness (km) =   91.8414194699996
+ Minimum Crustal thickness (km) =   1.98551609839220
+ Iteration   25
+ Delta (km) =   7.816139694303274E-003
+ Maximum Crustal thickness (km) =   91.8378064123997
+ Minimum Crustal thickness (km) =   1.98548464617738
+ Iteration   26
+ Average depth of Moho (km) =   44.0000000000019
+ Delta (km) =   1.035631937533617E-002
+ Maximum Crustal thickness (km) =   91.8423458182784
+ Minimum Crustal thickness (km) =   1.98551494726026
+ Iteration   27
+ Delta (km) =   5.178159687668085E-003
+ Maximum Crustal thickness (km) =   91.8400761153391
+ Minimum Crustal thickness (km) =   1.98549979671882
+ Iteration   28
+ Average depth of Moho (km) =   44.0000000000019
+ Delta (km) =   6.870705901179463E-003
+ Maximum Crustal thickness (km) =   91.8429303089795
+ Minimum Crustal thickness (km) =   1.98551494858833
+ Iteration   29
+ Delta (km) =   3.435352950822562E-003
+ Maximum Crustal thickness (km) =   91.8415032121595
+ Minimum Crustal thickness (km) =   1.98550737265358
+ Iteration   30
+ Average depth of Moho (km) =   44.0000000000019
+ Delta (km) =   4.563877326436341E-003
+ Maximum Crustal thickness (km) =   91.8432993020168
+ Minimum Crustal thickness (km) =   1.98551526042167
+ 
+ Reference depth (km) =   45.0144847395783
+ Maximum Crustal thickness (km) =   90.2244450457813
+ Minimum Crustal thickness (km) =  -3.94292880691914
+ Average depth of Moho (km) =   45.0144847395788
+ Delta (km) =   10.0240941897412
+ Maximum Crustal thickness (km) =   92.3668595457371
+ Minimum Crustal thickness (km) =   5.79828910970548
+ Iteration   1
+ Delta (km) =   5.01204709487082
+ Maximum Crustal thickness (km) =   91.2593197468622
+ Minimum Crustal thickness (km) =   1.06911828795122
+ Iteration   2
+ Average depth of Moho (km) =   45.0144847395779
+ Delta (km) =   2.48238609031588
+ Maximum Crustal thickness (km) =   92.6049312715018
+ Minimum Crustal thickness (km) =   3.55150437826710
+ Iteration   3
+ Delta (km) =   1.24119304515794
+ Maximum Crustal thickness (km) =   91.9321255091820
+ Minimum Crustal thickness (km) =   2.31031133310916
+ Iteration   4
+ Average depth of Moho (km) =   45.0144847395793
+ Delta (km) =   1.12407270984119
+ Maximum Crustal thickness (km) =   92.7585927170417
+ Minimum Crustal thickness (km) =   3.01492660613870
+ Iteration   5
+ Delta (km) =   0.562036354920361
+ Maximum Crustal thickness (km) =   92.3453591131121
+ Minimum Crustal thickness (km) =   2.66261896962393
+ Iteration   6
+ Average depth of Moho (km) =   45.0144847395807
+ Delta (km) =   0.720624218142591
+ Maximum Crustal thickness (km) =   92.8557855993039
+ Minimum Crustal thickness (km) =   2.88056576158851
+ Iteration   7
+ Delta (km) =   0.360312109071296
+ Maximum Crustal thickness (km) =   92.6005723562082
+ Minimum Crustal thickness (km) =   2.77159236560622
+ Iteration   8
+ Average depth of Moho (km) =   45.0144847395793
+ Delta (km) =   0.464760906693060
+ Maximum Crustal thickness (km) =   92.9169377376433
+ Minimum Crustal thickness (km) =   2.84422731026914
+ Iteration   9
+ Delta (km) =   0.232380453346297
+ Maximum Crustal thickness (km) =   92.7587550469255
+ Minimum Crustal thickness (km) =   2.80790983793745
+ Iteration   10
+ Average depth of Moho (km) =   45.0144847395807
+ Delta (km) =   0.301302639065776
+ Maximum Crustal thickness (km) =   92.9553586684549
+ Minimum Crustal thickness (km) =   2.83380483376514
+ Iteration   11
+ Delta (km) =   0.150651319533121
+ Maximum Crustal thickness (km) =   92.8570568576902
+ Minimum Crustal thickness (km) =   2.82085733585106
+ Iteration   12
+ Average depth of Moho (km) =   45.0144847395811
+ Delta (km) =   0.196197625726927
+ Maximum Crustal thickness (km) =   92.9794960946590
+ Minimum Crustal thickness (km) =   2.83064237664733
+ Iteration   13
+ Delta (km) =   9.809881286369638E-002
+ Maximum Crustal thickness (km) =   92.9182764761746
+ Minimum Crustal thickness (km) =   2.82574985624896
+ Iteration   14
+ Average depth of Moho (km) =   45.0144847395807
+ Delta (km) =   0.128242410217412
+ Maximum Crustal thickness (km) =   92.9946667836886
+ Minimum Crustal thickness (km) =   2.82962927466957
+ Iteration   15
+ Delta (km) =   6.412120510870591E-002
+ Maximum Crustal thickness (km) =   92.9564716299316
+ Minimum Crustal thickness (km) =   2.82768956545927
+ Iteration   16
+ Average depth of Moho (km) =   45.0144847395825
+ Delta (km) =   8.409890532912687E-002
+ Maximum Crustal thickness (km) =   93.0042077784455
+ Minimum Crustal thickness (km) =   2.82928904184187
+ Iteration   17
+ Delta (km) =   4.204945266433060E-002
+ Maximum Crustal thickness (km) =   92.9803397041885
+ Minimum Crustal thickness (km) =   2.82848930365080
+ Iteration   18
+ Average depth of Moho (km) =   45.0144847395816
+ Delta (km) =   5.530652217101306E-002
+ Maximum Crustal thickness (km) =   93.0102123283604
+ Minimum Crustal thickness (km) =   2.82917088449793
+ Iteration   19
+ Delta (km) =   2.765326108550653E-002
+ Maximum Crustal thickness (km) =   92.9952760162745
+ Minimum Crustal thickness (km) =   2.82883009407436
+ Iteration   20
+ Average depth of Moho (km) =   45.0144847395816
+ Delta (km) =   3.646064552385360E-002
+ Maximum Crustal thickness (km) =   93.0139938448761
+ Minimum Crustal thickness (km) =   2.82912933196453
+ Iteration   21
+ Delta (km) =   1.823032276192680E-002
+ Maximum Crustal thickness (km) =   93.0046349305753
+ Minimum Crustal thickness (km) =   2.82897971301945
+ Iteration   22
+ Average depth of Moho (km) =   45.0144847395844
+ Delta (km) =   2.408757238555700E-002
+ Maximum Crustal thickness (km) =   93.0163769373717
+ Minimum Crustal thickness (km) =   2.82911501012137
+ Iteration   23
+ Delta (km) =   1.204378619277850E-002
+ Maximum Crustal thickness (km) =   93.0105059339735
+ Minimum Crustal thickness (km) =   2.82904736157041
+ Iteration   24
+ Average depth of Moho (km) =   45.0144847395825
+ Delta (km) =   1.594298179121688E-002
+ Maximum Crustal thickness (km) =   93.0178797067027
+ Minimum Crustal thickness (km) =   2.82911046864232
+ Iteration   25
+ Delta (km) =   7.971490895841271E-003
+ Maximum Crustal thickness (km) =   93.0141928203381
+ Minimum Crustal thickness (km) =   2.82907891510660
+ Iteration   26
+ Average depth of Moho (km) =   45.0144847395830
+ Delta (km) =   1.056928207958117E-002
+ Maximum Crustal thickness (km) =   93.0188279214739
+ Minimum Crustal thickness (km) =   2.82910937514342
+ Iteration   27
+ Delta (km) =   5.284641040023416E-003
+ Maximum Crustal thickness (km) =   93.0165103709060
+ Minimum Crustal thickness (km) =   2.82909414512524
+ Iteration   28
+ Average depth of Moho (km) =   45.0144847395835
+ Delta (km) =   7.016621090471745E-003
+ Maximum Crustal thickness (km) =   93.0194265685980
+ Minimum Crustal thickness (km) =   2.82910941263568
+ Iteration   29
+ Delta (km) =   3.508310545235872E-003
+ Maximum Crustal thickness (km) =   93.0179684697520
+ Minimum Crustal thickness (km) =   2.82910177888023
+ Iteration   30
+ Average depth of Moho (km) =   45.0144847395835
+ Delta (km) =   4.663817761000246E-003
+ Maximum Crustal thickness (km) =   93.0198047259413
+ Minimum Crustal thickness (km) =   2.82910974782985
+ 
+ Reference depth (km) =   45.1853749917485
+ Maximum Crustal thickness (km) =   90.4136895795898
+ Minimum Crustal thickness (km) =  -3.81214214876248
+ Average depth of Moho (km) =   45.1853749917480
+ Delta (km) =   10.0440771078272
+ Maximum Crustal thickness (km) =   92.5633340673465
+ Minimum Crustal thickness (km) =   5.95045463154232
+ Iteration   1
+ Delta (km) =   5.02203855391359
+ Maximum Crustal thickness (km) =   91.4535599300833
+ Minimum Crustal thickness (km) =   1.20989640515111
+ Iteration   2
+ Average depth of Moho (km) =   45.1853749917480
+ Delta (km) =   2.48474667539494
+ Maximum Crustal thickness (km) =   92.8020444042301
+ Minimum Crustal thickness (km) =   3.69464308054605
+ Iteration   3
+ Delta (km) =   1.24237333769724
+ Maximum Crustal thickness (km) =   92.1278021671567
+ Minimum Crustal thickness (km) =   2.45226974284882
+ Iteration   4
+ Average depth of Moho (km) =   45.1853749917490
+ Delta (km) =   1.12634274480492
+ Maximum Crustal thickness (km) =   92.9561386484802
+ Minimum Crustal thickness (km) =   3.15709593892191
+ Iteration   5
+ Delta (km) =   0.563171372402459
+ Maximum Crustal thickness (km) =   92.5419704078184
+ Minimum Crustal thickness (km) =   2.80468284088513
+ Iteration   6
+ Average depth of Moho (km) =   45.1853749917490
+ Delta (km) =   0.722183076973073
+ Maximum Crustal thickness (km) =   93.0536153687160
+ Minimum Crustal thickness (km) =   3.02260081315599
+ Iteration   7
+ Delta (km) =   0.361091538486537
+ Maximum Crustal thickness (km) =   92.7977928882670
+ Minimum Crustal thickness (km) =   2.91364182702033
+ Iteration   8
+ Average depth of Moho (km) =   45.1853749917461
+ Delta (km) =   0.465832046681084
+ Maximum Crustal thickness (km) =   93.1149523204980
+ Minimum Crustal thickness (km) =   2.98624950737739
+ Iteration   9
+ Delta (km) =   0.232916023340542
+ Maximum Crustal thickness (km) =   92.9563726043822
+ Minimum Crustal thickness (km) =   2.94994566719886
+ Iteration   10
+ Average depth of Moho (km) =   45.1853749917480
+ Delta (km) =   0.302038904919289
+ Maximum Crustal thickness (km) =   93.1534932972481
+ Minimum Crustal thickness (km) =   2.97582858173456
+ Iteration   11
+ Delta (km) =   0.151019452459645
+ Maximum Crustal thickness (km) =   93.0549329508152
+ Minimum Crustal thickness (km) =   2.96288712446671
+ Iteration   12
+ Average depth of Moho (km) =   45.1853749917480
+ Delta (km) =   0.196703688324429
+ Maximum Crustal thickness (km) =   93.1777086183890
+ Minimum Crustal thickness (km) =   2.97266772466106
+ Iteration   13
+ Delta (km) =   9.835184416221454E-002
+ Maximum Crustal thickness (km) =   93.1163207846023
+ Minimum Crustal thickness (km) =   2.96777742456412
+ Iteration   14
+ Average depth of Moho (km) =   45.1853749917499
+ Delta (km) =   0.128590183062945
+ Maximum Crustal thickness (km) =   93.1929298230987
+ Minimum Crustal thickness (km) =   2.97165537162870
+ Iteration   15
+ Delta (km) =   6.429509153170511E-002
+ Maximum Crustal thickness (km) =   93.1546253038505
+ Minimum Crustal thickness (km) =   2.96971639809618
+ Iteration   16
+ Average depth of Moho (km) =   45.1853749917503
+ Delta (km) =   8.433783008810133E-002
+ Maximum Crustal thickness (km) =   93.2025035657878
+ Minimum Crustal thickness (km) =   2.97131544639030
+ Iteration   17
+ Delta (km) =   4.216891504405067E-002
+ Maximum Crustal thickness (km) =   93.1785644348189
+ Minimum Crustal thickness (km) =   2.97051592224324
+ Iteration   18
+ Average depth of Moho (km) =   45.1853749917499
+ Delta (km) =   5.547060872614384E-002
+ Maximum Crustal thickness (km) =   93.2085293396213
+ Minimum Crustal thickness (km) =   2.97119741718750
+ Iteration   19
+ Delta (km) =   2.773530436307192E-002
+ Maximum Crustal thickness (km) =   93.1935468872199
+ Minimum Crustal thickness (km) =   2.97085666971514
+ Iteration   20
+ Average depth of Moho (km) =   45.1853749917503
+ Delta (km) =   3.657329188939184E-002
+ Maximum Crustal thickness (km) =   93.2123246085430
+ Minimum Crustal thickness (km) =   2.97115592273744
+ Iteration   21
+ Delta (km) =   1.828664594469592E-002
+ Maximum Crustal thickness (km) =   93.2029357478814
+ Minimum Crustal thickness (km) =   2.97100629622629
+ Iteration   22
+ Average depth of Moho (km) =   45.1853749917503
+ Delta (km) =   2.416487400187179E-002
+ Maximum Crustal thickness (km) =   93.2147166106994
+ Minimum Crustal thickness (km) =   2.97114163027098
+ Iteration   23
+ Delta (km) =   1.208243700070307E-002
+ Maximum Crustal thickness (km) =   93.2088261792902
+ Minimum Crustal thickness (km) =   2.97107396324864
+ Iteration   24
+ Average depth of Moho (km) =   45.1853749917503
+ Delta (km) =   1.599599952343851E-002
+ Maximum Crustal thickness (km) =   93.2162251515449
+ Minimum Crustal thickness (km) =   2.97113710519532
+ Iteration   25
+ Delta (km) =   7.997999761719256E-003
+ Maximum Crustal thickness (km) =   93.2125256654173
+ Minimum Crustal thickness (km) =   2.97110553422198
+ Iteration   26
+ Average depth of Moho (km) =   45.1853749917517
+ Delta (km) =   1.060563618969172E-002
+ Maximum Crustal thickness (km) =   93.2171771046040
+ Minimum Crustal thickness (km) =   2.97113602153165
+ Iteration   27
+ Delta (km) =   5.302818094845861E-003
+ Maximum Crustal thickness (km) =   93.2148513850104
+ Minimum Crustal thickness (km) =   2.97112077787658
+ Iteration   28
+ Average depth of Moho (km) =   45.1853749917517
+ Delta (km) =   7.041539537720382E-003
+ Maximum Crustal thickness (km) =   93.2177781728725
+ Minimum Crustal thickness (km) =   2.97113606520509
+ Iteration   29
+ Delta (km) =   3.520769768860191E-003
+ Maximum Crustal thickness (km) =   93.2163147789417
+ Minimum Crustal thickness (km) =   2.97112842154084
+ Iteration   30
+ Average depth of Moho (km) =   45.1853749917522
+ Delta (km) =   4.680891539901495E-003
+ Maximum Crustal thickness (km) =   93.2181578981988
+ Minimum Crustal thickness (km) =   2.97113640439324
+ 
+ Reference depth (km) =   45.2142385873552
+ Maximum Crustal thickness (km) =   90.4456559609217
+ Minimum Crustal thickness (km) =  -3.79005627212906
+ Average depth of Moho (km) =   45.2142385873552
+ Delta (km) =   10.0474566986635
+ Maximum Crustal thickness (km) =   92.5965231851791
+ Minimum Crustal thickness (km) =   5.97615406350978
+ Iteration   1
+ Delta (km) =   5.02372834933177
+ Maximum Crustal thickness (km) =   91.4863711389802
+ Minimum Crustal thickness (km) =   1.23367207720270
+ Iteration   2
+ Average depth of Moho (km) =   45.2142385873566
+ Delta (km) =   2.48514514219761
+ Maximum Crustal thickness (km) =   92.8353415654097
+ Minimum Crustal thickness (km) =   3.71881721940031
+ Iteration   3
+ Delta (km) =   1.24257257109880
+ Maximum Crustal thickness (km) =   92.1608563521951
+ Minimum Crustal thickness (km) =   2.47624464830151
+ Iteration   4
+ Average depth of Moho (km) =   45.2142385873566
+ Delta (km) =   1.12672670334531
+ Maximum Crustal thickness (km) =   92.9895090388963
+ Minimum Crustal thickness (km) =   3.18110628368473
+ Iteration   5
+ Delta (km) =   0.563363351672422
+ Maximum Crustal thickness (km) =   92.5751826955457
+ Minimum Crustal thickness (km) =   2.82867546599312
+ Iteration   6
+ Average depth of Moho (km) =   45.2142385873571
+ Delta (km) =   0.722446767482907
+ Maximum Crustal thickness (km) =   93.0870337872598
+ Minimum Crustal thickness (km) =   3.04658850864088
+ Iteration   7
+ Delta (km) =   0.361223383741453
+ Maximum Crustal thickness (km) =   92.8311082414026
+ Minimum Crustal thickness (km) =   2.93763198731700
+ Iteration   8
+ Average depth of Moho (km) =   45.2142385873576
+ Delta (km) =   0.466013251265977
+ Maximum Crustal thickness (km) =   93.1484020132707
+ Minimum Crustal thickness (km) =   3.01023504608404
+ Iteration   9
+ Delta (km) =   0.233006625633221
+ Maximum Crustal thickness (km) =   92.9897551273368
+ Minimum Crustal thickness (km) =   2.97393351670029
+ Iteration   10
+ Average depth of Moho (km) =   45.2142385873585
+ Delta (km) =   0.302163468787447
+ Maximum Crustal thickness (km) =   93.1869633056102
+ Minimum Crustal thickness (km) =   2.99981438686932
+ Iteration   11
+ Delta (km) =   0.151081734393723
+ Maximum Crustal thickness (km) =   93.0883592164735
+ Minimum Crustal thickness (km) =   2.98687395178480
+ Iteration   12
+ Average depth of Moho (km) =   45.2142385873585
+ Delta (km) =   0.196789312322624
+ Maximum Crustal thickness (km) =   93.2111918099425
+ Minimum Crustal thickness (km) =   2.99665380125819
+ Iteration   13
+ Delta (km) =   9.839465616131202E-002
+ Maximum Crustal thickness (km) =   93.1497755132080
+ Minimum Crustal thickness (km) =   2.99176387652149
+ Iteration   14
+ Average depth of Moho (km) =   45.2142385873576
+ Delta (km) =   0.128649029484950
+ Maximum Crustal thickness (km) =   93.2264215646665
+ Minimum Crustal thickness (km) =   2.99564157503285
+ Iteration   15
+ Delta (km) =   6.432451474247499E-002
+ Maximum Crustal thickness (km) =   93.1880985389370
+ Minimum Crustal thickness (km) =   2.99370272577694
+ Iteration   16
+ Average depth of Moho (km) =   45.2142385873590
+ Delta (km) =   8.437826141295956E-002
+ Maximum Crustal thickness (km) =   93.2360008504731
+ Minimum Crustal thickness (km) =   2.99530170183396
+ Iteration   17
+ Delta (km) =   4.218913070624694E-002
+ Maximum Crustal thickness (km) =   93.2120496947048
+ Minimum Crustal thickness (km) =   2.99450221380545
+ Iteration   18
+ Average depth of Moho (km) =   45.2142385873590
+ Delta (km) =   5.549837781116366E-002
+ Maximum Crustal thickness (km) =   93.2420302170478
+ Minimum Crustal thickness (km) =   2.99518369430443
+ Iteration   19
+ Delta (km) =   2.774918890558183E-002
+ Maximum Crustal thickness (km) =   93.2270399558763
+ Minimum Crustal thickness (km) =   2.99484295405494
+ Iteration   20
+ Average depth of Moho (km) =   45.2142385873576
+ Delta (km) =   3.659235688718036E-002
+ Maximum Crustal thickness (km) =   93.2458278140980
+ Minimum Crustal thickness (km) =   2.99514220967935
+ Iteration   21
+ Delta (km) =   1.829617844382301E-002
+ Maximum Crustal thickness (km) =   93.2364338849871
+ Minimum Crustal thickness (km) =   2.99499258186715
+ Iteration   22
+ Average depth of Moho (km) =   45.2142385873576
+ Delta (km) =   2.417795794224367E-002
+ Maximum Crustal thickness (km) =   93.2482213246706
+ Minimum Crustal thickness (km) =   2.99512792217964
+ Iteration   23
+ Delta (km) =   1.208897897088900E-002
+ Maximum Crustal thickness (km) =   93.2423276048289
+ Minimum Crustal thickness (km) =   2.99506025202340
+ Iteration   24
+ Average depth of Moho (km) =   45.2142385873585
+ Delta (km) =   1.600497382879257E-002
+ Maximum Crustal thickness (km) =   93.2497308426998
+ Minimum Crustal thickness (km) =   2.99512339987978
+ Iteration   25
+ Delta (km) =   8.002486914396286E-003
+ Maximum Crustal thickness (km) =   93.2460292237643
+ Minimum Crustal thickness (km) =   2.99509182595136
+ Iteration   26
+ Average depth of Moho (km) =   45.2142385873599
+ Delta (km) =   1.061179026309401E-002
+ Maximum Crustal thickness (km) =   93.2506834287406
+ Minimum Crustal thickness (km) =   2.99512231788505
+ Iteration   27
+ Delta (km) =   5.305895131547004E-003
+ Maximum Crustal thickness (km) =   93.2483563262522
+ Minimum Crustal thickness (km) =   2.99510707191797
+ Iteration   28
+ Average depth of Moho (km) =   45.2142385873590
+ Delta (km) =   7.045758047141135E-003
+ Maximum Crustal thickness (km) =   93.2512849069955
+ Minimum Crustal thickness (km) =   2.99512236260204
+ Iteration   29
+ Delta (km) =   3.522879023570567E-003
+ Maximum Crustal thickness (km) =   93.2498206166239
+ Minimum Crustal thickness (km) =   2.99511471726000
+ Iteration   30
+ Average depth of Moho (km) =   45.2142385873608
+ Delta (km) =   4.683782193809748E-003
+ Maximum Crustal thickness (km) =   93.2516648978563
+ Minimum Crustal thickness (km) =   2.99512270246772
+ Location of thinnest crust (lat, long) =   11.5841584158416  85.5445544554455
+ Maximum misfit (mgals) =   1.996565672124941E-002
+ Minimum misfit (mgals) =  -3.179596902868367E-002
+ Mean Crustal Thickness (km) =  45.2142385873608
+ Writing output data
+ time (sec) =   5.55624800000000
+
