@@ -16,8 +16,8 @@
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Mr       = 40
-    INTEGER*4, PARAMETER ::        Lmax     = 16
-    INTEGER*4, PARAMETER ::        Lgrid    = 32
+    INTEGER*4, PARAMETER ::        Lmax     = 64
+    INTEGER*4, PARAMETER ::        Lgrid    = 64
     INTEGER*4, PARAMETER ::        TP       = 4
     INTEGER*4, PARAMETER ::        SpM      = 6
 
@@ -203,9 +203,9 @@
        Startit = 1                  !Starting from iteration 1
     END IF
 
-    X0 = 0.725D0                    !Initial axes of the spheroids in the
-    Y0 = 0.725D0                    !X, Y, and Z directions
-    Z0 = 0.625D0
+    X0 = 0.700D0                    !Initial axes of the spheroids in the
+    Y0 = 0.700D0                    !X, Y, and Z directions
+    Z0 = 0.600D0
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, 
@@ -265,7 +265,7 @@
         STOP "***ERROR*** Not enough collocation points"
     END IF
 
-    CALL PreCompute(Lgrid, GLQZeros, GLQWeights, NORM=4, CNORM=1)
+    CALL PreCompute(Lgrid, GLQZeros, GLQWeights, NORM=1, CNORM=1)
 
 !--------------------------------------------------------!
 !     Creating mesh & Inquiring Threads                  !
