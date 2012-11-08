@@ -29,7 +29,7 @@
         !Use SHTOOLS to find spectral coefficients at different r
         DO i=1,Nr
             CALL SHExpandGLQC(f(i,:,:,:), Lgrid, &
-                    &S(i,:,:), GLQWeights, ZERO=GLQZeros,NORM=4,LMAX_CALC=Lmax)
+                    &S(i,:,:), GLQWeights, ZERO=GLQZeros,NORM=1,LMAX_CALC=Lmax)
         END DO
         !But now: f_lm(r) = Sum(over n) a_nlm T_n(r)
         !Transform to spectral coefficients a
@@ -116,7 +116,7 @@
         !Use SHTOOLS to find get the spatial values
         DO i=1,Nr
             CALL MakeGridGLQC(S(i,:,:), f(i,:,:,:), Lgrid, &
-                    &ZERO=GLQZeros, NORM=4, LMAX_CALC=Lmax)
+                    &ZERO=GLQZeros, NORM=1, LMAX_CALC=Lmax)
         END DO
 
         RETURN
@@ -160,14 +160,14 @@
         !Get the real spherical harmonic coefficients
         DO i=1,Nr
             CALL SHExpandGLQ(f(i,:,:,:), Lgrid, SReal(i,:,:), W, &
-                    &ZERO=Zeros, NORM=4, LMAX_CALC=Lmax)
+                    &ZERO=Zeros, NORM=1, LMAX_CALC=Lmax)
         END DO
 
         DO j=1,SpM
             DO i=1,Nr
                 !Use these coefficients f to find the value of S 
                 S(j,i) = MakeGridPoint(f(i,:,:,:), Lmax, &
-                        & th0Degrees(j), phi0Degrees(j), NORM=4 )
+                        & th0Degrees(j), phi0Degrees(j), NORM=1 )
             END DO
         END DO
 
