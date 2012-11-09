@@ -134,10 +134,14 @@
                         &.AND. (iter .LT. 1000) ) THEN
                     format_string2 = '(A30,I3,A14,I1)'
                     format_string1 = '(A30,I3,A13,I1)'
-                ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) &
+                ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 1000) &
                         &.AND. (iter .LT. 10000) ) THEN
                     format_string2 = '(A30,I4,A14,I1)'
                     format_string1 = '(A30,I4,A13,I1)'
+                ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 10000) &
+                        &.AND. (iter .LT. 100000) ) THEN
+                    format_string2 = '(A30,I5,A14,I1)'
+                    format_string1 = '(A30,I5,A13,I1)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .LT. 10) ) THEN
                     format_string2 = '(A30,I1,A14,I2)'
                     format_string1 = '(A30,I1,A13,I2)'
@@ -147,9 +151,12 @@
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 1000) ) THEN
                     format_string2 = '(A30,I3,A14,I2)'
                     format_string1 = '(A30,I3,A13,I2)'
-                ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 10000) ) THEN
+                ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 1000) .AND. (iter .LT. 10000) ) THEN
                     format_string2 = '(A30,I4,A14,I2)'
                     format_string1 = '(A30,I4,A13,I2)'
+                ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 10000) .AND. (iter .LT. 100000) ) THEN
+                    format_string2 = '(A30,I5,A14,I2)'
+                    format_string1 = '(A30,I5,A13,I2)'
                 END IF
 
                 IF( DATASETFLAG .EQ. 0 ) THEN
@@ -179,9 +186,12 @@
                 ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 1000) ) THEN
                     format_string2 = '(A16,I3,A14,I1)'
                     format_string1 = '(A16,I3,A13,I1)'
-                ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 10000) ) THEN
+                ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 1000) .AND. (iter .LT. 10000) ) THEN
                     format_string2 = '(A16,I4,A14,I1)'
                     format_string1 = '(A16,I4,A13,I1)'
+                ELSE IF( (cnum .LE. 10) .AND. (iter .GE. 10000) .AND. (iter .LT. 100000) ) THEN
+                    format_string2 = '(A16,I5,A14,I1)'
+                    format_string1 = '(A16,I5,A13,I1)'
                 ELSE IF( (cnum .GT. 10) .AND. (iter .LT. 10) ) THEN
                     format_string2 = '(A16,I1,A14,I2)'
                     format_string1 = '(A16,I1,A13,I2)'
@@ -191,9 +201,12 @@
                 ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 1000) ) THEN
                     format_string2 = '(A16,I3,A14,I2)'
                     format_string1 = '(A16,I3,A13,I2)'
-                ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 100) .AND. (iter .LT. 10000) ) THEN
+                ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 1000) .AND. (iter .LT. 10000) ) THEN
                     format_string2 = '(A16,I4,A14,I2)'
                     format_string1 = '(A16,I4,A13,I2)'
+                ELSE IF( (cnum .GT. 10) .AND. (iter .GE. 10000) .AND. (iter .LT. 100000) ) THEN
+                    format_string2 = '(A16,I5,A14,I2)'
+                    format_string1 = '(A16,I5,A13,I2)'
                 END IF
                 
                 IF( DATASETFLAG .EQ. 4 ) THEN
