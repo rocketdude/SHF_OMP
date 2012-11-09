@@ -93,43 +93,51 @@
         !$OMP PARALLEL DO PRIVATE(j)
         DO i = 1,nchunks
             j = i - 1
-            IF( j .LT. 10 ) THEN
-                format_string_LapseShift(i) = '(A17,I1,A3)'
-                format_string_SpatMetric(i) = '(A15,I1,A3)'
-            ELSE
-                format_string_LapseShift(i) = '(A17,I2,A3)'
-                format_string_SpatMetric(i) = '(A15,I2,A3)'
-            END IF
             
             IF( iter .LE. 8000 ) THEN
-                WRITE(alphafilename(i), format_string_LapseShift(i)) 'Kerr1/alpha.file_', j, '.h5'
-                WRITE(beta1filename(i), format_string_LapseShift(i)) 'Kerr1/beta1.file_', j, '.h5'
-                WRITE(beta2filename(i), format_string_LapseShift(i)) 'Kerr1/beta2.file_', j, '.h5'
-                WRITE(beta3filename(i), format_string_LapseShift(i)) 'Kerr1/beta3.file_', j, '.h5'
-                WRITE(gxxfilename(i), format_string_SpatMetric(i)) 'Kerr1/gxx.file_', j, '.h5'
-                WRITE(gyyfilename(i), format_string_SpatMetric(i)) 'Kerr1/gyy.file_', j, '.h5'
-                WRITE(gzzfilename(i), format_string_SpatMetric(i)) 'Kerr1/gzz.file_', j, '.h5'
-                WRITE(gxyfilename(i), format_string_SpatMetric(i)) 'Kerr1/gxy.file_', j, '.h5'
-                WRITE(gxzfilename(i), format_string_SpatMetric(i)) 'Kerr1/gxz.file_', j, '.h5'
-                WRITE(gyzfilename(i), format_string_SpatMetric(i)) 'Kerr1/gyz.file_', j, '.h5'
+                IF( j .LT. 10 ) THEN
+                    format_string_LapseShift(i) = '(A18,I1,A3)'
+                    format_string_SpatMetric(i) = '(A16,I1,A3)'
+                ELSE
+                    format_string_LapseShift(i) = '(A18,I2,A3)'
+                    format_string_SpatMetric(i) = '(A16,I2,A3)'
+                END IF
+                
+                WRITE(alphafilename(i), format_string_LapseShift(i)) 't0_t50/alpha.file_', j, '.h5'
+                WRITE(beta1filename(i), format_string_LapseShift(i)) 't0_t50/beta1.file_', j, '.h5'
+                WRITE(beta2filename(i), format_string_LapseShift(i)) 't0_t50/beta2.file_', j, '.h5'
+                WRITE(beta3filename(i), format_string_LapseShift(i)) 't0_t50/beta3.file_', j, '.h5'
+                WRITE(gxxfilename(i), format_string_SpatMetric(i)) 't0_t50/gxx.file_', j, '.h5'
+                WRITE(gyyfilename(i), format_string_SpatMetric(i)) 't0_t50/gyy.file_', j, '.h5'
+                WRITE(gzzfilename(i), format_string_SpatMetric(i)) 't0_t50/gzz.file_', j, '.h5'
+                WRITE(gxyfilename(i), format_string_SpatMetric(i)) 't0_t50/gxy.file_', j, '.h5'
+                WRITE(gxzfilename(i), format_string_SpatMetric(i)) 't0_t50/gxz.file_', j, '.h5'
+                WRITE(gyzfilename(i), format_string_SpatMetric(i)) 't0_t50/gyz.file_', j, '.h5'
             ELSE
-                WRITE(alphafilename(i), format_string_LapseShift(i)) 'Kerr2/alpha.file_', j, '.h5'
-                WRITE(beta1filename(i), format_string_LapseShift(i)) 'Kerr2/beta1.file_', j, '.h5'
-                WRITE(beta2filename(i), format_string_LapseShift(i)) 'Kerr2/beta2.file_', j, '.h5'
-                WRITE(beta3filename(i), format_string_LapseShift(i)) 'Kerr2/beta3.file_', j, '.h5'
-                WRITE(gxxfilename(i), format_string_SpatMetric(i)) 'Kerr2/gxx.file_', j, '.h5'
-                WRITE(gyyfilename(i), format_string_SpatMetric(i)) 'Kerr2/gyy.file_', j, '.h5'
-                WRITE(gzzfilename(i), format_string_SpatMetric(i)) 'Kerr2/gzz.file_', j, '.h5'
-                WRITE(gxyfilename(i), format_string_SpatMetric(i)) 'Kerr2/gxy.file_', j, '.h5'
-                WRITE(gxzfilename(i), format_string_SpatMetric(i)) 'Kerr2/gxz.file_', j, '.h5'
-                WRITE(gyzfilename(i), format_string_SpatMetric(i)) 'Kerr2/gyz.file_', j, '.h5'
+                IF( j .LT. 10 ) THEN
+                    format_string_LapseShift(i) = '(A19,I1,A3)'
+                    format_string_SpatMetric(i) = '(A17,I1,A3)'
+                ELSE
+                    format_string_LapseShift(i) = '(A19,I2,A3)'
+                    format_string_SpatMetric(i) = '(A17,I2,A3)'
+                END IF
+                
+                WRITE(alphafilename(i), format_string_LapseShift(i)) 't50_t75/alpha.file_', j, '.h5'
+                WRITE(beta1filename(i), format_string_LapseShift(i)) 't50_t75/beta1.file_', j, '.h5'
+                WRITE(beta2filename(i), format_string_LapseShift(i)) 't50_t75/beta2.file_', j, '.h5'
+                WRITE(beta3filename(i), format_string_LapseShift(i)) 't50_t75/beta3.file_', j, '.h5'
+                WRITE(gxxfilename(i), format_string_SpatMetric(i)) 't50_t75/gxx.file_', j, '.h5'
+                WRITE(gyyfilename(i), format_string_SpatMetric(i)) 't50_t75/gyy.file_', j, '.h5'
+                WRITE(gzzfilename(i), format_string_SpatMetric(i)) 't50_t75/gzz.file_', j, '.h5'
+                WRITE(gxyfilename(i), format_string_SpatMetric(i)) 't50_t75/gxy.file_', j, '.h5'
+                WRITE(gxzfilename(i), format_string_SpatMetric(i)) 't50_t75/gxz.file_', j, '.h5'
+                WRITE(gyzfilename(i), format_string_SpatMetric(i)) 't50_t75/gyz.file_', j, '.h5'
             END IF
                 
             
         END DO
         !$OMP END PARALLEL DO
             
-        IF( iter .LE. 8000 ) THEN
         !ALPHA
         CALL GetMetricComponent(&
             &Nr, Nth, Nphi,&
@@ -240,118 +248,6 @@
             &r, theta, phi,&
             &gYZ)
         
-        ELSE
-
-        !ALPHA
-        CALL GetMetricComponent2(&
-            &Nr, Nth, Nphi,&
-            &bufsize,&
-            &timeofdata(1),&
-            &iter, nchunks,&
-            &0,&
-            &alphafilename,&
-            &r, theta, phi,&
-            &alphaXYZ)
-
-        !BETA1
-        CALL GetMetricComponent2(&
-            &Nr, Nth, Nphi,&
-            &bufsize,&
-            &timeofdata(2),&
-            &iter, nchunks,&
-            &1,&
-            &beta1filename,&
-            &r, theta, phi,&
-            &betaX)
-
-        !BETA2
-        CALL GetMetricComponent2(&
-            &Nr, Nth, Nphi,&
-            &bufsize,&
-            &timeofdata(3),&
-            &iter, nchunks,&
-            &2,&
-            &beta2filename,&
-            &r, theta, phi,&
-            &betaY)
-
-        !BETA3
-        CALL GetMetricComponent2(&
-            &Nr, Nth, Nphi,&
-            &bufsize,&
-            &timeofdata(4),&
-            &iter, nchunks,&
-            &3,&
-            &beta3filename,&
-            &r, theta, phi,&
-            &betaZ)
-
-        !GXX
-        CALL GetMetricComponent2(&
-            &Nr, Nth, Nphi,&
-            &bufsize,&
-            &timeofdata(5),&
-            &iter, nchunks,&
-            &4,&
-            &gxxfilename,&
-            &r, theta, phi,&
-            &gXX)
-
-        !GYY
-        CALL GetMetricComponent2(&
-            &Nr, Nth, Nphi,&
-            &bufsize,&
-            &timeofdata(6),&
-            &iter, nchunks,&
-            &5,&
-            &gyyfilename,&
-            &r, theta, phi,&
-            &gYY)
-
-        !GZZ
-        CALL GetMetricComponent2(&
-            &Nr, Nth, Nphi,&
-            &bufsize,&
-            &timeofdata(7),&
-            &iter, nchunks,&
-            &6,&
-            &gzzfilename,&
-            &r, theta, phi,&
-            &gZZ)
-
-        !GXY
-        CALL GetMetricComponent2(&
-            &Nr, Nth, Nphi,&
-            &bufsize,&
-            &timeofdata(8),&
-            &iter, nchunks,&
-            &7,&
-            &gxyfilename,&
-            &r, theta, phi,&
-            &gXY)
-
-        !GXZ
-        CALL GetMetricComponent2(&
-            &Nr, Nth, Nphi,&
-            &bufsize,&
-            &timeofdata(9),&    
-            &iter, nchunks,&
-            &8,&
-            &gxzfilename,&
-            &r, theta, phi,&
-            &gXZ)
-
-        !GYZ
-        CALL GetMetricComponent2(&
-            &Nr, Nth, Nphi,&
-            &bufsize,&
-            &timeofdata(10),&
-            &iter, nchunks,&
-            &9,&
-            &gyzfilename,&
-            &r, theta, phi,&
-            &gYZ)
-        END IF
         
         DO i = 1, 9
             IF( timeofdata(i) .NE. timeofdata(10) ) &
