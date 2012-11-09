@@ -16,8 +16,8 @@
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Mr       = 40
-    INTEGER*4, PARAMETER ::        Lmax     = 64
-    INTEGER*4, PARAMETER ::        Lgrid    = 64
+    INTEGER*4, PARAMETER ::        Lmax     = 16
+    INTEGER*4, PARAMETER ::        Lgrid    = 32
     INTEGER*4, PARAMETER ::        TP       = 4
     INTEGER*4, PARAMETER ::        SpM      = 6
 
@@ -196,16 +196,16 @@
     aFile = 'a10.dat'
 
     !Termination conditions
-    Maxit = 20000
-    tfinal = 5.0D0
+    Maxit = 80000
+    tfinal = 2.5D0
 
     IF( SFLAG .EQ. 0 ) THEN
        Startit = 1                  !Starting from iteration 1
     END IF
 
-    X0 = 0.700D0                    !Initial axes of the spheroids in the
-    Y0 = 0.700D0                    !X, Y, and Z directions
-    Z0 = 0.600D0
+    X0 = 0.675D0                    !Initial axes of the spheroids in the
+    Y0 = 0.675D0                    !X, Y, and Z directions
+    Z0 = 0.575D0
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, 
