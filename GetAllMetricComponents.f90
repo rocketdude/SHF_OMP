@@ -50,7 +50,8 @@
 !       Declare local variables                             !
 !-----------------------------------------------------------!
 
-        CHARACTER*32            format_string_LapseShift(nchunks)
+        CHARACTER*32            format_string_Lapse(nchunks)
+        CHARACTER*32            format_string_Shift(nchunks)
         CHARACTER*32            format_string_SpatMetric(nchunks)
 
         CHARACTER*32            alphafilename(nchunks)
@@ -94,23 +95,29 @@
         DO i = 1,nchunks
             j = i - 1
             IF( j .LT. 10 ) THEN
-                format_string_LapseShift(i) = '(A11,I1,A3)'
-                format_string_SpatMetric(i) = '(A9,I1,A3)'
-            ELSE
-                format_string_LapseShift(i) = '(A11,I2,A3)'
-                format_string_SpatMetric(i) = '(A9,I2,A3)'
+                format_string_Lapse(i) = '(A16,I1,A3)'
+                format_string_Shift(i) = '(A18,I1,A3)'
+                format_string_SpatMetric(i) = '(A16,I1,A3)'
+            ELSEIF( (j .GE. 10) .AND. (j .LT. 100) ) THEN
+                format_string_Lapse(i) = '(A16,I2,A3)'
+                format_string_Shift(i) = '(A18,I2,A3)'
+                format_string_SpatMetric(i) = '(A16,I2,A3)'
+            ELSEIF( (j .GE. 100) .AND. (j .LT. 1000) ) THEN
+                format_string_Lapse(i) = '(A16,I3,A3)'
+                format_string_Shift(i) = '(A18,I3,A3)'
+                format_string_SpatMetric(i) = '(A16,I3,A3)'
             END IF
             
-            WRITE(alphafilename(i), format_string_LapseShift(i)) 'alpha.file_', j, '.h5'
-            WRITE(beta1filename(i), format_string_LapseShift(i)) 'beta1.file_', j, '.h5'
-            WRITE(beta2filename(i), format_string_LapseShift(i)) 'beta2.file_', j, '.h5'
-            WRITE(beta3filename(i), format_string_LapseShift(i)) 'beta3.file_', j, '.h5'
-            WRITE(gxxfilename(i), format_string_SpatMetric(i)) 'gxx.file_', j, '.h5'
-            WRITE(gyyfilename(i), format_string_SpatMetric(i)) 'gyy.file_', j, '.h5'
-            WRITE(gzzfilename(i), format_string_SpatMetric(i)) 'gzz.file_', j, '.h5'
-            WRITE(gxyfilename(i), format_string_SpatMetric(i)) 'gxy.file_', j, '.h5'
-            WRITE(gxzfilename(i), format_string_SpatMetric(i)) 'gxz.file_', j, '.h5'
-            WRITE(gyzfilename(i), format_string_SpatMetric(i)) 'gyz.file_', j, '.h5'
+            WRITE(alphafilename(i), format_string_Lapse(i)) 'Metric/alp.file_', j, '.h5'
+            WRITE(beta1filename(i), format_string_Shift(i)) 'Metric/betax.file_', j, '.h5'
+            WRITE(beta2filename(i), format_string_Shift(i)) 'Metric/betay.file_', j, '.h5'
+            WRITE(beta3filename(i), format_string_Shift(i)) 'Metric/betaz.file_', j, '.h5'
+            WRITE(gxxfilename(i), format_string_SpatMetric(i)) 'Metric/gxx.file_', j, '.h5'
+            WRITE(gyyfilename(i), format_string_SpatMetric(i)) 'Metric/gyy.file_', j, '.h5'
+            WRITE(gzzfilename(i), format_string_SpatMetric(i)) 'Metric/gzz.file_', j, '.h5'
+            WRITE(gxyfilename(i), format_string_SpatMetric(i)) 'Metric/gxy.file_', j, '.h5'
+            WRITE(gxzfilename(i), format_string_SpatMetric(i)) 'Metric/gxz.file_', j, '.h5'
+            WRITE(gyzfilename(i), format_string_SpatMetric(i)) 'Metric/gyz.file_', j, '.h5'
         END DO
         !$OMP END PARALLEL DO
                 
