@@ -16,7 +16,7 @@
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Mr       = 40
-    INTEGER*4, PARAMETER ::        Lmax     = 16
+    INTEGER*4, PARAMETER ::        Lmax     = 30
     INTEGER*4, PARAMETER ::        Lgrid    = 32
     INTEGER*4, PARAMETER ::        TP       = 4
     INTEGER*4, PARAMETER ::        SpM      = 6
@@ -231,10 +231,10 @@
     phiSp = (/ 0.0D0, 0.0D0, 0.0D0, PI/2.0D0, PI, 1.5D0*PI /)
     
     !Parameters related to reading HDF5 files--do h5dump to check these
-    nchunks = 16
-    bufsize(1) = 50 !Buffer sizes need to be bigger than datasets
-    bufsize(2) = 50
-    bufsize(3) = 50
+    nchunks = 144
+    bufsize(1) = 30 !Buffer sizes need to be bigger than datasets
+    bufsize(2) = 30
+    bufsize(3) = 30
     it_data_max = 8000
     it_data_min = 0
     delta_it_data = 4
