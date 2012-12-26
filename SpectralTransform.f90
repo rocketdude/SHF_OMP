@@ -294,7 +294,8 @@
         COMPLEX*16, INTENT(out)   :: dSdr(Nr,Nth,Nphi)
         
         !Local variables
-        REAL*8                       const, nder, nn
+        REAL*8                       const
+        INTEGER*4                    nder, nn
         COMPLEX*16                   ader(Mr+1,2,Lmax+1,Lmax+1)
 
         !Main subroutine
