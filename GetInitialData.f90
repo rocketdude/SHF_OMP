@@ -8,6 +8,7 @@
 & GLQWeights, GLQZeros,&
 & c,&
 & X0, Y0, Z0,&
+& T0,&
 & r, rho, theta, phi,&
 & a)
 
@@ -30,6 +31,7 @@
         REAL*8                  :: rho(Nr) 
         REAL*8                  :: theta(Nth)
         REAL*8                  :: phi(Nphi)
+        REAL*8                  :: T0
 
         COMPLEX*16, INTENT(out) :: a(Mr+1, 2, Lmax+1, Lmax+1)
 
@@ -54,12 +56,15 @@
            DO j = 1, Nth
               DO k = 1, Nphi
 
-                 x = X0*SIN(theta(j))*COS(phi(k))
-                 y = Y0*SIN(theta(j))*SIN(phi(k))
-                 z = Z0*COS(theta(j))
-                 r0 = SQRT( x*x + y*y + z*z )
-                 S(i,j,k) = CMPLX( 100.0D0 *( 1 + TANH( ( r(i) - r0 )/c ) ), &
-                                 & 0.0D0 )
+!!$                 x = X0*SIN(theta(j))*COS(phi(k))
+!!$                 y = Y0*SIN(theta(j))*SIN(phi(k))
+!!$                 z = Z0*COS(theta(j))
+!!$                 r0 = SQRT( x*x + y*y + z*z )
+!!$               S(i,j,k) = CMPLX( 100.0D0 *( 1 + TANH( ( r(i) - r0 )/c ) ), &
+!!$                                 & 0.0D0 )
+
+                    S(i,j,k) = T0
+                 
 
               END DO
            END DO

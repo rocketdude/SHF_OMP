@@ -39,3 +39,6 @@ Event Horizon Finder using Pseudospectral methods.
 -       Include SHTOOLS in the repo, compile using: make F95=ifort (or whatever
         compiler that you're using)
         You need to also do 'mkdir lib' and 'mkdir modules'
+
+12/25/2012
+-       This branch solves the heat equation using pseudospectral methods

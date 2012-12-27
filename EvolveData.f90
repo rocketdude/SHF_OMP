@@ -5,12 +5,10 @@
       SUBROUTINE EvolveData(&
 &Nr, Nth, Nphi, Mr, Lmax, Lgrid,&
 &GLQWeights, GLQZeros,&
-&rootsign, rmin, rmax,&
-&rho, theta, phi,&
-&alpha,&
-&betaR, betaTh, betaPhi,&
-&gRR, gThTh, gPhiPhi,&
-&gRTh, gRPhi, gThPhi,&
+&rmin, rmax,&
+&r, rho, theta, phi,&
+&epsStar, alpStar,&
+&SolPhi,&
 &t, dt,&
 &a)
 
@@ -29,24 +27,13 @@
 
         INTEGER*4               :: Nr,Nth,Nphi,Mr,Lmax,Lgrid
 
-        REAL*8                  :: rootsign
         REAL*8                  :: rmin
         REAL*8                  :: rmax
         REAL*8                  :: GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
-        REAL*8                  :: rho(Nr), theta(Nth), phi(Nphi)
+        REAL*8                  :: r(Nr), rho(Nr), theta(Nth), phi(Nphi)
 
-        REAL*8                  :: alpha(Nr,Nth,Nphi)
-        REAL*8                  :: betaR(Nr,Nth,Nphi)
-        REAL*8                  :: betaTh(Nr,Nth,Nphi)
-        REAL*8                  :: betaPhi(Nr,Nth,Nphi)
-
-        REAL*8                  :: gRR(Nr,Nth,Nphi)
-        REAL*8                  :: gThTh(Nr,Nth,Nphi)
-        REAL*8                  :: gPhiPhi(Nr,Nth,Nphi)
-
-        REAL*8                  :: gRTh(Nr,Nth,Nphi)
-        REAL*8                  :: gRPhi(Nr,Nth,Nphi)
-        REAL*8                  :: gThPhi(Nr,Nth,Nphi)
+        REAL*8                  :: epsStar, alpStar
+        REAL*8                  :: SolPhi
 
         REAL*8                  :: t
         REAL*8                  :: dt
@@ -61,11 +48,23 @@
         INTEGER*4         i, j, k
         INTEGER*4         n
         
-        COMPLEX*16      sqrtterm
+        REAL*8          PI
 
+        REAL*8          rsqrd
+        REAL*8          bdryterm
+        REAL*8          sigma           !Stefan-Boltzmann constant
+
+        COMPLEX*16      S(Nr,Nth,Nphi)
+
+        !First spatial derivatives
         COMPLEX*16      dSdr(Nr,Nth,Nphi)
         COMPLEX*16      dSdth(Nr,Nth,Nphi)
         COMPLEX*16      dSdphi(Nr,Nth,Nphi)
+        !Second spatical derivatives
+        COMPLEX*16      d2Sdr2(Nr,Nth,Nphi)
+        COMPLEX*16      d2Sdth2(Nr,Nth,Nphi)
+        COMPLEX*16      d2Sdphi2(Nr,Nth,Nphi)
+
         COMPLEX*16      dSdt(Nr,Nth,Nphi)
 
         COMPLEX*16      aaRK(Mr+1,2,Lmax+1,Lmax+1,5)
@@ -75,6 +74,9 @@
 !--------------------------------------------------------!
 !      Main Subroutine                                   !
 !--------------------------------------------------------!
+
+        PI = 3.141592653589793238462643383279502884197D0
+        sigma = 5.670373D-8
 
 !--------------------------------------------------------!
 !      STEP 1                                            !
@@ -88,47 +90,55 @@
         END DO
         !$OMP END PARALLEL DO
 
-        !Calculate the derivatives S,r , S,theta, and S,phi
+        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                &GLQWeights,GLQZeros,rho,theta,phi,a,S)
+
+        !Calculate the derivatives
         CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,a,dSdr)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdth)
-        
-        !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,dSdphi,d2Sdphi2)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,dSdth,d2Sdth2)
+ 
+        !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
         DO i = 1,Nr
            DO j = 1,Nth
               DO k = 1,Nphi
                  
-                 IF( i .EQ. (Mr+1) ) THEN
+                 IF( i .EQ. 1 ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
-                    sqrtterm = SQRT(&
-                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
-                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
-                         &)
+                    rsqrd = r(i) * r(i)
+                    bdryterm = -1.0D0*epsStar*sigma*( S(i,j,k)**4 )
+
+                    IF( theta(j) .LT. PI/2.0D0 ) THEN
+                        bdryterm = bdryterm + &
+                            &alpStar*SolPhi*COS(theta(j))
+                    END IF
 
                     dSdt(i,j,k) = &
-                         &betaTh(i,j,k)*dSdth(i,j,k) + &
-                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
-                         &rootsign*alpha(i,j,k)*sqrtterm
+                        &2.0D0*bdryterm/r(i) - &
+                        &4.0D0*epsStar*sigma*bdryterm*( S(i,j,k)**3 ) + &
+                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
+                        &d2Sdth2(i,j,k)/rsqrd + &
+                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+
                  ELSE
                     !INNER POINTS
-                    sqrtterm = SQRT(&
-                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
-                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
-                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
-                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
-                         &)
+                    rsqrd = r(i) * r(i)
 
                     dSdt(i,j,k) = &
-                         &betaR(i,j,k)*dSdr(i,j,k) + &
-                         &betaTh(i,j,k)*dSdth(i,j,k) + &
-                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
-                         &rootsign*alpha(i,j,k)*sqrtterm
+                        &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
+                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
+                        &d2Sdth2(i,j,k)/rsqrd + &
+                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+
                  END IF
 
               END DO
@@ -160,55 +170,63 @@
             aaRK(n,:,:,:,2) = a(n,:,:,:)
         END DO
         !$OMP END PARALLEL DO
+ 
+        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                &GLQWeights,GLQZeros,rho,theta,phi,a,S)
 
-        !Calculate the derivatives S,r , S,theta, and S,phi
+        !Calculate the derivatives
         CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,a,dSdr)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdth)
-
-        !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,dSdphi,d2Sdphi2)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,dSdth,d2Sdth2)
+        
+        !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
         DO i = 1,Nr
            DO j = 1,Nth
               DO k = 1,Nphi
                  
-                 IF( i .EQ. (Mr+1) ) THEN
+                 IF( i .EQ. 1 ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
-                    sqrtterm = SQRT(&
-                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
-                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
-                         &)
+                    rsqrd = r(i) * r(i)
+                    bdryterm = -1.0D0*epsStar*sigma*( S(i,j,k)**4 )
+
+                    IF( theta(j) .LT. PI/2.0D0 ) THEN
+                        bdryterm = bdryterm + &
+                            &alpStar*SolPhi*COS(theta(j))
+                    END IF
 
                     dSdt(i,j,k) = &
-                         &betaTh(i,j,k)*dSdth(i,j,k) + &
-                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
-                         &rootsign*alpha(i,j,k)*sqrtterm
+                        &2.0D0*bdryterm/r(i) - &
+                        &4.0D0*epsStar*sigma*bdryterm*( S(i,j,k)**3 ) + &
+                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
+                        &d2Sdth2(i,j,k)/rsqrd + &
+                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+
                  ELSE
                     !INNER POINTS
-                    sqrtterm = SQRT(&
-                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
-                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
-                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
-                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
-                         &)
+                    rsqrd = r(i) * r(i)
 
                     dSdt(i,j,k) = &
-                         &betaR(i,j,k)*dSdr(i,j,k) + &
-                         &betaTh(i,j,k)*dSdth(i,j,k) + &
-                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
-                         &rootsign*alpha(i,j,k)*sqrtterm
+                        &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
+                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
+                        &d2Sdth2(i,j,k)/rsqrd + &
+                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+
                  END IF
 
               END DO
            END DO
         END DO
         !$OMP END PARALLEL DO
- 
+
         CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
                                        &GLQWeights,GLQZeros,&
                                        &rho,theta,phi,&
@@ -235,47 +253,55 @@
         END DO
         !$OMP END PARALLEL DO
 
-        !Calculate the derivatives S,r , S,theta, and S,phi
+        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                &GLQWeights,GLQZeros,rho,theta,phi,a,S)
+
+        !Calculate the derivatives
         CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,a,dSdr)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdth)
-
-        !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,dSdphi,d2Sdphi2)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,dSdth,d2Sdth2)
+        
+        !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
         DO i = 1,Nr
            DO j = 1,Nth
               DO k = 1,Nphi
                  
-                 IF( i .EQ. (Mr+1) ) THEN
+                 IF( i .EQ. 1 ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
-                    sqrtterm = SQRT(&
-                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
-                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
-                         &)
+                    rsqrd = r(i) * r(i)
+                    bdryterm = -1.0D0*epsStar*sigma*( S(i,j,k)**4 )
+
+                    IF( theta(j) .LT. PI/2.0D0 ) THEN
+                        bdryterm = bdryterm + &
+                            &alpStar*SolPhi*COS(theta(j))
+                    END IF
 
                     dSdt(i,j,k) = &
-                         &betaTh(i,j,k)*dSdth(i,j,k) + &
-                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
-                         &rootsign*alpha(i,j,k)*sqrtterm
+                        &2.0D0*bdryterm/r(i) - &
+                        &4.0D0*epsStar*sigma*bdryterm*( S(i,j,k)**3 ) + &
+                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
+                        &d2Sdth2(i,j,k)/rsqrd + &
+                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+
                  ELSE
                     !INNER POINTS
-                    sqrtterm = SQRT(&
-                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
-                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
-                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
-                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
-                         &)
+                    rsqrd = r(i) * r(i)
 
                     dSdt(i,j,k) = &
-                         &betaR(i,j,k)*dSdr(i,j,k) + &
-                         &betaTh(i,j,k)*dSdth(i,j,k) + &
-                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
-                         &rootsign*alpha(i,j,k)*sqrtterm
+                        &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
+                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
+                        &d2Sdth2(i,j,k)/rsqrd + &
+                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+
                  END IF
 
               END DO
@@ -309,47 +335,55 @@
         END DO
         !$OMP END PARALLEL DO
 
-        !Calculate the derivatives S,r , S,theta, and S,phi
+        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                &GLQWeights,GLQZeros,rho,theta,phi,a,S)
+
+        !Calculate the derivatives
         CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,a,dSdr)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdth)
-
-        !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,dSdphi,d2Sdphi2)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,dSdth,d2Sdth2)
+        
+        !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
         DO i = 1,Nr
            DO j = 1,Nth
               DO k = 1,Nphi
                  
-                 IF( i .EQ. (Mr+1) ) THEN
+                 IF( i .EQ. 1 ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
-                    sqrtterm = SQRT(&
-                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
-                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
-                         &)
+                    rsqrd = r(i) * r(i)
+                    bdryterm = -1.0D0*epsStar*sigma*( S(i,j,k)**4 )
+
+                    IF( theta(j) .LT. PI/2.0D0 ) THEN
+                        bdryterm = bdryterm + &
+                            &alpStar*SolPhi*COS(theta(j))
+                    END IF
 
                     dSdt(i,j,k) = &
-                         &betaTh(i,j,k)*dSdth(i,j,k) + &
-                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
-                         &rootsign*alpha(i,j,k)*sqrtterm
+                        &2.0D0*bdryterm/r(i) - &
+                        &4.0D0*epsStar*sigma*bdryterm*( S(i,j,k)**3 ) + &
+                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
+                        &d2Sdth2(i,j,k)/rsqrd + &
+                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+
                  ELSE
                     !INNER POINTS
-                    sqrtterm = SQRT(&
-                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
-                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
-                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
-                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
-                         &)
+                    rsqrd = r(i) * r(i)
 
                     dSdt(i,j,k) = &
-                         &betaR(i,j,k)*dSdr(i,j,k) + &
-                         &betaTh(i,j,k)*dSdth(i,j,k) + &
-                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
-                         &rootsign*alpha(i,j,k)*sqrtterm
+                        &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
+                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
+                        &d2Sdth2(i,j,k)/rsqrd + &
+                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+
                  END IF
 
               END DO
@@ -382,55 +416,63 @@
             dadt3(n,:,:,:) = dadt(n,:,:,:)
         END DO
         !$OMP END PARALLEL DO
+ 
+        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                &GLQWeights,GLQZeros,rho,theta,phi,a,S)
 
-        !Calculate the derivatives S,r , S,theta, and S,phi
+        !Calculate the derivatives
         CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,a,dSdr)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdth)
-
-        !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,dSdphi,d2Sdphi2)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,dSdth,d2Sdth2)
+        
+        !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
         DO i = 1,Nr
            DO j = 1,Nth
               DO k = 1,Nphi
                  
-                 IF( i .EQ. (Mr+1) ) THEN
+                 IF( i .EQ. 1 ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
-                    sqrtterm = SQRT(&
-                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
-                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
-                         &)
+                    rsqrd = r(i) * r(i)
+                    bdryterm = -1.0D0*epsStar*sigma*( S(i,j,k)**4 )
+
+                    IF( theta(j) .LT. PI/2.0D0 ) THEN
+                        bdryterm = bdryterm + &
+                            &alpStar*SolPhi*COS(theta(j))
+                    END IF
 
                     dSdt(i,j,k) = &
-                         &betaTh(i,j,k)*dSdth(i,j,k) + &
-                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
-                         &rootsign*alpha(i,j,k)*sqrtterm
+                        &2.0D0*bdryterm/r(i) - &
+                        &4.0D0*epsStar*sigma*bdryterm*( S(i,j,k)**3 ) + &
+                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
+                        &d2Sdth2(i,j,k)/rsqrd + &
+                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+
                  ELSE
                     !INNER POINTS
-                    sqrtterm = SQRT(&
-                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
-                         &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
-                         &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
-                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
-                         &)
+                    rsqrd = r(i) * r(i)
 
                     dSdt(i,j,k) = &
-                         &betaR(i,j,k)*dSdr(i,j,k) + &
-                         &betaTh(i,j,k)*dSdth(i,j,k) + &
-                         &betaPhi(i,j,k)*dSdphi(i,j,k) + &
-                         &rootsign*alpha(i,j,k)*sqrtterm
+                        &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
+                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
+                        &d2Sdth2(i,j,k)/rsqrd + &
+                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+
                  END IF
 
               END DO
            END DO
         END DO
         !$OMP END PARALLEL DO
- 
+
         CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
                                        &GLQWeights,GLQZeros,&
                                        &rho,theta,phi,&
@@ -446,6 +488,8 @@
         END DO
         !$OMP END PARALLEL DO
 
+        PRINT *, 'time=', t
+        PRINT *, 'dt=', dt
         t = t + dt
         
         RETURN

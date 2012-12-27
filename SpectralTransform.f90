@@ -43,8 +43,8 @@
             & rho,&
             & f, a)
 
-        !Using Chebyshev-Gauss quadrature assuming that rho is a grid
-        !of Chebyshev roots
+        !Using Chebyshev-Gauss-Radau quadrature
+        !Note that rho and r are inverted
 
         USE         omp_lib
         IMPLICIT    none
@@ -61,13 +61,19 @@
         REAL*8                  wi
 
         !Main subroutine
-        !Build wi (weight in the Chebyshev-Gauss quadrature*2/PI)
-        wi = 2.0D0/DBLE(Mr+1)
 
         !$OMP PARALLEL 
-        !$OMP DO PRIVATE(i)
+        !$OMP DO PRIVATE(i, wi)
         DO n=0,Mr
             DO i=1,Nr
+                
+                !wi is the weight in Chebyshev-Gauss-Radau quadrature
+                IF( i .EQ. 1 ) THEN
+                    wi = 1.0D0 / ( 2.0D0 * DBLE(Nr-1) + 1.0D0 )
+                ELSE 
+                    wi = 2.0D0 / ( 2.0D0 * DBLE(Nr-1) + 1.0D0 )
+                END IF
+
                 Spec2Spat(n+1,i) = wi*COS( DBLE(n)*ACOS(rho(i)) )
             END DO
         END DO
@@ -179,8 +185,8 @@
             & rho,&
             & a, f)
 
-        !Using Chebyshev-Gauss quadrature assuming that rho is a grid
-        !of Chebyshev roots
+        !Using Chebyshev-Gauss-Radau Quadrature
+        !Note that rho and r are inverted
 
         USE         omp_lib
         IMPLICIT    none
@@ -294,12 +300,14 @@
         COMPLEX*16, INTENT(out)   :: dSdr(Nr,Nth,Nphi)
         
         !Local variables
-        REAL*8                       const, nder, nn
+        REAL*8                       const
+        INTEGER*4                    nder, nn
         COMPLEX*16                   ader(Mr+1,2,Lmax+1,Lmax+1)
 
         !Main subroutine
-
-        const = 2.0D0/(rmax-rmin)
+    
+        !Note that r and rho are inverted because of the Chebyshev-Gauss-Radau
+        const = -2.0D0/(rmax-rmin)
 
         !Find derivatives by using recursion relations
         !This is similar to chder from Numerical Recipes
@@ -399,6 +407,98 @@
           END DO
         END DO
         !$OMP END PARALLEL DO
+
+        RETURN
+    END SUBROUTINE
+!===========================================================!
+    SUBROUTINE Evaluated2Sdphi2(&
+            & Nr, Nth, Nphi,&
+            & Mr, Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&            
+            & rho, theta, phi,&
+            & dSdphi, d2Sdphi2)
+
+        USE SHTOOLS
+        IMPLICIT     none 
+
+        !Calling variables
+        INTEGER*4                    Nr,Nth,Nphi,Mr,Lmax,Lgrid
+        REAL*8                       GLQWeights(Lgrid+1),GLQZeros(Lgrid+1)
+        REAL*8                       rho(Nr), theta(Nth), phi(Nphi)
+        COMPLEX*16                   dSdphi(Nr,Nth,Nphi)
+        COMPLEX*16, INTENT(out)   :: d2Sdphi2(Nr,Nth,Nphi)
+        
+        !Local variables
+        COMPLEX*16                   dadphi(Mr+1,2,Lmax+1,Lmax+1)
+
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
+                                       &dSdphi,dadphi)
+        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,dadphi,d2Sdphi2)
+
+        RETURN
+    END SUBROUTINE
+!===========================================================!
+    SUBROUTINE Evaluated2Sdr2(&
+            & Nr, Nth, Nphi,&
+            & Mr, Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&            
+            & rho, theta, phi,&
+            & rmax, rmin,&
+            & dSdr, d2Sdr2)
+
+        IMPLICIT none
+
+        !Calling variables
+        INTEGER*4                    Nr,Nth,Nphi,Mr,Lmax,Lgrid
+        REAL*8                       GLQWeights(Lgrid+1),GLQZeros(Lgrid+1)
+        REAL*8                       rmax,rmin
+        REAL*8                       rho(Nr), theta(Nth), phi(Nphi)
+        COMPLEX*16                   dSdr(Nr,Nth,Nphi)
+        COMPLEX*16, INTENT(out)   :: d2Sdr2(Nr,Nth,Nphi)
+
+        !Local variables
+        COMPLEX*16                   dadr(Mr+1,2,Lmax+1,Lmax+1)
+ 
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
+                                       &dSdr,dadr)
+        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,dadr,d2Sdr2)
+
+        RETURN
+    END SUBROUTINE
+!===========================================================!
+    SUBROUTINE Evaluated2Sdtheta2(&
+            & Nr, Nth, Nphi,&
+            & Mr, Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&            
+            & rho, theta, phi,&
+            & dSdth, d2Sdth2)
+
+        USE          omp_lib
+        USE          SHTOOLS
+        IMPLICIT     none 
+
+        !Calling variables
+        INTEGER*4                    Nr,Nth,Nphi,Mr,Lmax,Lgrid
+        REAL*8                       GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
+        REAL*8                       rho(Nr), theta(Nth), phi(Nphi)
+        COMPLEX*16                   dSdth(Nr,Nth,Nphi)
+        COMPLEX*16, INTENT(out)   :: d2Sdth2(Nr,Nth,Nphi)
+
+        !Local variables
+        COMPLEX*16                   dadth(Mr+1,2,Lmax+1,Lmax+1)
+
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
+                                       &dSdth,dadth)
+        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,dadth,d2Sdth2)
 
         RETURN
     END SUBROUTINE
