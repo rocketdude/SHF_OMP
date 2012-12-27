@@ -16,8 +16,8 @@ OBJS = \
        SpectralTransform.o \
        TricubicInterpolation.o
 
-F90 = h5fc
-CC = h5++
+F90 = gfortran-mp-4.7
+CC =
 
 #F90 DEPENDENCIES
 SWITCH = \
