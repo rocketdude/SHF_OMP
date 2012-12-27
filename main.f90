@@ -242,7 +242,7 @@
     dx = rmax - rmin
     DO i = 1, Mr
        IF( (r(i+1) - r(i)) .LT. dx ) THEN
-          dx = r(i+1) - r(i)
+          dx = ABS(r(i+1) - r(i))
        END IF
     END DO
     
