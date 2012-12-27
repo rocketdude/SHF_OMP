@@ -100,11 +100,11 @@
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdth)
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdr2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdphi2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,dSdphi,d2Sdphi2)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdtheta2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,dSdth,d2Sdth2)
  
         !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
@@ -181,11 +181,11 @@
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdth)
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdr2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdphi2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,dSdphi,d2Sdphi2)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdtheta2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,dSdth,d2Sdth2)
         
         !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
@@ -263,11 +263,11 @@
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdth)
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdr2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdphi2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,dSdphi,d2Sdphi2)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdtheta2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,dSdth,d2Sdth2)
         
         !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
@@ -345,11 +345,11 @@
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdth)
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdr2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdphi2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,dSdphi,d2Sdphi2)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdtheta2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,dSdth,d2Sdth2)
         
         !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
@@ -427,11 +427,11 @@
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdth)
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdr2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdphi2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,dSdphi,d2Sdphi2)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+        CALL Evaluated2Sdtheta2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,dSdth,d2Sdth2)
         
         !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
