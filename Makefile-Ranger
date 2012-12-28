@@ -11,6 +11,7 @@ OBJS = \
        EvolveData.o \
        Functions.o \
        GetInitialData.o \
+       GetResults.o \
        OneDimensionalInterpolation.o \
        ReinitializeData.o \
        SpectralTransform.o \

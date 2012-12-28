@@ -114,6 +114,8 @@
     REAL*8              epsStar     !Normalized emissivity
     REAL*8              alpStar     !Normalized absorptivity
 
+    REAL*8              TempAve     !Average temperature
+
     INTEGER*4           n           !Degree of Chebyshev polynomial
     INTEGER*4           l, ml       !Degree of spherical harmonics
     INTEGER*4           reinit      !Iteration at which we reinitialize
@@ -287,6 +289,10 @@
        CTemp = 'Time.dat'
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
        CLOSE(7)
+
+       CTemp = 'TempAve.dat'
+       OPEN(7, FILE = CTemp, STATUS = 'NEW')
+       CLOSE(7)
     ELSE IF( SFLAG .EQ. 1 ) THEN
         t = t+dt
     END IF
@@ -306,36 +312,35 @@
             &t, dt,&
             &a)
 
-!       CALL FindU(&
-!            &Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM,&
-!            &GLQWeights, GLQZeros,&
-!            &gRR, gThTh, gPhiPhi,&
-!            &gRTh, gRPhi, gThPhi,&
-!            &r, rho, theta, phi,&
-!            &a,&
-!            &it, WriteSit,&
-!            &U, Uave, USp,&
-!            &thetaSp, phiSp,&
-!            &g_rrUsqrd, g_rrUsqrdAve)
-
+       CALL GetResults(&
+            &Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM,&
+            &GLQWeights, GLQZeros,&
+            &r, rho, theta, phi,&
+            &a,&
+            &it, WriteSit,&
+            &thetaSp, phiSp,&
+            &TempAve) 
 
        !--------------------------------------------------------!
        !     Writing OUTPUTS into files                         !
        !--------------------------------------------------------!
 
-       !IF( MOD(it,WriteUit) .EQ. 0 ) CALL WriteU(Nth, Nphi, U, it)
-       !IF( MOD(it,Writeg_rrUsqrdit) .EQ. 0 ) &
-       !  & CALL WriteGRRUU(Nth, Nphi, g_rrUsqrd, it)
-       !IF( MOD(it,Writeait) .EQ. 0 .OR. (it .EQ. Maxit) ) &
-       !  & CALL Writea(Mr+1, 2, Lmax+1, Lmax+1, a, it)
+       IF( MOD(it,Writeait) .EQ. 0 .OR. (it .EQ. Maxit) ) &
+         & CALL Writea(Mr+1, 2, Lmax+1, Lmax+1, a, it)
        
        CTemp = 'Time.dat'
        OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
        WRITE(7,*) t
        CLOSE(7)
  
+       CTemp = 'TempAve.dat'
+       OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
+       WRITE(7,*) TempAve
+       CLOSE(7)
+
        PRINT *, 'Iteration #:', it
        PRINT *, 'Time= ', t
+       PRINT *, 'Average Temperature= ', TempAve
        PRINT *, '------------------'
 
        IF( ((t .LT. tfinal) .AND. (tdir .LT. 0.0D0)) .OR.&
