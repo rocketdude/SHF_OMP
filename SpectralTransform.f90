@@ -69,9 +69,9 @@
                 
                 !wi is the weight in Chebyshev-Gauss-Radau quadrature
                 IF( i .EQ. 1 ) THEN
-                    wi = 1.0D0 / ( 2.0D0 * DBLE(Nr-1) + 1.0D0 )
-                ELSE 
                     wi = 2.0D0 / ( 2.0D0 * DBLE(Nr-1) + 1.0D0 )
+                ELSE 
+                    wi = 4.0D0 / ( 2.0D0 * DBLE(Nr-1) + 1.0D0 )
                 END IF
 
                 Spec2Spat(n+1,i) = wi*COS( DBLE(n)*ACOS(rho(i)) )
