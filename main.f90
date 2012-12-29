@@ -15,9 +15,9 @@
     USE                HDF5
     IMPLICIT           none
 
-    INTEGER*4, PARAMETER ::        Mr       = 40
-    INTEGER*4, PARAMETER ::        Lmax     = 16
-    INTEGER*4, PARAMETER ::        Lgrid    = 32
+    INTEGER*4, PARAMETER ::        Mr       = 10
+    INTEGER*4, PARAMETER ::        Lmax     = 2
+    INTEGER*4, PARAMETER ::        Lgrid    = 4
     INTEGER*4, PARAMETER ::        TP       = 4
     INTEGER*4, PARAMETER ::        SpM      = 6
 
@@ -144,7 +144,7 @@
     aFile = 'a10.dat'
 
     !Termination conditions
-    Maxit = 80000
+    Maxit = 5
     tfinal = 2.5D0
 
     IF( SFLAG .EQ. 0 ) THEN
@@ -158,8 +158,8 @@
     !Parameters related to the heat problem
     T0          = 400                   !Initial temperature in K
     SolPhi      = 1366                  !Solar constant in W/m^2
-    epsStar     = 1.0                   !Normalized emissivitity (eps/k)
-    alpStar     = 1.0                   !Normalized absorptivity (alpha/k)
+    epsStar     = 0.9/200               !Normalized emissivitity (eps/k)
+    alpStar     = 0.45/200              !Normalized absorptivity (alpha/k)
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, 

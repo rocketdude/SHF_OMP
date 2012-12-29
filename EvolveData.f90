@@ -56,14 +56,9 @@
 
         COMPLEX*16      S(Nr,Nth,Nphi)
 
-        !First spatial derivatives
         COMPLEX*16      dSdr(Nr,Nth,Nphi)
-        COMPLEX*16      dSdth(Nr,Nth,Nphi)
-        COMPLEX*16      dSdphi(Nr,Nth,Nphi)
-        !Second spatical derivatives
         COMPLEX*16      d2Sdr2(Nr,Nth,Nphi)
-        COMPLEX*16      d2Sdth2(Nr,Nth,Nphi)
-        COMPLEX*16      d2Sdphi2(Nr,Nth,Nphi)
+        COMPLEX*16      AngularDel2S(Nr,Nth,Nphi)
 
         COMPLEX*16      dSdt(Nr,Nth,Nphi)
 
@@ -96,17 +91,11 @@
         !Calculate the derivatives
         CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,a,dSdr)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdphi)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdth)
         CALL Evaluated2Sdr2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
-        CALL Evaluated2Sdphi2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,dSdphi,d2Sdphi2)
-        CALL Evaluated2Sdtheta2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,dSdth,d2Sdth2)
- 
+        CALL EvaluateAngularLaplacian(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,&
+                &GLQZeros,rho,theta,phi,a,AngularDel2S)
+
         !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
         DO i = 1,Nr
            DO j = 1,Nth
@@ -123,11 +112,8 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &2.0D0*bdryterm/r(i) - &
-                        &4.0D0*epsStar*sigma*bdryterm*( S(i,j,k)**3 ) + &
-                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
-                        &d2Sdth2(i,j,k)/rsqrd + &
-                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+                        &2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd
 
                  ELSE
                     !INNER POINTS
@@ -135,9 +121,7 @@
 
                     dSdt(i,j,k) = &
                         &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
-                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
-                        &d2Sdth2(i,j,k)/rsqrd + &
-                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+                        &AngularDel2S(i,j,k)/rsqrd
 
                  END IF
 
@@ -177,17 +161,11 @@
         !Calculate the derivatives
         CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,a,dSdr)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdphi)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdth)
         CALL Evaluated2Sdr2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
-        CALL Evaluated2Sdphi2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,dSdphi,d2Sdphi2)
-        CALL Evaluated2Sdtheta2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,dSdth,d2Sdth2)
-        
+        CALL EvaluateAngularLaplacian(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,&
+                &GLQZeros,rho,theta,phi,a,AngularDel2S)
+
         !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
         DO i = 1,Nr
            DO j = 1,Nth
@@ -204,11 +182,8 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &2.0D0*bdryterm/r(i) - &
-                        &4.0D0*epsStar*sigma*bdryterm*( S(i,j,k)**3 ) + &
-                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
-                        &d2Sdth2(i,j,k)/rsqrd + &
-                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+                        &2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd
 
                  ELSE
                     !INNER POINTS
@@ -216,9 +191,7 @@
 
                     dSdt(i,j,k) = &
                         &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
-                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
-                        &d2Sdth2(i,j,k)/rsqrd + &
-                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+                        &AngularDel2S(i,j,k)/rsqrd
 
                  END IF
 
@@ -259,17 +232,11 @@
         !Calculate the derivatives
         CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,a,dSdr)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdphi)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdth)
         CALL Evaluated2Sdr2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
-        CALL Evaluated2Sdphi2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,dSdphi,d2Sdphi2)
-        CALL Evaluated2Sdtheta2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,dSdth,d2Sdth2)
-        
+        CALL EvaluateAngularLaplacian(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,&
+                &GLQZeros,rho,theta,phi,a,AngularDel2S)
+
         !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
         DO i = 1,Nr
            DO j = 1,Nth
@@ -286,11 +253,8 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &2.0D0*bdryterm/r(i) - &
-                        &4.0D0*epsStar*sigma*bdryterm*( S(i,j,k)**3 ) + &
-                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
-                        &d2Sdth2(i,j,k)/rsqrd + &
-                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+                        &2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd
 
                  ELSE
                     !INNER POINTS
@@ -298,9 +262,7 @@
 
                     dSdt(i,j,k) = &
                         &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
-                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
-                        &d2Sdth2(i,j,k)/rsqrd + &
-                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+                        &AngularDel2S(i,j,k)/rsqrd
 
                  END IF
 
@@ -341,17 +303,11 @@
         !Calculate the derivatives
         CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,a,dSdr)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdphi)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdth)
         CALL Evaluated2Sdr2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
-        CALL Evaluated2Sdphi2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,dSdphi,d2Sdphi2)
-        CALL Evaluated2Sdtheta2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,dSdth,d2Sdth2)
-        
+        CALL EvaluateAngularLaplacian(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,&
+                &GLQZeros,rho,theta,phi,a,AngularDel2S)
+
         !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
         DO i = 1,Nr
            DO j = 1,Nth
@@ -368,11 +324,8 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &2.0D0*bdryterm/r(i) - &
-                        &4.0D0*epsStar*sigma*bdryterm*( S(i,j,k)**3 ) + &
-                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
-                        &d2Sdth2(i,j,k)/rsqrd + &
-                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+                        &2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd
 
                  ELSE
                     !INNER POINTS
@@ -380,9 +333,7 @@
 
                     dSdt(i,j,k) = &
                         &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
-                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
-                        &d2Sdth2(i,j,k)/rsqrd + &
-                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+                        &AngularDel2S(i,j,k)/rsqrd
 
                  END IF
 
@@ -423,17 +374,11 @@
         !Calculate the derivatives
         CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,a,dSdr)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdphi)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdth)
         CALL Evaluated2Sdr2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,rmax,rmin,dSdr,d2Sdr2)
-        CALL Evaluated2Sdphi2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,dSdphi,d2Sdphi2)
-        CALL Evaluated2Sdtheta2(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,dSdth,d2Sdth2)
-        
+        CALL EvaluateAngularLaplacian(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,&
+                &GLQZeros,rho,theta,phi,a,AngularDel2S)
+
         !$OMP PARALLEL DO PRIVATE(j, k, rsqrd, bdryterm)
         DO i = 1,Nr
            DO j = 1,Nth
@@ -450,11 +395,8 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &2.0D0*bdryterm/r(i) - &
-                        &4.0D0*epsStar*sigma*bdryterm*( S(i,j,k)**3 ) + &
-                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
-                        &d2Sdth2(i,j,k)/rsqrd + &
-                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+                        &2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd
 
                  ELSE
                     !INNER POINTS
@@ -462,9 +404,7 @@
 
                     dSdt(i,j,k) = &
                         &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
-                        &dSdth(i,j,k)/(rsqrd*TAN(theta(j))) + &
-                        &d2Sdth2(i,j,k)/rsqrd + &
-                        &d2Sdphi2(i,j,k)/(rsqrd*SIN(theta(j))*SIN(theta(j)))
+                        &AngularDel2S(i,j,k)/rsqrd
 
                  END IF
 
@@ -488,8 +428,6 @@
         END DO
         !$OMP END PARALLEL DO
 
-        PRINT *, 'time=', t
-        PRINT *, 'dt=', dt
         t = t + dt
         
         RETURN

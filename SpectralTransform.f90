@@ -411,36 +411,6 @@
         RETURN
     END SUBROUTINE
 !===========================================================!
-    SUBROUTINE Evaluated2Sdphi2(&
-            & Nr, Nth, Nphi,&
-            & Mr, Lmax, Lgrid,&
-            & GLQWeights, GLQZeros,&            
-            & rho, theta, phi,&
-            & dSdphi, d2Sdphi2)
-
-        USE SHTOOLS
-        IMPLICIT     none 
-
-        !Calling variables
-        INTEGER*4                    Nr,Nth,Nphi,Mr,Lmax,Lgrid
-        REAL*8                       GLQWeights(Lgrid+1),GLQZeros(Lgrid+1)
-        REAL*8                       rho(Nr), theta(Nth), phi(Nphi)
-        COMPLEX*16                   dSdphi(Nr,Nth,Nphi)
-        COMPLEX*16, INTENT(out)   :: d2Sdphi2(Nr,Nth,Nphi)
-        
-        !Local variables
-        COMPLEX*16                   dadphi(Mr+1,2,Lmax+1,Lmax+1)
-
-        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
-                                       &GLQWeights,GLQZeros,&
-                                       &rho,theta,phi,&
-                                       &dSdphi,dadphi)
-        CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,dadphi,d2Sdphi2)
-
-        RETURN
-    END SUBROUTINE
-!===========================================================!
     SUBROUTINE Evaluated2Sdr2(&
             & Nr, Nth, Nphi,&
             & Mr, Lmax, Lgrid,&
@@ -472,34 +442,51 @@
         RETURN
     END SUBROUTINE
 !===========================================================!
-    SUBROUTINE Evaluated2Sdtheta2(&
+    SUBROUTINE EvaluateAngularLaplacian(&
             & Nr, Nth, Nphi,&
             & Mr, Lmax, Lgrid,&
             & GLQWeights, GLQZeros,&            
             & rho, theta, phi,&
-            & dSdth, d2Sdth2)
+            & a, delsqrdS)
 
-        USE          omp_lib
-        USE          SHTOOLS
+        USE SHTOOLS
         IMPLICIT     none 
 
         !Calling variables
         INTEGER*4                    Nr,Nth,Nphi,Mr,Lmax,Lgrid
-        REAL*8                       GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
+        REAL*8                       GLQWeights(Lgrid+1),GLQZeros(Lgrid+1)
         REAL*8                       rho(Nr), theta(Nth), phi(Nphi)
-        COMPLEX*16                   dSdth(Nr,Nth,Nphi)
-        COMPLEX*16, INTENT(out)   :: d2Sdth2(Nr,Nth,Nphi)
+        COMPLEX*16                   a(Mr+1,2,Lmax+1,Lmax+1)
+        COMPLEX*16, INTENT(out)   :: delsqrdS(Nr,Nth,Nphi)
 
         !Local variables
-        COMPLEX*16                   dadth(Mr+1,2,Lmax+1,Lmax+1)
+        INTEGER*4                    n,l,ml
+        COMPLEX*16                   ader(Mr+1,2,Lmax+1,Lmax+1)
 
-        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+        ader(:,:,:,:) = DCMPLX(0.0D0, 0.0D0)
+
+        !Main subroutine
+        DO l=0,Lmax
+            DO ml=0,l
+            
+            IF( ml .EQ. 0 ) THEN
+                ader(:,1,l+1,ml+1) = -1.0D0*DBLE(l*(l+1))*&
+                                    &a(:,1,l+1,ml+1)
+            ELSE
+                ader(:,1,l+1,ml+1) = -1.0D0*DBLE(l*(l+1))*&
+                                    &a(:,1,l+1,ml+1)
+                ader(:,2,l+1,ml+1) = -1.0D0*DBLE(l*(l+1))*&
+                                    &a(:,2,l+1,ml+1)
+            END IF
+            
+            END DO
+        END DO
+
+        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
                                        &GLQWeights,GLQZeros,&
                                        &rho,theta,phi,&
-                                       &dSdth,dadth)
-        CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,dadth,d2Sdth2)
-
+                                       &ader,delsqrdS)
+        
         RETURN
     END SUBROUTINE
 !===========================================================!
