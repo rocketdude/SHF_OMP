@@ -9,7 +9,7 @@
 &a,&
 &it, WriteSit,&
 &thetaSp, phiSp,&
-&TempAve)
+&TempTop, TempBottom)
 
 !This subroutine finds U(theta, phi) using cubic spline interpolation
 !and then performing linear interpolation
@@ -31,7 +31,7 @@
  
         COMPLEX*16          :: a(Mr+1,2,Lmax+1,Lmax+1)
 
-        REAL*8, INTENT(out) :: TempAve
+        REAL*8, INTENT(out) :: TempTop, TempBottom
 
 !--------------------------------------------------------!
 !     Declare Locals                                     !
@@ -46,11 +46,18 @@
         INTEGER*4                i, j, k
         INTEGER*4                n, l, ml
 
+        REAL*8                   PI
+
+        REAL*8                   thetaTopBottom(2)
+        REAL*8                   phiTopBottom(2)
+        REAL*8                   STopBottom(2,Nr)
         COMPLEX*16               S(Nr,Nth,Nphi)
 
 !--------------------------------------------------------!
 !      Main Subroutine                                   !
 !--------------------------------------------------------!
+
+        PI = 3.141592653589793238462643383279502884197D0
 
         !Evaluate the eikonal data S
         CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
@@ -61,15 +68,16 @@
         !Writing S into file (only at certain iterations)
         IF( MOD(it, WriteSit) .EQ. 0 ) CALL WriteS(Nr, Nth, Nphi, ABS(S), it)
 
-        TempAve = 0.0D0
-        DO i=1,Nr
-            DO j=1,Nth
-                DO k=1,Nphi
-                   TempAve = TempAve + ABS( S(i,j,k) )
-                END DO
-            END DO
-        END DO
-        TempAve = TempAve / (Nr*Nth*Nphi)            
+        !Get the top and bottom temperatures
+        thetaTopBottom = (/ 0.0D0, PI /)
+        phiTopBottom = (/ 0.0D0, 0.0D0 /)
+        CALL GetRealSpatialValueOnRadialLine(Nr,Nth,Nphi,Mr,2,Lmax,Lgrid,&
+                                           &rho,theta,phi,&
+                                           &thetaTopBottom,phiTopBottom,&
+                                           &S, STopBottom)
+
+        TempTop = STopBottom(1,1)
+        TempBottom = STopBottom(2,1)
     
         RETURN
     END SUBROUTINE GetResults

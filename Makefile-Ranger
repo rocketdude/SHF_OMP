@@ -8,8 +8,10 @@ MODS =
 OBJS = \
        IO.o \
        main.o \
+       ApplyFilter.o \
        EvolveData.o \
        Functions.o \
+       GetFilter.o \
        GetInitialData.o \
        GetResults.o \
        OneDimensionalInterpolation.o \

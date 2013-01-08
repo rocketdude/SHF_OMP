@@ -20,6 +20,7 @@
     INTEGER*4, PARAMETER ::        Lgrid    = 16
     INTEGER*4, PARAMETER ::        TP       = 4
     INTEGER*4, PARAMETER ::        SpM      = 6
+    INTEGER*4, PARAMETER ::        filterP  = 16
 
     INTEGER*4, PARAMETER ::        Nr       = Mr+1
     INTEGER*4, PARAMETER ::        Nth      = Lgrid+1
@@ -29,6 +30,7 @@
     ! Nr, Nth, and Nphi are the # of points in r, theta, phi directions
     ! TP-1 is the temporal interpolation order
     ! SpM is the number of additional directions we'd like to compute U for
+    ! filterP is the order of the filter
 
     REAL*8, PARAMETER ::    PI = 3.141592653589793238462643383279502884197D0
 
@@ -80,6 +82,8 @@
     COMPLEX*16        a(Mr+1,2,Lmax+1,Lmax+1) 
             !time-dependent coefficients a_nlm(t)
 
+    REAL*8            Filter(Mr+1)
+
     ! Parameters for FFT using Gauss-Legendre Quadrature
     REAL*8            GLQWeights(Lgrid+1)  !Gauss-Legendre Quadrature weights
     REAL*8            GLQZeros(Lgrid+1)    !Gauss-Legendre Quadrature zeros
@@ -115,7 +119,8 @@
     REAL*8              alpStar     !Normalized absorptivity
     REAL*8              kappaStar   !Normalized conductivity
 
-    REAL*8              TempAve     !Average temperature
+    REAL*8              TempTop     !Temperature at theta = 0
+    REAL*8              TempBottom  !Temperature at theta = pi
 
     INTEGER*4           n           !Degree of Chebyshev polynomial
     INTEGER*4           l, ml       !Degree of spherical harmonics
@@ -145,7 +150,7 @@
     aFile = 'a10.dat'
 
     !Termination conditions
-    Maxit = 50000
+    Maxit = 10000000
     tfinal = 3600.0D0
 
     IF( SFLAG .EQ. 0 ) THEN
@@ -157,18 +162,18 @@
     Z0 = 1.0D0
 
     !Parameters related to the heat problem
-    T0          = 290.0D0               !Initial temperature in K
+    T0          = 250.0D0               !Initial temperature in K
     SolPhi      = 1366.0D0              !Solar constant in W/m^2
     epsStar     = 0.90D0/2.0D2          !Normalized emissivity (eps/kappa)
     alpStar     = 0.45D0/2.0D2          !Normalized absorptivity (alpha/kappa)
-    kappaStar   = 2.0D0/(1.5D4*2.0D2)   !kappa / rho*cp
+    kappaStar   = 2.0D2/(1.5D4*2.0D2)   !kappa / rho*cp
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, 
     !      and negative tdir give EH finder
     eps =  2.22044604925031308D-016 !Machine epsilon (precalculate)
     c = 0.1D0
-    cfl = 1.508D0                   !Depends on which SSP-Runge-Kutta used
+    cfl = 1.508D-1                   !Depends on which SSP-Runge-Kutta used
                                     !SSPRK(5,4)=>cfl=1.508 and 
                                     !SSPRK(3,3)=>cfl=1.0
     tdir = +1.0D0                   !Direction of time, choose +1.0D0 or -1.0D0
@@ -282,6 +287,10 @@
             & r, rho, theta, phi,&
             & a)
     END IF
+    
+    PRINT *, 'OBTAINING FILTER'
+
+    CALL GetFilter(Mr,filterP,eps,Filter)
 
     PRINT *, '==============================='
 
@@ -296,9 +305,14 @@
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
        CLOSE(7)
 
-       CTemp = 'TempAve.dat'
+       CTemp = 'TempTop.dat'
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
        CLOSE(7)
+
+       CTemp = 'TempBottom.dat'
+       OPEN(7, FILE = CTemp, STATUS = 'NEW')
+       CLOSE(7)
+
     ELSE IF( SFLAG .EQ. 1 ) THEN
         t = t+dt
     END IF
@@ -325,7 +339,7 @@
             &a,&
             &it, WriteSit,&
             &thetaSp, phiSp,&
-            &TempAve) 
+            &TempTop, TempBottom) 
 
        !--------------------------------------------------------!
        !     Writing OUTPUTS into files                         !
@@ -339,15 +353,27 @@
        WRITE(7,*) t
        CLOSE(7)
  
-       CTemp = 'TempAve.dat'
+       CTemp = 'TempTop.dat'
        OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
-       WRITE(7,*) TempAve
+       WRITE(7,*) TempTop
+       CLOSE(7)
+
+       CTemp = 'TempBottom.dat'
+       OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
+       WRITE(7,*) TempBottom
        CLOSE(7)
 
        PRINT *, 'Iteration #:', it
        PRINT *, 'Time= ', t
-       PRINT *, 'Average Temperature= ', TempAve
+       PRINT *, 'Top Temperature= ', TempTop
+       PRINT *, 'Bottom Temperature= ', TempBottom
        PRINT *, '------------------'
+
+       !--------------------------------------------------------!
+       !     Filtering                                          !
+       !--------------------------------------------------------!
+
+       CALL ApplyFilter(Mr,Lmax,Filter,a)
 
        IF( ((t .LT. tfinal) .AND. (tdir .LT. 0.0D0)) .OR.&
           &((t .GT. tfinal) .AND. (tdir .GT. 0.0D0)) ) THEN
