@@ -8,7 +8,7 @@
 &rmin, rmax,&
 &r, rho, theta, phi,&
 &epsStar, alpStar,&
-&SolPhi,&
+&kappaStar, SolPhi,&
 &t, dt,&
 &a)
 
@@ -33,7 +33,7 @@
         REAL*8                  :: r(Nr), rho(Nr), theta(Nth), phi(Nphi)
 
         REAL*8                  :: epsStar, alpStar
-        REAL*8                  :: SolPhi
+        REAL*8                  :: kappaStar, SolPhi
 
         REAL*8                  :: t
         REAL*8                  :: dt
@@ -112,16 +112,16 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
-                        &AngularDel2S(i,j,k)/rsqrd
+                        &(2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  ELSE
                     !INNER POINTS
                     rsqrd = r(i) * r(i)
 
                     dSdt(i,j,k) = &
-                        &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
-                        &AngularDel2S(i,j,k)/rsqrd
+                        &(2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  END IF
 
@@ -182,16 +182,16 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
-                        &AngularDel2S(i,j,k)/rsqrd
+                        &(2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  ELSE
                     !INNER POINTS
                     rsqrd = r(i) * r(i)
 
                     dSdt(i,j,k) = &
-                        &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
-                        &AngularDel2S(i,j,k)/rsqrd
+                        &(2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  END IF
 
@@ -253,16 +253,16 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
-                        &AngularDel2S(i,j,k)/rsqrd
+                        &(2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  ELSE
                     !INNER POINTS
                     rsqrd = r(i) * r(i)
 
                     dSdt(i,j,k) = &
-                        &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
-                        &AngularDel2S(i,j,k)/rsqrd
+                        &(2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  END IF
 
@@ -324,16 +324,16 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
-                        &AngularDel2S(i,j,k)/rsqrd
+                        &(2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  ELSE
                     !INNER POINTS
                     rsqrd = r(i) * r(i)
 
                     dSdt(i,j,k) = &
-                        &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
-                        &AngularDel2S(i,j,k)/rsqrd
+                        &(2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  END IF
 
@@ -395,16 +395,16 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
-                        &AngularDel2S(i,j,k)/rsqrd
+                        &(2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  ELSE
                     !INNER POINTS
                     rsqrd = r(i) * r(i)
 
                     dSdt(i,j,k) = &
-                        &2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
-                        &AngularDel2S(i,j,k)/rsqrd
+                        &(2.0D0*dSdr(i,j,k)/r(i) + d2Sdr2(i,j,k) + &
+                        &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  END IF
 

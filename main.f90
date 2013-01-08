@@ -16,8 +16,8 @@
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Mr       = 10
-    INTEGER*4, PARAMETER ::        Lmax     = 2
-    INTEGER*4, PARAMETER ::        Lgrid    = 4
+    INTEGER*4, PARAMETER ::        Lmax     = 16
+    INTEGER*4, PARAMETER ::        Lgrid    = 16
     INTEGER*4, PARAMETER ::        TP       = 4
     INTEGER*4, PARAMETER ::        SpM      = 6
 
@@ -113,6 +113,7 @@
     REAL*8              SolPhi      !Solar constant
     REAL*8              epsStar     !Normalized emissivity
     REAL*8              alpStar     !Normalized absorptivity
+    REAL*8              kappaStar   !Normalized conductivity
 
     REAL*8              TempAve     !Average temperature
 
@@ -144,8 +145,8 @@
     aFile = 'a10.dat'
 
     !Termination conditions
-    Maxit = 5
-    tfinal = 2.5D0
+    Maxit = 50000
+    tfinal = 3600.0D0
 
     IF( SFLAG .EQ. 0 ) THEN
        Startit = 1                  !Starting from iteration 1
@@ -156,10 +157,11 @@
     Z0 = 1.0D0
 
     !Parameters related to the heat problem
-    T0          = 400                   !Initial temperature in K
-    SolPhi      = 1366                  !Solar constant in W/m^2
-    epsStar     = 0.9/200               !Normalized emissivitity (eps/k)
-    alpStar     = 0.45/200              !Normalized absorptivity (alpha/k)
+    T0          = 290.0D0               !Initial temperature in K
+    SolPhi      = 1366.0D0              !Solar constant in W/m^2
+    epsStar     = 0.90D0/2.0D2          !Normalized emissivity (eps/kappa)
+    alpStar     = 0.45D0/2.0D2          !Normalized absorptivity (alpha/kappa)
+    kappaStar   = 2.0D0/(1.5D4*2.0D2)   !kappa / rho*cp
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, 
@@ -173,8 +175,8 @@
     reinit = 15
 
     !Spherical grid parameters
-    rmax = 1.20D0                   !maximum value of r
-    rmin = 0.20D0                   !minimum value of r
+    rmax = 0.20D0                   !maximum value of r (meters)
+    rmin = 0.00D0                   !minimum value of r (meters)
 
     !Additional directions we'd like to compute U
     thetaSp = (/ 0.0D0, PI, PI/2.0D0, PI/2.0D0, PI/2.0D0, PI/2.0D0 /)
@@ -229,9 +231,13 @@
 !--------------------------------------------------------!
 
 !!$    PRINT *, 'Mass of blackhole =', Mass
+    PRINT *, 'epsilon star = ', epsStar
+    PRINT *, 'alpha star = ', alpStar
+    PRINT *, 'kappa star = ', kappaStar
     PRINT *, 'Mr = ', Mr
     PRINT *, 'Lmax = ', Lmax
     PRINT *, '(Nr, Nth, Nphi) = ', Nr, ',', Nth, ',', Nphi
+    PRINT *, 'r = ', r
     PRINT *, 'theta = ', theta
     PRINT *, 'phi = ', phi
     PRINT *, '# of iterations =', (Maxit-Startit+1)
@@ -308,7 +314,7 @@
             &rmin, rmax,&
             &r, rho, theta, phi,&
             &epsStar, alpStar,&
-            &SolPhi,&
+            &kappaStar, SolPhi,&
             &t, dt,&
             &a)
 
