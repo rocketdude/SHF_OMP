@@ -1,15 +1,16 @@
 #!/bin/bash
-#                          # Use Bash Shell
-#$ -V                     # Inherit the submission environment
-#$ -cwd                   # Start job in  submission directory
-#$ -N SHF                 # Job Name
-#$ -j y                   # Combine stderr and stdout
-#$ -o $JOB_NAME.o$JOB_ID  # Name of the output file (eg. myMPI.oJobID)
-#$ -pe 16way 16           # Requests 16 cores/node, 16 cores total
-#$ -q development         # Queue name
-#$ -l h_rt=02:00:00       # Run time (hh:mm:ss) - 1.5 hours
-#$ -M darius.bunandar@utexas.edu      # Email notification address (UNCOMMENT)
-#$ -m be                  # Email at Begin/End of job  (UNCOMMENT)
-#$ -A TG-PHY090030
+#----------------------------------------------------
+# Job script
+#----------------------------------------------------
+
+#SBATCH -J SHES               # Job name
+#SBATCH -o SHES.%j.out        # Name of stdout output file (%j expands to jobId)
+#SBATCH -p long               # Queue name
+#SBATCH -N 1                  # Total number of nodes requested (16 cores/node)
+#SBATCH -n 1                  # Total number of mpi tasks requested
+#SBATCH -t 48:00:00           # Run time (hh:mm:ss)
+
+#SBATCH -A TG-PHY090030       # Allocation name to charge job against
+
 export OMP_NUM_THREADS=16
-./SHF         # Run the executable
+./SHES
