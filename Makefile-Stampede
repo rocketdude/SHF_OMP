@@ -24,22 +24,24 @@ CC = mpicc
 
 #F90 DEPENDENCIES
 SWITCH = -O3 -mkl -xhost -mcmodel=large -openmp
+INC = \
+   -I$$MKLROOT/include \
+   -I$$TACC_HDF5_INC \
+   -I$$TACC_FFTW3_INC 
 LIBS = \
    -free -ISHTOOLS/modules \
    -LSHTOOLS/lib \
    -lSHTOOLS2.7 \
-   -I$$MKLROOT/include -mkl=parallel \
-   -I$$TACC_HDF5_INC -Wl,-rpath,$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB \
+   -mkl=parallel \
+   -Wl,-rpath,$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB \
    -lhdf5_fortran -lhdf5 -lz \
-   -I$$TACC_FFTW3_INC -L$$TACC_FFTW3_LIB -lfftw3 -lm
+   -L$$TACC_FFTW3_LIB -lfftw3 -lm
 FLAGS = -fpp
 
 #C++ DEPENDENCIES
-CCSWITCH = -O3 -xW -mcmodel=large -openmp
-CCLIBS = -I$$TACC_MKL_INC -Wl,-rpath,$$TACC_MKL_LIB \
-   -L$$TACC_MKL_LIB -lmkl -lguide \
-   -I$$TACC_HDF5_INC -Wl,-rpath,$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB -lhdf5 -lz \
-   -I$$TACC_FFTW3_INC -Wl,-rpath,$$TACC_FFTW3_LIB -L$$TACC_FFTW3_LIB -lfftw3 -lm
+CCSWITCH =
+CCINC =
+CCLIBS =
 CCFLAGS =
 
 all: $(PROG)
@@ -48,11 +50,11 @@ $(PROG) : $(OBJS)
 	$(F90) -o $(PROG) $(SWITCH) $(OBJS) $(LIBS)
 
 %.mod: %.o $.f90
-	$(F90) -c $(FLAGS) $(SWITCH) $(LIBS) $<
+	$(F90) -c $(FLAGS) $(SWITCH) $(INC) $< $(LIBS)
 %.o: %.f90
-	$(F90) -c $(FLAGS) $(SWITCH) $(LIBS) $<
+	$(F90) -c $(FLAGS) $(SWITCH) $(INC) $< $(LIBS)
 %.o: %.cpp
-	$(CC) -c $(CCFLAGS) $(CCSWITCH) $(CCLIBS) $<
+	$(CC) -c $(CCFLAGS) $(CCSWITCH) $(CCINC) $< $(CCLIBS)
 
 # Cleaning everything
 clean:

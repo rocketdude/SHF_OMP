@@ -12,5 +12,7 @@
 
 #SBATCH -A TG-PHY090030       # Allocation name to charge job against
 
+export MKL_MIC_ENABLE=1
+export MKL_MIC_WORKDIVISION0=1 MKL_MIC_WORKDIVISION1=0
 export OMP_NUM_THREADS=16
 ./SHES
