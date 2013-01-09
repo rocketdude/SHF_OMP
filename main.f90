@@ -16,8 +16,8 @@
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Mr       = 10
-    INTEGER*4, PARAMETER ::        Lmax     = 12
-    INTEGER*4, PARAMETER ::        Lgrid    = 32
+    INTEGER*4, PARAMETER ::        Lmax     = 16
+    INTEGER*4, PARAMETER ::        Lgrid    = 16
     INTEGER*4, PARAMETER ::        TP       = 4
     INTEGER*4, PARAMETER ::        SpM      = 6
     INTEGER*4, PARAMETER ::        filterP  = 32
@@ -173,7 +173,7 @@
     !      and negative tdir give EH finder
     eps =  2.22044604925031308D-016 !Machine epsilon (precalculate)
     c = 0.1D0
-    cfl = 1.508D-1                   !Depends on which SSP-Runge-Kutta used
+    cfl = 6.000D-2                  !Depends on which SSP-Runge-Kutta used
                                     !SSPRK(5,4)=>cfl=1.508 and 
                                     !SSPRK(3,3)=>cfl=1.0
     tdir = +1.0D0                   !Direction of time, choose +1.0D0 or -1.0D0
@@ -302,19 +302,26 @@
     IF( SFLAG .EQ. 0 ) THEN
        !Initialize output files and write values for iteration 0
        CTemp = 'Time.dat'
-       OPEN(7, FILE = CTemp, STATUS = 'NEW')
-       CLOSE(7)
+       OPEN(1, FILE = CTemp, STATUS = 'NEW')
 
        CTemp = 'TempTop.dat'
-       OPEN(7, FILE = CTemp, STATUS = 'NEW')
-       CLOSE(7)
+       OPEN(2, FILE = CTemp, STATUS = 'NEW')
 
        CTemp = 'TempBottom.dat'
-       OPEN(7, FILE = CTemp, STATUS = 'NEW')
-       CLOSE(7)
+       OPEN(3, FILE = CTemp, STATUS = 'NEW')
 
     ELSE IF( SFLAG .EQ. 1 ) THEN
         t = t+dt
+
+        CTemp = 'Time.dat'
+        OPEN(1, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
+
+        CTemp = 'TempTop.dat'
+        OPEN(2, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
+
+        CTemp = 'TempBottom.dat'
+        OPEN(3, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
+
     END IF
 
     PRINT *, '==============================='
@@ -348,20 +355,9 @@
        IF( MOD(it,Writeait) .EQ. 0 .OR. (it .EQ. Maxit) ) &
          & CALL Writea(Mr+1, 2, Lmax+1, Lmax+1, a, it)
        
-       CTemp = 'Time.dat'
-       OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
-       WRITE(7,*) t
-       CLOSE(7)
- 
-       CTemp = 'TempTop.dat'
-       OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
-       WRITE(7,*) TempTop
-       CLOSE(7)
-
-       CTemp = 'TempBottom.dat'
-       OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
-       WRITE(7,*) TempBottom
-       CLOSE(7)
+       WRITE(1,*) t
+       WRITE(2,*) TempTop
+       WRITE(3,*) TempBottom
 
        PRINT *, 'Iteration #:', it
        PRINT *, 'Time= ', t
@@ -385,6 +381,10 @@
 
     PRINT *, 'END PROGRAM'
     PRINT *, '==============================='
+
+    CLOSE(1)
+    CLOSE(2)
+    CLOSE(3)
 
 !--------------------------------------------------------!
 !     Timer Stop                                         !
