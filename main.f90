@@ -16,11 +16,11 @@
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Mr       = 10
-    INTEGER*4, PARAMETER ::        Lmax     = 16
-    INTEGER*4, PARAMETER ::        Lgrid    = 16
+    INTEGER*4, PARAMETER ::        Lmax     = 12
+    INTEGER*4, PARAMETER ::        Lgrid    = 32
     INTEGER*4, PARAMETER ::        TP       = 4
     INTEGER*4, PARAMETER ::        SpM      = 6
-    INTEGER*4, PARAMETER ::        filterP  = 16
+    INTEGER*4, PARAMETER ::        filterP  = 32
 
     INTEGER*4, PARAMETER ::        Nr       = Mr+1
     INTEGER*4, PARAMETER ::        Nth      = Lgrid+1
@@ -162,7 +162,7 @@
     Z0 = 1.0D0
 
     !Parameters related to the heat problem
-    T0          = 250.0D0               !Initial temperature in K
+    T0          = 300.0D0               !Initial temperature in K
     SolPhi      = 1366.0D0              !Solar constant in W/m^2
     epsStar     = 0.90D0/2.0D2          !Normalized emissivity (eps/kappa)
     alpStar     = 0.45D0/2.0D2          !Normalized absorptivity (alpha/kappa)

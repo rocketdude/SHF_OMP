@@ -112,7 +112,7 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &(2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &(2.0D0*bdryterm/r(i) + &
                         &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  ELSE
@@ -182,7 +182,7 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &(2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &(2.0D0*bdryterm/r(i) + &
                         &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  ELSE
@@ -253,7 +253,7 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &(2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &(2.0D0*bdryterm/r(i) + &
                         &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  ELSE
@@ -324,7 +324,7 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &(2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &(2.0D0*bdryterm/r(i) + &
                         &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  ELSE
@@ -395,7 +395,7 @@
                     END IF
 
                     dSdt(i,j,k) = &
-                        &(2.0D0*bdryterm/r(i) + d2Sdr2(i,j,k) + &
+                        &(2.0D0*bdryterm/r(i) + &
                         &AngularDel2S(i,j,k)/rsqrd)*kappaStar
 
                  ELSE

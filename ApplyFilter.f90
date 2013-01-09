@@ -28,6 +28,7 @@
 !      Main Subroutine                                   !
 !--------------------------------------------------------!
 
+        a(:,:,(Lmax-2):(Lmax+1),:) = DCMPLX(0.0D0,0.0D0)
         !$OMP PARALLEL DO
         DO n = 0, Mr
             a(n+1,:,:,:) = a(n+1,:,:,:) * Filter(n+1)
