@@ -1,38 +1,23 @@
 !======================================================! 
-! Spectral Horizon Finder (SHF)                        ! 
+! Radiation Boundary Condition Solver                  ! 
 !======================================================!
 
-! This program is an event horizon finder using the pseudospectral methods.
-! The eikonal data S(t, r, theta, phi) is represented as orthogonal functions 
-! of Chebyshev polynomials & spherical harmonics.
-! In other words, we are approximating 
-! S(t, r, theta, phi) ~= a_nlm(t) T_n (rho) Y_lm (theta, phi).
-! This is an improvement to the old SHF with the use of FFT and SHTOOLS.
-
-  PROGRAM              SHF
+  PROGRAM              RadiationBoundary
     USE                omp_lib
     USE                SHTOOLS
     USE                HDF5
     IMPLICIT           none
 
-    INTEGER*4, PARAMETER ::        Mr       = 10
     INTEGER*4, PARAMETER ::        Lmax     = 16
     INTEGER*4, PARAMETER ::        Lgrid    = 16
-    INTEGER*4, PARAMETER ::        TP       = 4
-    INTEGER*4, PARAMETER ::        SpM      = 6
-    INTEGER*4, PARAMETER ::        filterP  = 32
 
-    INTEGER*4, PARAMETER ::        Nr       = Mr+1
     INTEGER*4, PARAMETER ::        Nth      = Lgrid+1
     INTEGER*4, PARAMETER ::        Nphi     = 2*Lgrid+1
-    ! Mr is the degree of the radial Chebyshev polynomial
-    ! Lmax is the maximum values of l and m of the spherical harmonics
-    ! Nr, Nth, and Nphi are the # of points in r, theta, phi directions
-    ! TP-1 is the temporal interpolation order
-    ! SpM is the number of additional directions we'd like to compute U for
-    ! filterP is the order of the filter
 
     REAL*8, PARAMETER ::    PI = 3.141592653589793238462643383279502884197D0
+
+    !Lmax is the maximum value of l considered
+    !Lgrid is the maximum value of l that can be found from 
 
 !-------------------------------------------------------!
 !     Declare Commons                                   !
@@ -43,75 +28,32 @@
 !-------------------------------------------------------!
 
     CHARACTER*32      CTemp
-    CHARACTER*32      aFile
     LOGICAL           FileExist
-
-    INTEGER*4           WriteSit        
-    !iteration at which we output S into file
-    INTEGER*4           Writeait        
-    !iteration at which we output the coef. a_nlm
-    INTEGER*4           WriteRit
-    !iteration at which we output the temperature along a radial line
 
 !--------------------------------------------------------!
 !     Declare Numerical Inputs                           ! 
 !--------------------------------------------------------!
 
     INTEGER*4           it     !Iteration counter
-    INTEGER*4           Startit!Starting iteration
     INTEGER*4           Maxit  !Maximum iteration
-
-    INTEGER*4           SFLAG  
-    !If SFLAG = 1, then we are continuing previous run
-
-    REAL*8            cfl    !Courant-Friedrich-Lewy factor
-    REAL*8            c      !Steepness of the initial tanh function
-
-    INTEGER*4         STAT   !Status placeholder
 
 !--------------------------------------------------------!
 !     Declare Level Set Data                             !
 !--------------------------------------------------------!
 
-    ! We use the usual spherical coordinates
-    ! X = r*sin(theta)*cos(phi)
-    ! Y = r*sin(theta)*sin(phi)
-    ! Z = r*cos(theta)
-
     ! Things that need to be allocated due to sph. harmonic FFTW
-    COMPLEX*16        a(Mr+1,2,Lmax+1,Lmax+1) 
-            !time-dependent coefficients a_nlm(t)
-
-    REAL*8            Filter(Mr+1)
+    COMPLEX*16        a(2,Lmax+1,Lmax+1) 
 
     ! Parameters for FFT using Gauss-Legendre Quadrature
     REAL*8            GLQWeights(Lgrid+1)  !Gauss-Legendre Quadrature weights
     REAL*8            GLQZeros(Lgrid+1)    !Gauss-Legendre Quadrature zeros
     
-    REAL*8            t           !Current time
-    REAL*8            tfinal      !Final time
-    REAL*8            tdir        !Direction of time
-    REAL*8            dt          !Time increment
-    REAL*8            dx          !Smallest distance between two points
-    REAL*8            rdtheta     !Smallest distance in the theta direction
-    REAL*8            rsinthdphi  !Smallest distance in the phi direction
     REAL*8            walltime_start, walltime_stop  !calc. total wall time
     REAL*8            cputime_start, cputime_stop    !calc. program speed
     REAL*8            eps         !Machine epsilon (needs to be pre-computed)
 
-    REAL*8            rho(Nr)   !Canonical radial coord. for Chebyshev poly.
-    REAL*8            r(Nr)     !The radial coordinate r
-    REAL*8            rmax, rmin  !rmax and rmin define the radial domain,
-                                  !used to calculate rho
-
     REAL*8              theta(Nth)      !The angle theta
     REAL*8              phi(Nphi)        !The angle phi
-    REAL*8              thetaSp(SpM)!The angle theta in specific directions
-    REAL*8              phiSp(SpM)  !The angle phi in specific directions
-
-    REAL*8              X0,Y0,Z0    !X0,Y0,Z0 are the initial axes of the
-                                    !the spheroids
-                                    !X0=Y0=Z0 is a sphere
 
     REAL*8              T0          !Initial temperature
     REAL*8              SolPhi      !Solar constant
@@ -119,12 +61,7 @@
     REAL*8              alpStar     !Normalized absorptivity
     REAL*8              kappaStar   !Normalized conductivity
 
-    REAL*8              TempTop     !Temperature at theta = 0
-    REAL*8              TempBottom  !Temperature at theta = pi
-
-    INTEGER*4           n           !Degree of Chebyshev polynomial
     INTEGER*4           l, ml       !Degree of spherical harmonics
-    INTEGER*4           reinit      !Iteration at which we reinitialize
  
 !--------------------------------------------------------!
 !     Declare Local Parameters                           !
@@ -142,58 +79,19 @@
 !--------------------------------------------------------!
     
     !Parameters related to initial conditions
-    SFLAG = 0                       !If SFLAG = 1, 
-                                    !we are continuing previous run: 
-                                    !change t, Startit and aFile
-    t = 0.0D0                       !Last time from previous run
-    Startit = 6751                  !Startit = last iteration + 1
-    aFile = 'a10.dat'
 
     !Termination conditions
-    Maxit = 10000000
-    tfinal = 3600.0D0
-
-    IF( SFLAG .EQ. 0 ) THEN
-       Startit = 1                  !Starting from iteration 1
-    END IF
-
-    X0 = 1.0D0                    !Initial axes of the spheroids in the
-    Y0 = 1.0D0                    !X, Y, and Z directions
-    Z0 = 1.0D0
+    Maxit = 1000
 
     !Parameters related to the heat problem
-    T0          = 300.0D0               !Initial temperature in K
+    T0          = 300.0D0               !Initial temperature guess in K
     SolPhi      = 1366.0D0              !Solar constant in W/m^2
     epsStar     = 0.90D0/2.0D2          !Normalized emissivity (eps/kappa)
     alpStar     = 0.45D0/2.0D2          !Normalized absorptivity (alpha/kappa)
     kappaStar   = 2.0D2/(1.5D4*2.0D2)   !kappa / rho*cp
 
-    !Simulation parameters                              
-    !Note: negative rootsign, positive lapse & shift functions, 
-    !      and negative tdir give EH finder
     eps =  2.22044604925031308D-016 !Machine epsilon (precalculate)
-    c = 0.1D0
-    cfl = 6.000D-2                  !Depends on which SSP-Runge-Kutta used
-                                    !SSPRK(5,4)=>cfl=1.508 and 
-                                    !SSPRK(3,3)=>cfl=1.0
-    tdir = +1.0D0                   !Direction of time, choose +1.0D0 or -1.0D0
-    reinit = 15
-
-    !Spherical grid parameters
-    rmax = 0.20D0                   !maximum value of r (meters)
-    rmin = 0.00D0                   !minimum value of r (meters)
-
-    !Additional directions we'd like to compute U
-    thetaSp = (/ 0.0D0, PI, PI/2.0D0, PI/2.0D0, PI/2.0D0, PI/2.0D0 /)
-    phiSp = (/ 0.0D0, 0.0D0, 0.0D0, PI/2.0D0, PI, 1.5D0*PI /)
-    
-!--------------------------------------------------------!
-!     Output Parameters                                  !
-!--------------------------------------------------------!
-
-    WriteSit         = 100000
-    Writeait         = 1000
-
+ 
 !--------------------------------------------------------!
 !     Timer Start                                        !
 !--------------------------------------------------------!	  
@@ -221,170 +119,32 @@
     nthreads = omp_get_max_threads()
     WRITE(*,*) 'No. of threads = ', nthreads
 
-    !Set up Chebyshev-Gauss-Radau points and DH collocation points
-    !$OMP PARALLEL DO
-    DO i = 0, Mr
-       rho(i+1) = -1.0D0*COS( 2*PI*i / (2*Mr+1) ) 
-       r(i+1) = 0.5D0*( (rmax + rmin) - (rmax - rmin)*rho(i+1) )
-    END DO
-    !$OMP END PARALLEL DO
-
     CALL GetThetaAndPhi(Nth,Nphi,Lgrid,theta,phi)
      
 !--------------------------------------------------------!
 !     Echo certain parameters                            !
 !--------------------------------------------------------!
 
-!!$    PRINT *, 'Mass of blackhole =', Mass
     PRINT *, 'epsilon star = ', epsStar
     PRINT *, 'alpha star = ', alpStar
     PRINT *, 'kappa star = ', kappaStar
-    PRINT *, 'Mr = ', Mr
     PRINT *, 'Lmax = ', Lmax
-    PRINT *, '(Nr, Nth, Nphi) = ', Nr, ',', Nth, ',', Nphi
-    PRINT *, 'r = ', r
+    PRINT *, '(Nth, Nphi) = ', Nth, ',', Nphi
     PRINT *, 'theta = ', theta
     PRINT *, 'phi = ', phi
-    PRINT *, '# of iterations =', (Maxit-Startit+1)
-    PRINT *, 'Reinitializing every ', reinit, 'iterations'
-
-!--------------------------------------------------------!
-!     Find smallest spatial increment                    !
-!--------------------------------------------------------!
-
-    dx = rmax - rmin
-    DO i = 1, Mr
-       IF( (r(i+1) - r(i)) .LT. dx ) THEN
-          dx = ABS(r(i+1) - r(i))
-       END IF
-    END DO
+    PRINT *, 'Max # of iterations =', Maxit
     
-    !then set the value of dt
-    dt = tdir * cfl * dx
-    
-!--------------------------------------------------------!
-!     Initial Data                                       !
-!--------------------------------------------------------!
-
-    PRINT *, '==============================='
-    PRINT *, 'INITIALIZING PROGRAM'
-
-    IF( SFLAG .EQ. 1 ) THEN
-       PRINT *, 'Continuing run'
-       PRINT *, 'Previous iteration=' ,(Startit-1)
-
-       CALL Read4dC(Mr+1, 2, Lmax+1, Lmax+1, a, aFile)
-
-    ELSE
-
-       CALL GetInitialData(& 
-            & Nr, Nth, Nphi,&
-            & Mr, Lmax, Lgrid,&
-            & GLQWeights, GLQZeros,&
-            & c,&
-            & X0, Y0, Z0,&
-            & T0,&
-            & r, rho, theta, phi,&
-            & a)
-    END IF
-    
-    PRINT *, 'OBTAINING FILTER'
-
-    CALL GetFilter(Mr,filterP,eps,Filter)
-
-    PRINT *, '==============================='
-
-
 !--------------------------------------------------------!
 !     Evolve Eikonal S                                   !
 !--------------------------------------------------------!
 
-    IF( SFLAG .EQ. 0 ) THEN
-       !Initialize output files and write values for iteration 0
-       CTemp = 'Time.dat'
-       OPEN(1, FILE = CTemp, STATUS = 'NEW')
-
-       CTemp = 'TempTop.dat'
-       OPEN(2, FILE = CTemp, STATUS = 'NEW')
-
-       CTemp = 'TempBottom.dat'
-       OPEN(3, FILE = CTemp, STATUS = 'NEW')
-
-    ELSE IF( SFLAG .EQ. 1 ) THEN
-        t = t+dt
-
-        CTemp = 'Time.dat'
-        OPEN(1, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
-
-        CTemp = 'TempTop.dat'
-        OPEN(2, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
-
-        CTemp = 'TempBottom.dat'
-        OPEN(3, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
-
-    END IF
-
     PRINT *, '==============================='
     PRINT *, 'START MAIN PROGRAM'
 
-    mainloop: DO it = Startit, Maxit
-
-       CALL EvolveData(&
-            &Nr, Nth, Nphi, Mr, Lmax, Lgrid,&
-            &GLQWeights, GLQZeros,&
-            &rmin, rmax,&
-            &r, rho, theta, phi,&
-            &epsStar, alpStar,&
-            &kappaStar, SolPhi,&
-            &t, dt,&
-            &a)
-
-       CALL GetResults(&
-            &Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM,&
-            &GLQWeights, GLQZeros,&
-            &r, rho, theta, phi,&
-            &a,&
-            &it, WriteSit,&
-            &thetaSp, phiSp,&
-            &TempTop, TempBottom) 
-
-       !--------------------------------------------------------!
-       !     Writing OUTPUTS into files                         !
-       !--------------------------------------------------------!
-
-       IF( MOD(it,Writeait) .EQ. 0 .OR. (it .EQ. Maxit) ) &
-         & CALL Writea(Mr+1, 2, Lmax+1, Lmax+1, a, it)
-       
-       WRITE(1,*) t
-       WRITE(2,*) TempTop
-       WRITE(3,*) TempBottom
-
-       PRINT *, 'Iteration #:', it
-       PRINT *, 'Time= ', t
-       PRINT *, 'Top Temperature= ', TempTop
-       PRINT *, 'Bottom Temperature= ', TempBottom
-       PRINT *, '------------------'
-
-       !--------------------------------------------------------!
-       !     Filtering                                          !
-       !--------------------------------------------------------!
-
-       CALL ApplyFilter(Mr,Lmax,Filter,a)
-
-       IF( ((t .LT. tfinal) .AND. (tdir .LT. 0.0D0)) .OR.&
-          &((t .GT. tfinal) .AND. (tdir .GT. 0.0D0)) ) THEN
-           CALL Writea(Mr+1, 2, Lmax+1, Lmax+1, a, it)
-           EXIT
-       END IF
-
-    END DO mainloop
 
     PRINT *, 'END PROGRAM'
     PRINT *, '==============================='
 
-    CLOSE(1)
-    CLOSE(2)
-    CLOSE(3)
 
 !--------------------------------------------------------!
 !     Timer Stop                                         !
@@ -396,5 +156,6 @@
     WRITE(*,*) 'Elapse Walltime = ', walltime_stop - walltime_start
 
     STOP
-  END PROGRAM SHF
+  END PROGRAM RadiationBoundary
+
 

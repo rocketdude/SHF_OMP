@@ -1,21 +1,15 @@
 # MAKEFILE
 # Define variables
 
-PROG = SHES
+PROG = RadiationBoundary
 
 MODS =
 #Place objects related to modules first
 OBJS = \
        IO.o \
        main.o \
-       ApplyFilter.o \
-       EvolveData.o \
        Functions.o \
-       GetFilter.o \
-       GetInitialData.o \
-       GetResults.o \
        OneDimensionalInterpolation.o \
-       ReinitializeData.o \
        SpectralTransform.o \
        TricubicInterpolation.o
 
