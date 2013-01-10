@@ -516,3 +516,53 @@
         phi = longitude*PI/180.0D0
 
     END SUBROUTINE
+!===========================================================!
+    SUBROUTINE AngularToSpectralTransform(&
+            & Nth, Nphi,&
+            & Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&
+            & theta, phi,&
+            & S, a)
+
+        USE SHTOOLS
+        IMPLICIT    none
+
+        !Calling variables
+        INTEGER*4                   Nth, Nphi, Lmax, Lgrid
+        REAL*8                      theta(Nth), phi(Nphi)
+        REAL*8                      GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
+        COMPLEX*16                  S(Nth,Nphi)
+        COMPLEX*16, INTENT(out) ::  a(2,Lmax+1,Lmax+1)
+
+        !Main subroutine
+        
+        CALL SHExpandGLQC(a, Lgrid, &
+                &S, GLQWeights, ZERO=GLQZeros,NORM=1,LMAX_CALC=Lmax)
+
+        RETURN
+    END SUBROUTINE
+!===========================================================!
+    SUBROUTINE SpectralToAngularTransform(&
+            & Nth, Nphi,&
+            & Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&            
+            & theta, phi,&
+            & a, S)
+
+        USE SHTOOLS
+        IMPLICIT    none
+
+        !Calling variables
+        INTEGER*4                   Nth, Nphi, Lmax, Lgrid
+        REAL*8                      GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
+        REAL*8                      theta(Nth), phi(Nphi)
+        COMPLEX*16                  a(2,Lmax+1,Lmax+1)
+        COMPLEX*16, INTENT(OUT)  :: S(Nth,Nphi)
+ 
+        !Main subroutine
+         
+        CALL MakeGridGLQC(S, a, Lgrid, &
+                &ZERO=GLQZeros, NORM=1, LMAX_CALC=Lmax)
+
+        RETURN
+    END SUBROUTINE
