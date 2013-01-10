@@ -1006,8 +1006,14 @@
            format_string = '(A1,I3,A4)'
         ELSE IF (i .ge. 1000 .and. i < 10000) THEN
            format_string = '(A1,I4,A4)'
-        ELSE
+        ELSE IF (i .ge. 10000 .and. i < 100000) THEN
            format_string = '(A1,I5,A4)'
+        ELSE IF (i .ge. 100000 .and. i < 1000000) THEN
+           format_string = '(A1,I6,A4)'
+        ELSE IF (i .ge. 1000000 .and. i < 10000000) THEN
+           format_string = '(A1,I7,A4)'
+        ELSE
+           format_string = '(A1,I7,A4)'
         END IF
 
         WRITE(TestFile, format_string) 'S',i,'.dat'
@@ -1097,8 +1103,14 @@
            format_string = '(A8,I3,A4)'
         ELSE IF (i .ge. 1000 .and. i < 10000) THEN
            format_string = '(A8,I4,A4)'
-        ELSE
+        ELSE IF (i .ge. 10000 .and. i < 100000) THEN
            format_string = '(A8,I5,A4)'
+        ELSE IF (i .ge. 100000 .and. i < 1000000) THEN
+           format_string = '(A8,I6,A4)'
+        ELSE IF (i .ge. 1000000 .and. i < 10000000) THEN
+           format_string = '(A8,I7,A4)'
+        ELSE
+           format_string = '(A8,I8,A4)' 
         END IF
 
         WRITE(TestFile, format_string) 'gRRUsqrd',i,'.dat'
@@ -1142,8 +1154,14 @@
            format_string = '(A1,I3,A4)'
         ELSE IF (i .ge. 1000 .and. i < 10000) THEN
            format_string = '(A1,I4,A4)'
-        ELSE
+        ELSE IF (i .ge. 10000 .and. i < 100000) THEN
            format_string = '(A1,I5,A4)'
+        ELSE IF (i .ge. 100000 .and. i < 1000000) THEN
+           format_string = '(A1,I6,A4)'
+        ELSE IF (i .ge. 1000000 .and. i < 10000000) THEN
+           format_string = '(A1,I7,A4)'
+        ELSE
+           format_string = '(A1,I8,A4)'
         END IF
 
         WRITE(TestFile, format_string) 'a',i,'.dat'
