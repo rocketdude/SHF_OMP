@@ -41,8 +41,8 @@
 !     Declare Level Set Data                             !
 !--------------------------------------------------------!
 
-    ! Things that need to be allocated due to sph. harmonic FFTW
-    COMPLEX*16        a(2,Lmax+1,Lmax+1) 
+    REAL*8            a(2,Lmax+1,Lmax+1)    !Coefficients
+    REAL*8            S(Nth,Nphi)           !Temperatures
 
     ! Parameters for FFT using Gauss-Legendre Quadrature
     REAL*8            GLQWeights(Lgrid+1)  !Gauss-Legendre Quadrature weights
@@ -52,16 +52,16 @@
     REAL*8            cputime_start, cputime_stop    !calc. program speed
     REAL*8            eps         !Machine epsilon (needs to be pre-computed)
 
+    REAL*8              R               !Radius of the object
     REAL*8              theta(Nth)      !The angle theta
-    REAL*8              phi(Nphi)        !The angle phi
+    REAL*8              phi(Nphi)       !The angle phi
 
     REAL*8              T0          !Initial temperature
-    REAL*8              SolPhi      !Solar constant
-    REAL*8              epsStar     !Normalized emissivity
-    REAL*8              alpStar     !Normalized absorptivity
-    REAL*8              kappaStar   !Normalized conductivity
+    REAL*8              tolA        !Tolerance of the solution
+    REAL*8              tolF        !Tolerance of the residual
 
     INTEGER*4           l, ml       !Degree of spherical harmonics
+    INTEGER*4           LWORK       !For inverting Jacobian
  
 !--------------------------------------------------------!
 !     Declare Local Parameters                           !
@@ -85,10 +85,12 @@
 
     !Parameters related to the heat problem
     T0          = 300.0D0               !Initial temperature guess in K
-    SolPhi      = 1366.0D0              !Solar constant in W/m^2
-    epsStar     = 0.90D0/2.0D2          !Normalized emissivity (eps/kappa)
-    alpStar     = 0.45D0/2.0D2          !Normalized absorptivity (alpha/kappa)
-    kappaStar   = 2.0D2/(1.5D4*2.0D2)   !kappa / rho*cp
+    R           = 0.2D0                 !Radius of the object in meters
+    !Tolerances
+    tolA        = 1000.0D0              !Tolerance of solution
+    tolF        = 0.1D0                 !Tolerance of residual
+
+    LWORK       = -1
 
     eps =  2.22044604925031308D-016 !Machine epsilon (precalculate)
  
@@ -125,9 +127,6 @@
 !     Echo certain parameters                            !
 !--------------------------------------------------------!
 
-    PRINT *, 'epsilon star = ', epsStar
-    PRINT *, 'alpha star = ', alpStar
-    PRINT *, 'kappa star = ', kappaStar
     PRINT *, 'Lmax = ', Lmax
     PRINT *, '(Nth, Nphi) = ', Nth, ',', Nphi
     PRINT *, 'theta = ', theta
@@ -141,8 +140,28 @@
     PRINT *, '==============================='
     PRINT *, 'START MAIN PROGRAM'
 
+    CALL GetInitialData(&
+    & Nth, Nphi,&
+    & Lmax, Lgrid,&
+    & GLQWeights, GLQZeros,&
+    & T0,&
+    & R, theta, phi,&
+    & a)
 
-    PRINT *, 'END PROGRAM'
+    CALL SolveEquation(&
+    & Nth, Nphi, Lmax, Lgrid, GLQWeights, GLQZeros,&
+    & R, theta, phi,&
+    & Maxit, tolA, tolF,&
+    & LWORK,&
+    & a) 
+
+    CALL GetResults(&
+    & Nth, Nphi,&
+    & Lmax, Lgrid,&
+    & GLQWeights, GLQZeros,&
+    & R, theta, phi,&
+    & a, S)
+
     PRINT *, '==============================='
 
 

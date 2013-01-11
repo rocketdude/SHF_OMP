@@ -1,7 +1,7 @@
 # MAKEFILE
 # Define variables
 
-PROG = RadiationBoundary
+PROG = a.out
 
 MODS =
 #Place objects related to modules first
@@ -9,9 +9,11 @@ OBJS = \
        IO.o \
        main.o \
        Functions.o \
-       OneDimensionalInterpolation.o \
+       GetInitialData.o \
+       GetResults.o \
+       RadiationFunction.o \
+       SolveEquation.o \
        SpectralTransform.o \
-       TricubicInterpolation.o
 
 F90 = gfortran-mp-4.7
 CC =
