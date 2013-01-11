@@ -34,7 +34,7 @@ WWWDIR = ../../www/man
 PODFILES = cilmplus.pod computed0.pod computedg82.pod computedm.pod \
 	dhaj.pod djpi2.pod eigvalsym.pod eigvalvecsym.pod eigvalvecsymtri.pod \
 	hilm.pod makecirclecoord.pod makegeoidgrid.pod makegrid2d.pod glqgridcoord.pod \
-	makegriddh.pod makegridglq.pod makegridpoint.pod makemaggrid2d.pod \
+	makegriddh.pod makegridglq.pod makegridpoint.pod makemaggriddh.pod \
 	planetsconstants.pod plbar_d1.pod plbar.pod plegendre.pod plegendre_d1.pod \
 	plegendrea_d1.pod plegendrea.pod plmbar_d1.pod plmbar.pod plmindex.pod \
 	plon.pod plon_d1.pod plmon.pod plmon_d1.pod plschmidt.pod plschmidt_d1.pod \
@@ -50,18 +50,18 @@ PODFILES = cilmplus.pod computed0.pod computedg82.pod computedm.pod \
 	shcrosspowerl.pod shread.pod shreadjpl.pod shread2.pod \
 	shreturntapers.pod shreturntapersm.pod shrotatecoef.pod shrotaterealcoef.pod \
 	wigner3j.pod shsjkpg.pod shsjkpg0.pod shtools.pod sphericalcapcoef.pod shmtdebias.pod \
-	makegravgrid2d.pod shconfidence.pod shmagpowerl.pod shmagpowerspectrum.pod \
+	makegravgriddh.pod shconfidence.pod shmagpowerl.pod shmagpowerspectrum.pod \
 	makegriddhc.pod shexpanddhc.pod makegridglqc.pod shexpandglqc.pod shpowerlc.pod \
 	shpowerdensitylc.pod shcrosspowerdensitylc.pod shpowerspectrumc.pod \
 	shpowerspectrumdensityc.pod shcrosspowerspectrumc.pod shcrosspowerspectrumdensityc.pod \
 	shcrosspowerlc.pod shbiasadmitcorr.pod shcilmtovector.pod shvectortocilm.pod \
 	yilmindex.pod computedmap.pod shreturntapers.pod curve2mask.pod makeellipsecoord.pod \
-	cilmplusrhoh.pod hilmrhoh.pod
+	cilmplusrhoh.pod hilmrhoh.pod normalgravity.pod makegravgradgriddh.pod
 
 MANFILES = cilmplus.1 computed0.1 computedg82.1 computedm.1 \
 	dhaj.1 djpi2.1 eigvalsym.1 eigvalvecsym.1 eigvalvecsymtri.1 hilm.1 \
 	makecirclecoord.1 makegeoidgrid.1 makegrid2d.1 glqgridcoord.1 makegriddh.1 \
-	makegridglq.1 makegridpoint.1 makemaggrid2d.1 planetsconstants.1 plbar_d1.1 \
+	makegridglq.1 makegridpoint.1 makemaggriddh.1 planetsconstants.1 plbar_d1.1 \
 	plbar.1 plegendre.1 plegendre_d1.1 plegendrea_d1.1 plegendrea.1 plmbar_d1.1 \
 	plmbar.1 plmindex.1 plon.1 plon_d1.1 plmon.1 plmon_d1.1 plschmidt.1 plschmidt_d1.1 \
 	plmschmidt.1 plmschmidt_d1.1 precompute.1 preglq.1 nglq.1 nglqsh.1 nglqshn.1 \
@@ -73,13 +73,13 @@ MANFILES = cilmplus.1 computed0.1 computedg82.1 computedm.1 \
 	shpowerspectrum.1 shpowerspectrumdensity.1 shcrosspowerspectrum.1 \
 	shcrosspowerspectrumdensity.1 shcrosspowerl.1 shread.1 shreadjpl.1 shread2.1 \
 	shreturntapers.1 shreturntapersm.1 shrotatecoef.1 shrotaterealcoef.1 \
-	wigner3j.1 shsjkpg.1 shsjkpg0.1 shtools.1 sphericalcapcoef.1 shmtdebias.1 makegravgrid2d.1 \
+	wigner3j.1 shsjkpg.1 shsjkpg0.1 shtools.1 sphericalcapcoef.1 shmtdebias.1 makegravgriddh.1 \
 	shconfidence.1 shmagpowerl.1 shmagpowerspectrum.1 makegriddhc.1 shexpanddhc.1 \
 	makegridglqc.1 shexpandglqc.1 shpowerlc.1 shpowerdensitylc.1 shcrosspowerdensitylc.1 \
 	shpowerspectrumc.1 shpowerspectrumdensityc.1 shcrosspowerspectrumc.1 shcrosspowerspectrumdensityc.1 \
 	shcrosspowerlc.1 shbiasadmitcorr.1 shcilmtovector.1 shvectortocilm.1 yilmindex.1 \
 	computedmap.1 shreturntapersmap.1 curve2mask.1 makeellipsecoord.1 cilmplusrhoh.1 \
-	hilmrhoh.1
+	hilmrhoh.1 normalgravity.1 makegravgradgriddh.1
 
 HTMLFILES_modules = planetsconstants.html shtools.html
 
@@ -115,8 +115,9 @@ HTMLFILES_localized = computed0.html computedg82.html computedm.html \
 HTMLFILES_rotations = djpi2.html shrotatecoef.html shrotaterealcoef.html
 
 HTMLFILES_gravmag = cilmplus.html hilm.html makegeoidgrid.html \
-	makemaggrid2d.html wl.html wlcurv.html makegravgrid2d.html \
-	shmagpowerl.html shmagpowerspectrum.html cilmplusrhoh.html hilmrhoh.html
+	makemaggriddh.html wl.html wlcurv.html makegravgriddh.html \
+	shmagpowerl.html shmagpowerspectrum.html cilmplusrhoh.html hilmrhoh.html \
+	normalgravity.html makegravgradgriddh.html
 
 HTMLFILES_other =  eigvalsym.html eigvalvecsym.html eigvalvecsymtri.html \
 	 makecirclecoord.html randomn.html randomgaussian.html import_wisdom_from_file.html \

@@ -32,7 +32,7 @@
 >  <a href="../../SHTOOLS.html" class="dir">Home</a> > <a href="../documentation.html" class="dir">Documentation</a> > <a href="../other.html" class="dir">Other</a></p>
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
-<B>MAKEELLIPSECOORD(1)</B>               SHTOOLS 2.7              <B>MAKEELLIPSECOORD(1)</B>
+<B>MAKEELLIPSECOORD(1)</B>               SHTOOLS 2.8              <B>MAKEELLIPSECOORD(1)</B>
 
 
 </PRE>
@@ -59,9 +59,12 @@
        <B>MakeEllipseCoord</B> will calculate the (lat, long) coordinates of an
        ellipse placed on a sphere at position (LAT, LON). The semi-major and
        semi-minor axes, expressed in angular radii in degrees, are given by
-       A_THETA and B_THETA, respectively, and the semi-major axis of the
-       ellipse is rotated clockwise by the angle DEC with respect to local
-       north. This is useful for plotting ellipses on geographic maps.
+       A_THETA and B_THETA, respectively. The semimajor axis of the ellipse is
+       initially directed due north, and it is then rotated clockwise by the
+       angle DEC. This is useful for plotting ellipses on geographic maps. The
+       first index in the output vectors corresponds to the northern rotated
+       semimajor axis, and subsequent points are arranged in a clockwise
+       manner. Input and output units are in DEGREES.
 
 
 </PRE>
@@ -119,7 +122,7 @@
        This is free software; you can distribute and modify it under the terms
        of the revised BSD license.
 
-SHTOOLS 2.7                       2012-03-08               <B>MAKEELLIPSECOORD(1)</B>
+SHTOOLS 2.8                       2012-10-30               <B>MAKEELLIPSECOORD(1)</B>
 </PRE>
 
 	<p class="dir">

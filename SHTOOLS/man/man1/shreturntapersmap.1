@@ -132,7 +132,7 @@
 .\" ========================================================================
 .\"
 .IX Title "SHRETURNTAPERSMAP 1"
-.TH SHRETURNTAPERSMAP 1 "2012-03-08" "SHTOOLS 2.7" "SHTOOLS 2.7"
+.TH SHRETURNTAPERSMAP 1 "2012-10-18" "SHTOOLS 2.8" "SHTOOLS 2.8"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -164,7 +164,7 @@ Calculate the eigenfunctions and eigenvalues of the space-concentration problem 
 .IX Header "DESCRIPTION"
 \&\fISHReturnTapersMap\fR will calculate the eigenfunctions (i.e., localization windows) of the space-concentration problem for an arbitrary concentration region specified in \s-1DH_MASK\s0 (see Simons et al. (2006) for further details). The input mask \s-1DH_MASK\s0 must be sampled according to the Driscoll and Healy (1994) sampling theorem with N samples in latitude, and possess a value of 1 inside the concentration region, and 0 elsewhere. \s-1DH_MASK\s0 can either possess N samples in longitude (SAMPLING=1) or 2*N samples in longitude (SAMPLING=2). Given the approximate way in which the elements of the space-concentration kernel are calculated (see \fIComputeDMap\fR for details), SAMPLING=2 should be preferred. Furthermore, the effective spherical harmonic bandwidth (L=N/2\-1) of the grid \s-1DH_MASK\s0 determines the accuracy of the results, and experience shows that this should be about 4 times larger than \s-1LMAX\s0.
 .PP
-The spherical harmonic coefficients of each window are given in the columns of \s-1TAPERS\s0, and the corresponding concentration factors are given in \s-1EIGENVAULES\s0. The spherical harmonic coefficients are ordered according to the scheme described in \fIYilmIndex\fR, and the columns of \s-1TAPERS\s0 are ordered from best to worst concentrated. The localization windows are normalized such that they have unit power. If the optional parameter \s-1NTAPERS\s0 is specified, then only the \s-1NTAPERS\s0 largest eigenvalues and corresponding eigenfunctions will be calculated and returned.
+The spherical harmonic coefficients of each window are given in the columns of \s-1TAPERS\s0, and the corresponding concentration factors are given in \s-1EIGENVAULES\s0. The spherical harmonic coefficients are ordered according to the scheme described in \fIYilmIndex\fR, which can be converted to matrix form using \fISHVectorToCilm\fR, and the columns of \s-1TAPERS\s0 are ordered from best to worst concentrated. The localization windows are normalized such that they have unit power. If the optional parameter \s-1NTAPERS\s0 is specified, then only the \s-1NTAPERS\s0 largest eigenvalues and corresponding eigenfunctions will be calculated and returned.
 .SH "ARGUMENTS"
 .IX Header "ARGUMENTS"
 .IP "\s-1TAPERS\s0" 14
@@ -204,7 +204,7 @@ The spherical harmonic bandwidth of the localization windows.
 The number of best concentrated eigenvalues and corresponding eigenfunctions to return in \s-1TAPERS\s0 and \s-1EIGENVALUES\s0.
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
-\&\fIcomputedmap\fR\|(1), \fIyilmindex\fR\|(1)
+\&\fIcomputedmap\fR\|(1), \fIyilmindex\fR\|(1), \fIshvectortocilm\fR\|(1)
 .PP
 <http://shtools.ipgp.fr/>
 .SH "REFERENCES"

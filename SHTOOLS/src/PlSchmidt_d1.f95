@@ -88,7 +88,7 @@ subroutine PlSchmidt_d1(p, dp, lmax, z)
       		dp(2) = 1.0d0
       	
       		do l = 2, lmax
-         		pl = ( dble(2*l-1)  * z * pm1 - dble(l-1) * pm2 )  / dble(l)
+         		pl = ( (2*l-1) * z * pm1 - (l-1) * pm2 ) / dble(l)
          		p(l+1) = pl
          		dp(l+1) =  dble(l) * (pm1 - z * pl) / sinsq
          		pm2  = pm1

@@ -54,8 +54,11 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
 !
 !	November 21, 2011	Fixed problem where saved variables used in Plm recursion were not recalculated
 !				if NORM changed from one call to the next (with the same value of N).
+!	August 8, 2012.		Changed variable type of symsign from real to integer*1 to increase speed. 
+!				Expanded indexed quantities with "k" to L and M in order to assure that 
+!				memory is adajent in do loops.	
 !
-!	Copyright (c) 2008-2011, Mark A. Wieczorek
+!	Copyright (c) 2008-2012, Mark A. Wieczorek
 !	All rights reserved.
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -69,17 +72,27 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
 	complex*16, intent(out) ::	cilm(:,:,:)
 	integer, intent(in) ::	lmax
 	integer, intent(in), optional :: norm, csphase, lmax_calc
-	integer :: 		nlong, nlat, i, l, m, k, kstart, l1, m1, phase, i_s, astat(4), &
+	integer :: 		nlong, nlat, i, l, m, k, l1, m1, i_s, astat(4), &
 				lnorm, lmax_comp
 	real*8 :: 		pi, prod, scalef, rescalem, u, p, pmm, &
 				pm1, pm2, z
-	complex*16 ::		cc(2*lmax+1), gridl(2*lmax+1),  fcoef1(2*lmax+1), fcoef2(2*lmax+1)
+	complex*16 ::		cc(2*lmax+1), gridl(2*lmax+1),  fcoef1(2*lmax+1), fcoef2(2*lmax+1), ffc1(-1:1), ffc2(-1:1)
 	integer*8 :: 		plan
-	real*8, save, allocatable ::	f1(:), f2(:), sqr(:), symsign(:)
+	real*8, save, allocatable ::	ff1(:,:), ff2(:,:), sqr(:)
+	integer*1, save, allocatable ::	fsymsign(:,:)
 	integer, save ::	lmax_old=0, norm_old = 0
+	integer*1 ::		phase
 
 	if (present(lmax_calc)) then
-		lmax_comp = min(lmax, lmax_calc)
+		if (lmax_calc > lmax) then
+			print*, "Error --- SHExpandGLQ"
+			print*, "LMAX_CALC must be less than or equal to LMAX."
+			print*, "LMAX = ", lmax
+			print*, "LMAX_CALC = ", lmax_calc
+			stop
+		else
+			lmax_comp = min(lmax, lmax_calc)
+		endif
 	else
 		lmax_comp = lmax
 	endif
@@ -182,18 +195,18 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
 	if ( (lmax_comp /= lmax_old .or. lnorm /= norm_old) .and. .not. present(plx) ) then
 
 		if (allocated(sqr)) deallocate(sqr)
-		if (allocated(f1)) deallocate(f1)
-		if (allocated(f2)) deallocate(f2)
-		if (allocated(symsign)) deallocate(symsign)
+		if (allocated(ff1)) deallocate(ff1)
+		if (allocated(ff2)) deallocate(ff2)
+		if (allocated(fsymsign)) deallocate(fsymsign)
 		
 		allocate(sqr(2*lmax_comp+1), stat=astat(1))
-		allocate(f1((lmax_comp+1)*(lmax_comp+2)/2), stat=astat(2))
-		allocate(f2((lmax_comp+1)*(lmax_comp+2)/2), stat=astat(3))
-		allocate(symsign((lmax_comp+1)*(lmax_comp+2)/2), stat=astat(4))
+		allocate(ff1(lmax_comp+1,lmax_comp+1), stat=astat(2))
+		allocate(ff2(lmax_comp+1,lmax_comp+1), stat=astat(3))
+		allocate(fsymsign(lmax_comp+1,lmax_comp+1), stat=astat(4))
 		
-		if (astat(1) /= 0 .or. astat(2) /= 0 .or. astat(3) /= 0 .or. astat(4) /= 0) then
+		if (sum(astat(1:4)) /= 0) then
 			print*, "Error --- SHExpandGLQ"
-			print*, "Problem allocating arrays SQR, F1, F2, or SYMSIGN", astat(1), astat(2), astat(3), astat(4)
+			print*, "Problem allocating arrays SQR, FF1, FF2, or FSYMSIGN", astat(1), astat(2), astat(3), astat(4)
 			stop
 		endif
 		
@@ -203,14 +216,12 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
 		!
 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		
-		k = 0
 		do l = 0, lmax_comp, 1
 			do m = 0, l, 1
-				k = k + 1
 				if (mod(l-m,2) == 0) then
-					symsign(k) = 1.0d0
+					fsymsign(l+1,m+1) = 1
 				else
-					symsign(k) = -1.0d0
+					fsymsign(l+1,m+1) = -1
 				endif
 			enddo
 		enddo
@@ -235,71 +246,54 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
 		!
 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
-		k = 1
-		
 		select case(lnorm)
 		
 			case(1,4)
-			
+	
 				if (lmax_comp /= 0) then
-					k = k + 1
-					f1(k) = sqr(3)
-					f2(k) = 0.0d0
-					k = k + 1
+					ff1(2,1) = sqr(3)
+					ff2(2,1) = 0.0d0
 				endif
 				
 				do l=2, lmax_comp, 1
-					k = k + 1
-					f1(k) = sqr(2*l-1) * sqr(2*l+1) / dble(l)
-					f2(k) = dble(l-1) * sqr(2*l+1) / sqr(2*l-3) / dble(l)
+					ff1(l+1,1) = sqr(2*l-1) * sqr(2*l+1) / dble(l)
+					ff2(l+1,1) = dble(l-1) * sqr(2*l+1) / sqr(2*l-3) / dble(l)
 					do m=1, l-2, 1
-						k = k+1
-						f1(k) = sqr(2*l+1) * sqr(2*l-1) / sqr(l+m) / sqr(l-m)
-                				f2(k) = sqr(2*l+1) * sqr(l-m-1) * sqr(l+m-1) &
+						ff1(l+1,m+1) = sqr(2*l+1) * sqr(2*l-1) / sqr(l+m) / sqr(l-m)
+                				ff2(l+1,m+1) = sqr(2*l+1) * sqr(l-m-1) * sqr(l+m-1) &
                   				 	/ sqr(2*l-3) / sqr(l+m) / sqr(l-m) 
 					enddo
-					k = k+1
-					f1(k) = sqr(2*l+1) * sqr(2*l-1) / sqr(l+m) / sqr(l-m)
-                			f2(k) = 0.0d0
-					k = k + 1
+					ff1(l+1,l) = sqr(2*l+1) * sqr(2*l-1) / sqr(l+m) / sqr(l-m)
+                			ff2(l+1,l) = 0.0d0
 				enddo
 			
 			case(2)
 			
 				if (lmax_comp /= 0) then
-					k = k + 1
-					f1(k) = 1.0d0
-					f2(k) = 0.0d0
-					k = k + 1
+					ff1(2,1) = 1.0d0
+					ff2(2,1) = 0.0d0
 				endif
 				
 				do l=2, lmax_comp, 1
-					k = k + 1
-					f1(k) = dble(2*l-1) /dble(l)
-					f2(k) = dble(l-1) /dble(l)
+					ff1(l+1,1) = dble(2*l-1) /dble(l)
+					ff2(l+1,1) = dble(l-1) /dble(l)
 					do m=1, l-2, 1
-						k = k+1
-						f1(k) = dble(2*l-1) / sqr(l+m) / sqr(l-m)
-                  				f2(k) = sqr(l-m-1) * sqr(l+m-1) / sqr(l+m) / sqr(l-m)
+						ff1(l+1,m+1) = dble(2*l-1) / sqr(l+m) / sqr(l-m)
+                  				ff2(l+1,m+1) = sqr(l-m-1) * sqr(l+m-1) / sqr(l+m) / sqr(l-m)
 					enddo
-					k = k+1
-					f1(k) = dble(2*l-1) / sqr(l+m) / sqr(l-m)
-                  			f2(k) = 0.0d0
-					k = k + 1
+					ff1(l+1,l)= dble(2*l-1) / sqr(l+m) / sqr(l-m)
+                  			ff2(l+1,l) = 0.0d0
 				enddo
 			
 			case(3)
 		
 				do l=1, lmax_comp, 1
-					k = k + 1
-					f1(k) = dble(2*l-1) /dble(l)
-					f2(k) = dble(l-1) /dble(l)
+					ff1(l+1,1) = dble(2*l-1) /dble(l)
+					ff2(l+1,1) = dble(l-1) /dble(l)
 					do m=1, l-1, 1
-						k = k+1
-						f1(k) = dble(2*l-1) / dble(l-m)
-                  				f2(k) = dble(l+m-1) / dble(l-m)
+						ff1(l+1,m+1) = dble(2*l-1) / dble(l-m)
+                  				ff2(l+1,m+1) = dble(l+m-1) / dble(l-m)
 					enddo
-					k = k + 1
 				enddo
 
 		end select
@@ -335,7 +329,7 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
 		
 			gridl(1:nlong) = gridglq(i,1:nlong)
 			call dfftw_execute_(plan)				! take fourier transform
-			fcoef1(1:nlong) = 2.0d0 * cc(1:nlong) * w(i) * pi / dble(nlong)
+			fcoef1(1:nlong) = 2 * cc(1:nlong) * w(i) * pi / dble(nlong)
 			
 			k = 0
 			do l = 0, lmax_comp, 1
@@ -347,7 +341,7 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
 					m1 = m+1
 					k = k + 1
 					cilm(1,l1,m1) = cilm(1,l1,m1) + plx(i,k) * fcoef1(m1)
-					cilm(2,l1,m1) = cilm(2,l1,m1) + dble((-1)**mod(m,2)) * plx(i,k) * fcoef1(nlong-(m-1))
+					cilm(2,l1,m1) = cilm(2,l1,m1) + ((-1)**mod(m,2)) * plx(i,k) * fcoef1(nlong-(m-1))
 				enddo
 			enddo
 		enddo
@@ -360,42 +354,36 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
 			
 				gridl(1:nlong) = gridglq(i,1:nlong)
 				call dfftw_execute_(plan)				! take fourier transform
-				fcoef1(1:nlong) = 2.0d0 * w(i) * pi * cc(1:nlong) / dble(nlong)
+				fcoef1(1:nlong) = 2 * w(i) * pi * cc(1:nlong) / dble(nlong)
 				
 				u = 1.0d0
 				
 				select case(lnorm)
 					case(1,2,3);	pm2 = 1.0d0
-					case(4);	pm2 = 1.0d0 / sqrt(4.0d0*pi)
+					case(4);	pm2 = 1.0d0 / sqrt(4*pi)
 				end select
 				
 				cilm(1,1,1) = cilm(1,1,1) + pm2 * fcoef1(1)
 				
 				if (lmax_comp == 0) cycle
 				
-				k = 2
-				
 				do l=2, lmax_comp, 2
 					l1 = l+1
-					k = k+l
-					p = - f2(k) * pm2
+					p = - ff2(l1,1) * pm2
 					pm2 = p
 					cilm(1,l1,1) = cilm(1,l1,1) + p * fcoef1(1)
-					k = k + l + 1
 				enddo
 				
 				select case(lnorm)
 					case(1,2,3);	pmm = scalef
-					case(4);	pmm = scalef / sqrt(4.0d0*pi)
+					case(4);	pmm = scalef / sqrt(4*pi)
 				end select
 				
 				rescalem = 1.0d0/scalef
-				kstart = 1
 	
 				do m = 1, lmax_comp-1, 1
 				
 					m1 = m + 1
-					kstart = kstart+m+1
 					
 					select case(lnorm)
 						case(1,4)
@@ -405,26 +393,22 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
 							pmm = phase * pmm * sqr(2*m+1) / sqr(2*m)
 							pm2 = pmm / sqr(2*m+1)
 						case(3)
-							pmm = phase * pmm * dble(2*m-1)
+							pmm = phase * pmm * (2*m-1)
 							pm2 = pmm
 					end select
 
 					fcoef1(m1) = fcoef1(m1) * rescalem
-					fcoef1(nlong-(m-1)) = fcoef1(nlong-(m-1)) * rescalem * dble((-1)**mod(m,2))
+					fcoef1(nlong-(m-1)) = fcoef1(nlong-(m-1)) * rescalem * ((-1)**mod(m,2))
 					
 					cilm(1,m1,m1) = cilm(1,m1,m1) + pm2 * fcoef1(m1)
 					cilm(2,m1,m1) = cilm(2,m1,m1) + pm2 * fcoef1(nlong-(m-1))
 					
-					k = kstart+m+1
-					
 					do l = m+2, lmax_comp, 2
 						l1 = l+1
-						k = k+l
-                  				p = - f2(k) * pm2
+                  				p = - ff2(l1,m1) * pm2
                   				pm2 = p
 						cilm(1,l1,m1) = cilm(1,l1,m1) + p * fcoef1(m1)
 						cilm(2,l1,m1) = cilm(2,l1,m1) + p * fcoef1(nlong-(m-1)) 
-						k = k + l + 1
 					enddo
 
 				enddo
@@ -432,13 +416,13 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
             			select case(lnorm)
             				case(1,4);	pmm = phase * pmm * sqr(2*lmax_comp+1) / sqr(2*lmax_comp) * rescalem
             				case(2);	pmm = phase * pmm / sqr(2*lmax_comp) * rescalem
-            				case(3);	pmm = phase * pmm * dble(2*lmax_comp-1) * rescalem
+            				case(3);	pmm = phase * pmm * (2*lmax_comp-1) * rescalem
         			end select
         			
         			cilm(1,lmax_comp+1,lmax_comp+1) = cilm(1,lmax_comp+1,lmax_comp+1) &
         					+ pmm * fcoef1(lmax_comp+1)
         			cilm(2,lmax_comp+1,lmax_comp+1) = cilm(2,lmax_comp+1,lmax_comp+1) &
-        					+ dble((-1)**mod(lmax_comp,2)) * pmm * fcoef1(nlong-(lmax_comp-1)) 
+        					+ ((-1)**mod(lmax_comp,2)) * pmm * fcoef1(nlong-(lmax_comp-1)) 
 
 				
 			else			
@@ -448,52 +432,49 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
 				
 				gridl(1:nlong) = gridglq(i,1:nlong)
 				call dfftw_execute_(plan)			
-				fcoef1(1:nlong) = 2.0d0 * w(i) * pi * cc(1:nlong) / dble(nlong)
+				fcoef1(1:nlong) = 2 * w(i) * pi * cc(1:nlong) / dble(nlong)
 				
 				i_s = nlat + 1 - i	! point symmetric about the equator
 				
 				gridl(1:nlong) = gridglq(i_s,1:nlong)
 				call dfftw_execute_(plan)			
-				fcoef2(1:nlong) = 2.0d0 * w(i_s) * pi * cc(1:nlong) / dble(nlong)
+				fcoef2(1:nlong) = 2 * w(i_s) * pi * cc(1:nlong) / dble(nlong)
 
-				
 				select case(lnorm)
 					case(1,2,3);	pm2 = 1.0d0
-					case(4);	pm2 = 1.0d0 / sqrt(4.0d0*pi)
+					case(4);	pm2 = 1.0d0 / sqrt(4*pi)
 				end select
 
 				cilm(1,1,1) = cilm(1,1,1) + pm2 * (fcoef1(1) + fcoef2(1) )
-				! symsign(1) = 1
+				! fsymsign = 1
 				
 				if (lmax_comp == 0) cycle
 				
-				k = 2
-				pm1 =  f1(k) * z * pm2
+				pm1 =  ff1(2,1) * z * pm2
 				cilm(1,2,1) = cilm(1,2,1) + pm1 * ( fcoef1(1) - fcoef2(1) )
-				! symsign(2) = -1
+				! fsymsign = -1
 				
+				ffc1(-1) = fcoef1(1) - fcoef2(1)
+				ffc1(1) = fcoef1(1) + fcoef2(1)
 				do l=2, lmax_comp, 1
 					l1 = l+1
-					k = k+l
-					p = f1(k) * z * pm1 - f2(k) * pm2
+					p = ff1(l1,1) * z * pm1 - ff2(l1,1) * pm2
 					pm2 = pm1
 					pm1 = p
-					cilm(1,l1,1) = cilm(1,l1,1) + p * ( fcoef1(1) + fcoef2(1) * symsign(k) )
+					cilm(1,l1,1) = cilm(1,l1,1) + p * ffc1(fsymsign(l1,1))
 				enddo
 				
 				select case(lnorm)
 					case(1,2,3);	pmm = scalef
-					case(4);	pmm = scalef / sqrt(4.0d0*pi)
+					case(4);	pmm = scalef / sqrt(4*pi)
 				end select
 				
 				rescalem = 1.0d0/scalef
-				kstart = 1
 	
 				do m = 1, lmax_comp-1, 1
 				
 					m1 = m+1
 					rescalem = rescalem * u
-					kstart = kstart+m+1
 					
 					select case(lnorm)
 						case(1,4)
@@ -503,38 +484,38 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
 							pmm = phase * pmm * sqr(2*m+1) / sqr(2*m)
 							pm2 = pmm / sqr(2*m+1)
 						case(3)
-							pmm = phase * pmm * dble(2*m-1)
+							pmm = phase * pmm * (2*m-1)
 							pm2 = pmm
 					end select
 					
 					fcoef1(m1) = fcoef1(m1) * rescalem
-					fcoef1(nlong-(m-1)) = fcoef1(nlong-(m-1)) * rescalem * dble((-1)**mod(m,2))
+					fcoef1(nlong-(m-1)) = fcoef1(nlong-(m-1)) * rescalem * ((-1)**mod(m,2))
 					fcoef2(m1) = fcoef2(m1) * rescalem
-					fcoef2(nlong-(m-1)) = fcoef2(nlong-(m-1)) * rescalem * dble((-1)**mod(m,2))
+					fcoef2(nlong-(m-1)) = fcoef2(nlong-(m-1)) * rescalem * ((-1)**mod(m,2))
 					
 					cilm(1,m1,m1) = cilm(1,m1,m1) + pm2 * ( fcoef1(m1) + fcoef2(m1) )
 					cilm(2,m1,m1) = cilm(2,m1,m1) + pm2 * &
 							( fcoef1(nlong-(m-1)) + fcoef2(nlong-(m-1)) )
-					! symsign(kstart) = 1
+					! fsymsign = 1
 					
-					k = kstart+m+1
-	   				pm1 = z * f1(k) * pm2
+	   				pm1 = z * ff1(m1+1,m1) * pm2
 	   				
 	   				cilm(1,m1+1,m1) = cilm(1,m1+1,m1) + pm1 * ( fcoef1(m1) - fcoef2(m1) )
                				cilm(2,m1+1,m1) = cilm(2,m1+1,m1) + pm1 * &
                						( fcoef1(nlong-(m-1)) - fcoef2(nlong-(m-1)) )
-               				! symsign(k) = -1
+               				! fsymsign = -1
 					
+					ffc1(-1) = fcoef1(m1) - fcoef2(m1)
+					ffc1(1) = fcoef1(m1) + fcoef2(m1)
+					ffc2(-1) = fcoef1(nlong-(m-1)) - fcoef2(nlong-(m-1)) 
+					ffc2(1) = fcoef1(nlong-(m-1)) + fcoef2(nlong-(m-1)) 
 					do l = m+2, lmax_comp, 1
 						l1 = l+1
-						k = k+l
-                  				p = z * f1(k) * pm1-f2(k) * pm2
+                  				p = z * ff1(l1,m1) * pm1-ff2(l1,m1) * pm2
                   				pm2 = pm1
                   				pm1 = p
-						cilm(1,l1,m1) = cilm(1,l1,m1) + p * &
-								( fcoef1(m1) + fcoef2(m1) * symsign(k) )
-						cilm(2,l1,m1) = cilm(2,l1,m1) + p * &
-								( fcoef1(nlong-(m-1)) + fcoef2(nlong-(m-1)) * symsign(k) )
+						cilm(1,l1,m1) = cilm(1,l1,m1) + p * ffc1(fsymsign(l1,m1))
+						cilm(2,l1,m1) = cilm(2,l1,m1) + p * ffc2(fsymsign(l1,m1))
 					enddo
                				
 				enddo
@@ -544,14 +525,14 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
             			select case(lnorm)
             				case(1,4);	pmm = phase * pmm * sqr(2*lmax_comp+1) / sqr(2*lmax_comp) * rescalem
             				case(2);	pmm = phase * pmm / sqr(2*lmax_comp) * rescalem
-            				case(3);	pmm = phase * pmm * dble(2*lmax_comp-1) * rescalem
+            				case(3);	pmm = phase * pmm * (2*lmax_comp-1) * rescalem
         			end select
           			
         			cilm(1,lmax_comp+1,lmax_comp+1) = cilm(1,lmax_comp+1,lmax_comp+1) + pmm * &
         						( fcoef1(lmax_comp+1) + fcoef2(lmax_comp+1) )
-        			cilm(2,lmax_comp+1,lmax_comp+1) = cilm(2,lmax_comp+1,lmax_comp+1) + dble((-1)**mod(lmax_comp,2)) * pmm * &
+        			cilm(2,lmax_comp+1,lmax_comp+1) = cilm(2,lmax_comp+1,lmax_comp+1) + ((-1)**mod(lmax_comp,2)) * pmm * &
         						( fcoef1(nlong-(lmax_comp-1)) + fcoef2(nlong-(lmax_comp-1)) )	
-        						! symsign = 1
+        						! fsymsign = 1
 			
 			endif
 		enddo
@@ -571,26 +552,26 @@ subroutine SHExpandGLQC(cilm, lmax, gridglq, w, plx, zero, norm, csphase, lmax_c
 		case(1)
 		
 			do l=0, lmax_comp, 1
-				cilm(1:2,l+1, 1:l+1) = cilm(1:2,l+1, 1:l+1) / (4.0d0*pi)
+				cilm(1:2,l+1, 1:l+1) = cilm(1:2,l+1, 1:l+1) / (4*pi)
 			enddo	
 		
 		case(2)
 	
 			do l=0, lmax_comp, 1
-				cilm(1:2,l+1, 1:l+1) = dble(2*l+1) * cilm(1:2,l+1, 1:l+1) / (4.0d0*pi)
+				cilm(1:2,l+1, 1:l+1) = (2*l+1) * cilm(1:2,l+1, 1:l+1) / (4*pi)
 			enddo
 		
 		case(3)
 		
 			do l=0, lmax_comp, 1
-				prod = 4.0d0*pi/dble(2*l+1)
+				prod = 4 * pi / dble(2*l+1)
 				cilm(1,l+1,1) = cilm(1,l+1,1) / prod
 				do m=1, l-1, 1
-					prod = prod * dble(l+m) * dble(l-m+1)
+					prod = prod * (l+m) * (l-m+1)
 					cilm(1:2,l+1,m+1) = cilm(1:2,l+1,m+1) / prod
 				enddo
 				!do m=l case
-				if (l /= 0) cilm(1:2,l+1,l+1) = cilm(1:2,l+1, l+1)/(prod*dble(2*l))
+				if (l /= 0) cilm(1:2,l+1,l+1) = cilm(1:2,l+1, l+1)/(prod*2*l)
 			enddo
 			
 	end select

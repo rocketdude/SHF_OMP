@@ -35,6 +35,19 @@
 
 	<h1>Version History</h1>
 	
+	<h2>Version 2.8 (November 20, 2012)</h2>
+		<ul>
+			<li>Following the suggestions of Leonid Petrov, the routines <tt>ShExpandDH</tt>, <tt>ShExpandDHC</tt>, <tt>ShExpandGLQ</tt>, <tt>ShExpandGLQC</tt>, <tt>MakeGridDH</tt>, <tt>MakeGridDHC</tt>, <tt>MakeGridGLQ</tt>, and <tt>MakeGridGLQC</tt> were optimized, giving rise to performance gains of about two.</li>
+			<li>Following the suggestions of Leonid Petrov, the routine <tt>MakeGridPoint</tt> was optimized, giving rise to large performance gains.</li>
+			<li>Replaced the routine <tt>MakeGravGrid2D</tt> with <tt>MakeGravGridDH</tt>. This routine is orders of magnitude faster than its predecessor, and can calculate all three components of the gravity field and gravity disturbance of the 2190-degree EGM2008 field in under 300 seconds.</li>
+			<li> Added the routine <tt>MakeGravGradGridDH</tt> which calculates the components of the gravity "gradient" tensor on a flattened ellipsoid. This routine can calculate the degree-2190 EGM2008 gravity tensor in under 720 seconds.</li>
+			<li>Replaced the routine <tt>MakeMagGrid2D</tt> with <tt>MakeMagGridDH</tt>, which is orders of magnitude faster than its predecessor.</li>
+			<li>Added the routine <tt>NormalGravity</tt> to calculate the normal gravity on an ellipsoid.</li>
+			<li>Modified <tt>SHLocalizedAdmitCorr</tt> to increase performance.</li>
+			<li>Modified <tt>MakeCircleCoord</tt> such that the output coordinates are organised in a clockwise manner with the first index corresponding to due north.</li>
+			<li>Introduced a different scaling procedure in <tt>CilmPlus</tt> and <tt>CilmRho</tt> that should be more accurate at high powers.</li>
+		</ul>
+
 	<h2>Version 2.7 (July 4, 2012)</h2>
 		<ul>
 			<li>Improved memory management of <tt>CilmPlus</tt> and <tt>Hilm</tt>, avoiding potential runtime crashes at high degrees.</li>

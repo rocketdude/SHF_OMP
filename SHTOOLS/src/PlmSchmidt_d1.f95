@@ -54,6 +54,9 @@ subroutine PlmSchmidt_d1(p, dp, lmax, z, csphase, cnorm)
 !	Written by Mark Wieczorek September 25, 2005.
 !
 !	April 19, 2008: Added CNORM optional parameter compute complex normalized functions.
+!	August 14, 2012: Modified to save auxilliary variables whenever lmax <= lmax_old (instead of
+!			reinitializing whenever lmax /= lmax_old). Converted PHASE from REAL*4
+!			to INTEGER*1.
 !
 !	Copyright (c) 2008, Mark A. Wieczorek
 !	All rights reserved.
@@ -67,10 +70,11 @@ subroutine PlmSchmidt_d1(p, dp, lmax, z, csphase, cnorm)
 	real*8, intent(out) ::	p(:), dp(:)
        	real*8, intent(in) ::	z
        	integer, intent(in), optional :: csphase, cnorm
-       	real*8 ::	pm2, pm1, pmm, plm, rescalem, phase, u, scalef
+       	real*8 ::	pm2, pm1, pmm, plm, rescalem, u, scalef
       	real*8, save, allocatable ::	f1(:), f2(:), sqr(:)
       	integer ::	k, kstart, m, l, sdim, astat(3)
       	integer, save ::	lmax_old = 0
+      	integer*1 ::	phase
 
 	 	
 	if (lmax == -1) then
@@ -112,9 +116,9 @@ subroutine PlmSchmidt_d1(p, dp, lmax, z, csphase, cnorm)
      	
      	if (present(csphase)) then
      		if (csphase == -1) then
-     			phase = -1.0d0
+     			phase = -1
      		elseif (csphase == 1) then
-     			phase = 1.0d0
+     			phase = 1
      		else
      			print*, "Error --- PlmSchmidt_d1"
      			print*, "CSPHASE must be 1 (exclude) or -1 (include)."
@@ -122,13 +126,13 @@ subroutine PlmSchmidt_d1(p, dp, lmax, z, csphase, cnorm)
      			stop
      		endif
      	else
-     		phase = dble(CSPHASE_DEFAULT)
+     		phase = CSPHASE_DEFAULT
      	endif
 	
 	scalef = 1.0d-280
 	
 	
-	if (lmax /= lmax_old) then
+	if (lmax > lmax_old) then
 		
 		if (allocated(sqr)) deallocate(sqr)
 		if (allocated(f1)) deallocate(f1)
@@ -206,7 +210,7 @@ subroutine PlmSchmidt_d1(p, dp, lmax, z, csphase, cnorm)
          	k = k+l
          	plm = f1(k)*z*pm1-f2(k)*pm2
          	p(k) = plm
-         	dp(k) = dble(l) * (pm1 - z * plm) / u**2
+         	dp(k) = l * (pm1 - z * plm) / u**2
          	pm2  = pm1
          	pm1  = plm
       	enddo
@@ -239,21 +243,21 @@ subroutine PlmSchmidt_d1(p, dp, lmax, z, csphase, cnorm)
          
          	pmm = phase * pmm * sqr(2*m+1) / sqr(2*m)
         	p(kstart) = pmm*rescalem / sqr(2*m+1)
-        	dp(kstart) = -dble(m) * z * p(kstart) / u**2
+        	dp(kstart) = -m * z * p(kstart) / u**2
         	pm2 = pmm/sqr(2*m+1)
 
 		! Calculate P(m+1,m)
 		k = kstart+m+1
 	   	pm1 = z * sqr(2*m+1) * pm2 
 	    	p(k) = pm1*rescalem
-	    	dp(k) =  (p(k-m-1) * sqr(2*m+1) - z * dble(m+1) * p(k)) / u**2
+	    	dp(k) =  (p(k-m-1) * sqr(2*m+1) - z * (m+1) * p(k)) / u**2
 
 		! Calculate P(l,m)
                	do l = m+2, lmax, 1
                		k = k+l
                   	plm  = z*f1(k)*pm1-f2(k)*pm2
                   	p(k) = plm*rescalem
-                  	dp(k) = ( sqr(l+m) * sqr(l-m) * p(k-l) - dble(l) * z * p(k) ) / u**2
+                  	dp(k) = ( sqr(l+m) * sqr(l-m) * p(k-l) - l * z * p(k) ) / u**2
                   	pm2  = pm1
                   	pm1  = plm
                	enddo
@@ -267,7 +271,7 @@ subroutine PlmSchmidt_d1(p, dp, lmax, z, csphase, cnorm)
         kstart = kstart+m+1
         pmm = phase * pmm  / sqr(2*lmax)
         p(kstart) = pmm*rescalem
-        dp(kstart) = -dble(lmax) * z * p(kstart) / u**2
+        dp(kstart) = -lmax * z * p(kstart) / u**2
       		
 end subroutine PlmSchmidt_d1
 

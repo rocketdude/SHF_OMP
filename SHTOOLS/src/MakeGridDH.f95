@@ -68,8 +68,11 @@ subroutine MakeGridDH(griddh, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
 !				to a maximum degree smaller than LMAX. 
 !	November 21, 2011	Fixed problem where saved variables used in Plm recursion were not recalculated
 !				if NORM changed from one call to the next (with the same value of N).
+!	August 8, 2012.		Changed variable type of symsign from real to integer*1 to increase speed. 
+!				Expanded indexed quantities with "k" to L and M in order to assure that 
+!				memory is adajent in do loops.
 !
-!	Copyright (c) 2006-2011, Mark A. Wieczorek
+!	Copyright (c) 2006-2012, Mark A. Wieczorek
 !	All rights reserved.
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -83,14 +86,15 @@ subroutine MakeGridDH(griddh, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
 	integer, intent(in) :: 	lmax
 	integer, intent(out) ::	n
 	integer, intent(in), optional :: norm, sampling, csphase, lmax_calc
-	integer :: 		l, m, i, l1, m1, lmax_comp, i_eq, i_s, phase, astat(4), lnorm, &
-				k, kstart, nlong
+	integer :: 		l, m, i, l1, m1, lmax_comp, i_eq, i_s, astat(4), lnorm, nlong
 	real*8 :: 		grid(4*lmax+4), pi, theta, coef0, scalef, rescalem, u, p, pmm, &
 				pm1, pm2, z, coef0s, tempr
 	complex*16 ::		coef(2*lmax+3), coefs(2*lmax+3), tempc
 	integer*8 ::		plan
-	real*8, save, allocatable ::	f1(:), f2(:), sqr(:), symsign(:)
+	real*8, save, allocatable ::	ff1(:,:), ff2(:,:), sqr(:)
+	integer*1, save, allocatable ::	fsymsign(:,:)
 	integer, save ::	lmax_old=0, norm_old = 0
+	integer*1 ::		phase
 	
 	n = 2*lmax+2
 	
@@ -169,7 +173,15 @@ subroutine MakeGridDH(griddh, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
 	scalef = 1.0d-280
 	
 	if (present(lmax_calc)) then
-		lmax_comp = min(lmax, size(cilm(1,1,:))-1, size(cilm(1,:,1))-1, lmax_calc)
+		if (lmax_calc > lmax) then
+			print*, "Error --- MakeGridDH"
+			print*, "LMAX_CALC must be less than or equal to LMAX."
+			print*, "LMAX = ", lmax
+			print*, "LMAX_CALC = ", lmax_calc
+			stop
+		else
+			lmax_comp = min(lmax, size(cilm(1,1,:))-1, size(cilm(1,:,1))-1, lmax_calc)
+		endif
 	else
 		lmax_comp = min(lmax, size(cilm(1,1,:))-1, size(cilm(1,:,1))-1)
 	endif
@@ -193,18 +205,18 @@ subroutine MakeGridDH(griddh, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
 	if (lmax_comp /= lmax_old .or. lnorm /= norm_old) then
 		
 		if (allocated(sqr)) deallocate(sqr)
-		if (allocated(f1)) deallocate(f1)
-		if (allocated(f2)) deallocate(f2)
-		if (allocated(symsign)) deallocate(symsign)
+		if (allocated(ff1)) deallocate(ff1)
+		if (allocated(ff2)) deallocate(ff2)
+		if (allocated(fsymsign)) deallocate(fsymsign)
 		
 		allocate(sqr(2*lmax_comp+1), stat=astat(1))
-		allocate(f1((lmax_comp+1)*(lmax_comp+2)/2), stat=astat(2))
-		allocate(f2((lmax_comp+1)*(lmax_comp+2)/2), stat=astat(3))
-		allocate(symsign((lmax_comp+1)*(lmax_comp+2)/2), stat=astat(4))
+		allocate(ff1(lmax_comp+1,lmax_comp+1), stat=astat(2))
+		allocate(ff2(lmax_comp+1,lmax_comp+1), stat=astat(3))
+		allocate(fsymsign(lmax_comp+1,lmax_comp+1), stat=astat(4))
 		
-		if (astat(1) /= 0 .or. astat(2) /= 0 .or. astat(3) /= 0 .or. astat(4) /= 0) then
+		if (sum(astat(1:4)) /= 0) then
 			print*, "MakeGridDH --- Error"
-			print*, "Problem allocating arrays SQR, F1, F2, or SYMSIGN", astat(1), astat(2), astat(3), astat(4)
+			print*, "Problem allocating arrays SQR, FF1, FF2, or FSYMSIGN", astat(1), astat(2), astat(3), astat(4)
 			stop
 		endif
 		
@@ -214,14 +226,12 @@ subroutine MakeGridDH(griddh, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
 		!
 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		
-		k = 0
 		do l = 0, lmax_comp, 1
 			do m = 0, l, 1
-				k = k + 1
 				if (mod(l-m,2) == 0) then
-					symsign(k) = 1.0d0
+					fsymsign(l+1,m+1) = 1
 				else
-					symsign(k) = -1.0d0
+					fsymsign(l+1,m+1) = -1
 				endif
 			enddo
 		enddo
@@ -246,71 +256,54 @@ subroutine MakeGridDH(griddh, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
 		!
 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
-		k = 1
-		
 		select case(lnorm)
 		
 			case(1,4)
 	
 				if (lmax_comp /= 0) then
-					k = k + 1
-					f1(k) = sqr(3)
-					f2(k) = 0.0d0
-					k = k + 1
+					ff1(2,1) = sqr(3)
+					ff2(2,1) = 0.0d0
 				endif
 				
 				do l=2, lmax_comp, 1
-					k = k + 1
-					f1(k) = sqr(2*l-1) * sqr(2*l+1) / dble(l)
-					f2(k) = dble(l-1) * sqr(2*l+1) / sqr(2*l-3) / dble(l)
+					ff1(l+1,1) = sqr(2*l-1) * sqr(2*l+1) / dble(l)
+					ff2(l+1,1) = dble(l-1) * sqr(2*l+1) / sqr(2*l-3) / dble(l)
 					do m=1, l-2, 1
-						k = k+1
-						f1(k) = sqr(2*l+1) * sqr(2*l-1) / sqr(l+m) / sqr(l-m)
-                				f2(k) = sqr(2*l+1) * sqr(l-m-1) * sqr(l+m-1) &
+						ff1(l+1,m+1) = sqr(2*l+1) * sqr(2*l-1) / sqr(l+m) / sqr(l-m)
+                				ff2(l+1,m+1) = sqr(2*l+1) * sqr(l-m-1) * sqr(l+m-1) &
                   				 	/ sqr(2*l-3) / sqr(l+m) / sqr(l-m) 
 					enddo
-					k = k+1
-					f1(k) = sqr(2*l+1) * sqr(2*l-1) / sqr(l+m) / sqr(l-m)
-                			f2(k) = 0.0d0
-					k = k + 1
+					ff1(l+1,l) = sqr(2*l+1) * sqr(2*l-1) / sqr(l+m) / sqr(l-m)
+                			ff2(l+1,l) = 0.0d0
 				enddo
 			
 			case(2)
 			
 				if (lmax_comp /= 0) then
-					k = k + 1
-					f1(k) = 1.0d0
-					f2(k) = 0.0d0
-					k = k + 1
+					ff1(2,1) = 1.0d0
+					ff2(2,1) = 0.0d0
 				endif
 				
 				do l=2, lmax_comp, 1
-					k = k + 1
-					f1(k) = dble(2*l-1) /dble(l)
-					f2(k) = dble(l-1) /dble(l)
+					ff1(l+1,1) = dble(2*l-1) /dble(l)
+					ff2(l+1,1) = dble(l-1) /dble(l)
 					do m=1, l-2, 1
-						k = k+1
-						f1(k) = dble(2*l-1) / sqr(l+m) / sqr(l-m)
-                  				f2(k) = sqr(l-m-1) * sqr(l+m-1) / sqr(l+m) / sqr(l-m)
+						ff1(l+1,m+1) = dble(2*l-1) / sqr(l+m) / sqr(l-m)
+                  				ff2(l+1,m+1) = sqr(l-m-1) * sqr(l+m-1) / sqr(l+m) / sqr(l-m)
 					enddo
-					k = k+1
-					f1(k) = dble(2*l-1) / sqr(l+m) / sqr(l-m)
-                  			f2(k) = 0.0d0
-					k = k + 1
+					ff1(l+1,l)= dble(2*l-1) / sqr(l+m) / sqr(l-m)
+                  			ff2(l+1,l) = 0.0d0
 				enddo
 			
 			case(3)
 		
 				do l=1, lmax_comp, 1
-					k = k + 1
-					f1(k) = dble(2*l-1) /dble(l)
-					f2(k) = dble(l-1) /dble(l)
+					ff1(l+1,1) = dble(2*l-1) /dble(l)
+					ff2(l+1,1) = dble(l-1) /dble(l)
 					do m=1, l-1, 1
-						k = k+1
-						f1(k) = dble(2*l-1) / dble(l-m)
-                  				f2(k) = dble(l+m-1) / dble(l-m)
+						ff1(l+1,m+1) = dble(2*l-1) / dble(l-m)
+                  				ff2(l+1,m+1) = dble(l+m-1) / dble(l-m)
 					enddo
-					k = k + 1
 				enddo
 
 		end select
@@ -381,21 +374,19 @@ subroutine MakeGridDH(griddh, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
 
 		tempr =  cilm(1,1,1) * pm2
 		coef0 = coef0 + tempr
-		coef0s = coef0s + tempr 	! symsign is always 1 for l=m=0
+		coef0s = coef0s + tempr 	! fsymsign is always 1 for l=m=0
 				
-		k = 2
-		pm1 =  f1(k) * z * pm2
+		pm1 =  ff1(2,1) * z * pm2
 		tempr = cilm(1,2,1) * pm1
 		coef0 = coef0 + tempr
-		coef0s = coef0s - tempr 	! symsign = -1
+		coef0s = coef0s - tempr 	! fsymsign = -1
 				
 		do l=2, lmax_comp, 1
 			l1 = l+1
-			k = k+l
-			p = f1(k) * z * pm1 - f2(k) * pm2
+			p = ff1(l1,1) * z * pm1 - ff2(l1,1) * pm2
 			tempr = cilm(1,l1,1) * p
 			coef0 = coef0 + tempr
-			coef0s = coef0s + tempr * symsign(k)
+			coef0s = coef0s + tempr * fsymsign(l1,1)
 			pm2 = pm1
 			pm1 = p
 		enddo
@@ -407,13 +398,11 @@ subroutine MakeGridDH(griddh, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
 		end select
 				
 		rescalem = 1.0d0/scalef
-		kstart = 1
 			
 		do m = 1, lmax_comp-1, 1
 			
 			m1 = m+1
 			rescalem = rescalem * u
-			kstart = kstart+m+1
 					
 			select case(lnorm)
 				case(1,4)
@@ -430,25 +419,23 @@ subroutine MakeGridDH(griddh, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
 			tempc = dcmplx(cilm(1,m1,m1), - cilm(2,m1,m1)) * pm2
 			coef(m1) = coef(m1) + tempc
 			coefs(m1) = coefs(m1) + tempc
-			! symsign(kstart) = 1
+			! fsymsign = 1
 										
-			k = kstart+m+1
-	   		pm1 = z * f1(k) * pm2
+	   		pm1 = z * ff1(m1+1,m1) * pm2
 	   				
 	   		tempc = dcmplx(cilm(1,m1+1,m1), - cilm(2,m1+1,m1)) * pm1
 	   		coef(m1) = coef(m1) + tempc	
 			coefs(m1) = coefs(m1) - tempc
-			! symsign = -1
+			! fsymsign = -1
 	   				
 			do l = m+2, lmax_comp, 1
 				l1 = l+1
-				k = k + l
-				p = z * f1(k) * pm1 - f2(k) * pm2
+				p = z * ff1(l1,m1) * pm1 - ff2(l1,m1) * pm2
 				pm2 = pm1
        				pm1 = p
        				tempc = dcmplx(cilm(1,l1,m1), - cilm(2,l1,m1)) * p
 				coef(m1) = coef(m1) + tempc
-				coefs(m1) = coefs(m1) + tempc * symsign(k)
+				coefs(m1) = coefs(m1) + tempc * fsymsign(l1,m1)
 			enddo
 					
 			coef(m1) = coef(m1) * rescalem
@@ -467,7 +454,7 @@ subroutine MakeGridDH(griddh, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
         	tempc = dcmplx(cilm(1,lmax_comp+1,lmax_comp+1), - cilm(2,lmax_comp+1,lmax_comp+1)) * pmm
         	coef(lmax_comp+1) = coef(lmax_comp+1) + tempc
 		coefs(lmax_comp+1) = coefs(lmax_comp+1) + tempc
-		! symsign = 1
+		! fsymsign = 1
 		
 		coef(1) = dcmplx(coef0,0.0d0)
 		coef(2:lmax+1) = coef(2:lmax+1)/2.0d0
@@ -512,15 +499,11 @@ subroutine MakeGridDH(griddh, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
 	
 	coef0 = coef0 + cilm(1,1,1) * pm2
 				
-	k = 2
-				
 	do l=2, lmax_comp, 2
 		l1 = l+1
-		k = k+l
-		p = - f2(k) * pm2
+		p = - ff2(l1,1) * pm2
 		pm2 = p
 		coef0 = coef0 + cilm(1,l1,1) * p
-		k = k + l + 1
 	enddo
 				
 	select case(lnorm)
@@ -530,12 +513,10 @@ subroutine MakeGridDH(griddh, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
 	end select
 				
 	rescalem = 1.0d0/scalef
-	kstart = 1
 			
 	do m = 1, lmax_comp-1, 1
 				
 		m1 = m + 1
-		kstart = kstart+m+1
 					
 		select case(lnorm)
 			case(1,4)
@@ -551,17 +532,13 @@ subroutine MakeGridDH(griddh, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
 					
 		coef(m1) = coef(m1) + dcmplx(cilm(1,m1,m1), &
 				- cilm(2,m1,m1)) * pm2
-					
-		k = kstart+m+1 
 	   				
 		do l = m+2, lmax_comp, 2
 			l1 = l+1
-			k = k + l
-			p = - f2(k) * pm2
+			p = - ff2(l1,m1) * pm2
 			coef(m1) = coef(m1) + dcmplx(cilm(1,l1,m1), &
 				- cilm(2,l1,m1)) * p
 			pm2 = p
-                 	k = k + l + 1
 		enddo
 					
 	enddo			

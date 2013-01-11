@@ -27,37 +27,37 @@ all: getflags
 	@echo -------------------------------------------------------------------------------------------------------
 	@echo Compiling example code in SHTOOLS/examples with the following flags:
 	@echo
-	@echo $(F95) $(MODFLAG) $(F95FLAGS) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s -m64
+	@echo $(F95) $(MODFLAG) $(F95FLAGS) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm -s -m64
 	@echo -------------------------------------------------------------------------------------------------------
 	@echo
 	
-	$(F95) $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s $(F95FLAGS) fftw_wisdom/create_wisdom.f95 -o fftw_wisdom/create_wisdom
+	$(F95) fftw_wisdom/create_wisdom.f95 $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm $(F95FLAGS) -o fftw_wisdom/create_wisdom
 	
-	$(F95) $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s $(F95FLAGS) MarsCrustalThickness/MarsCrustalThickness.f95 -o MarsCrustalThickness/MarsCrustalThickness
+	$(F95) MarsCrustalThickness/MarsCrustalThickness.f95 $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm $(F95FLAGS) -o MarsCrustalThickness/MarsCrustalThickness
 	
-	$(F95) $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s $(F95FLAGS) SHCilmPlus/TestCilmPlus.f95 -o SHCilmPlus/TestCilmPlus
+	$(F95) SHCilmPlus/TestCilmPlus.f95 $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm $(F95FLAGS) -o SHCilmPlus/TestCilmPlus
 	
-	$(F95) $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s $(F95FLAGS) SHExpandDH/TestExpandDH.f95 -o SHExpandDH/TestExpandDH
+	$(F95) SHExpandDH/TestExpandDH.f95 $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm $(F95FLAGS) -o SHExpandDH/TestExpandDH
 	
-	$(F95) $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -llapack -lblas -lfftw3 -lm -O3 -s $(F95FLAGS) SHExpandLSQ/TestSHExpandLSQ.f95 -o SHExpandLSQ/TestSHExpandLSQ
+	$(F95) SHExpandLSQ/TestSHExpandLSQ.f95 $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -llapack -lblas -lfftw3 -lm $(F95FLAGS) -o SHExpandLSQ/TestSHExpandLSQ
 	
-	$(F95) $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -llapack -lblas -lfftw3 -lm -O3 -s $(F95FLAGS) SHLocalizedAdmitCorr/LocalizedAdmitCorr.f95 -o SHLocalizedAdmitCorr/LocalizedAdmitCorr
+	$(F95) SHLocalizedAdmitCorr/LocalizedAdmitCorr.f95 $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -llapack -lblas -lfftw3 -lm $(F95FLAGS) -o SHLocalizedAdmitCorr/LocalizedAdmitCorr
 	
-	$(F95) $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s $(F95FLAGS) SHMag/SHMag.f95 -o SHMag/SHMag
+	$(F95) SHMag/SHMag.f95 $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm $(F95FLAGS) -o SHMag/SHMag
 	
-	$(F95) $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s $(F95FLAGS) SHRotate/TestSHRotate.f95 -o SHRotate/TestSHRotate
+	$(F95) SHRotate/TestSHRotate.f95 $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm $(F95FLAGS) -o SHRotate/TestSHRotate
 	
-	$(F95) $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s $(F95FLAGS) TimingAccuracy/TimingAccuracyDH.f95 -o TimingAccuracy/TimingAccuracyDH
+	$(F95) TimingAccuracy/TimingAccuracyDH.f95 $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm $(F95FLAGS) -o TimingAccuracy/TimingAccuracyDH
 	
-	$(F95) $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s $(F95FLAGS) TimingAccuracy/TimingAccuracyDHC.f95 -o TimingAccuracy/TimingAccuracyDHC
+	$(F95) TimingAccuracy/TimingAccuracyDHC.f95 $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm $(F95FLAGS) -o TimingAccuracy/TimingAccuracyDHC
 	
-	$(F95) $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s $(F95FLAGS) TimingAccuracy/TimingAccuracyGLQ.f95 -o TimingAccuracy/TimingAccuracyGLQ
+	$(F95) TimingAccuracy/TimingAccuracyGLQ.f95 $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm $(F95FLAGS) -o TimingAccuracy/TimingAccuracyGLQ
 	
-	$(F95) $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s $(F95FLAGS) TimingAccuracy/TimingAccuracyGLQC.f95 -o TimingAccuracy/TimingAccuracyGLQC
+	$(F95) TimingAccuracy/TimingAccuracyGLQC.f95 $(MODFLAG) -L../lib -lSHTOOLS$(VERSION) -lfftw3 -lm $(F95FLAGS) -o TimingAccuracy/TimingAccuracyGLQC
 	
 make run-examples:
 	 @echo CREATE_WISDOM
-	 cd fftw_wisdom ; create_wisdom < input.txt 
+	 cd fftw_wisdom ; create_wisdom < input.txt
 	 @echo
 	 @echo MARS CRUSTAL THICKNESS
 	 cd MarsCrustalThickness ; MarsCrustalThickness < input.txt
@@ -75,15 +75,15 @@ make run-examples:
 	 cd SHLocalizedAdmitCorr ; LocalizedAdmitCorr < input.txt
 	 @echo
 	 @echo SHMAG
-	 cd SHMag ; SHMag < input.txt
+	 cd SHMag ; SHMag
 	 @echo
 	 @echo TEST SHROTATE
 	 cd SHRotate ; TestSHRotate < input.txt
 	 @echo
-	 @echo *** The following timing and accuracy tests will take almost a day to complete ***
+	 @echo "*** The following 8 timing and accuracy tests will take several hours to complete ***"
 	 @echo
 	 @echo TIMING ACCURACY GLQ
-	 cd TimingAccuracy ;	TimingAccuracyGLQ < input1 > output1
+	 cd TimingAccuracy ; TimingAccuracyGLQ < input1 > output1
 	 @echo
 	 @echo TIMING ACCURACY GLQ
 	 cd TimingAccuracy ; TimingAccuracyGLQ < input2 > output2
@@ -135,18 +135,30 @@ endif
 
 
 clean:
-	@rm -f SHCilmPlus/TestCilmPlus
 	@rm -f fftw_wisdom/create_wisdom
 	@rm -f MarsCrustalThickness/MarsCrustalThickness
+	@rm -f MarsCrustalThickness/*.sh
+	@rm -f MarsCrustalThickness/*.dat
+	@rm -f SHCilmPlus/TestCilmPlus
+	@rm -f SHCilmPlus/*.dat
 	@rm -f SHExpandDH/TestExpandDH
 	@rm -f SHExpandLSQ/TestSHExpandLSQ
 	@rm -f SHLocalizedAdmitCorr/LocalizedAdmitCorr
+	@rm -f SHLocalizedAdmitCorr/*.dat
 	@rm -f SHMag/SHMag
+	@rm -f SHMag/*.dat
 	@rm -f SHRotate/TestSHRotate
+	@rm -f SHRotate/*.sh
+	@rm -f SHRotate/*.dat
 	@rm -f TimingAccuracy/TimingAccuracyDH
 	@rm -f TimingAccuracy/TimingAccuracyDHC
 	@rm -f TimingAccuracy/TimingAccuracyGLQ
 	@rm -f TimingAccuracy/TimingAccuracyGLQC
+	@rm -f TimingAccuracy/output*
+	@rm -f TimingAccuracy/*.maxerror
+	@rm -f TimingAccuracy/*.rmserror
+	@rm -f TimingAccuracy/*.timef
+	@rm -f TimingAccuracy/*.timei
 	
 
 

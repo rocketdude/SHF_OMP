@@ -42,7 +42,7 @@ NTAPERS
 
 I<SHReturnTapersMap> will calculate the eigenfunctions (i.e., localization windows) of the space-concentration problem for an arbitrary concentration region specified in DH_MASK (see Simons et al. (2006) for further details). The input mask DH_MASK must be sampled according to the Driscoll and Healy (1994) sampling theorem with N samples in latitude, and possess a value of 1 inside the concentration region, and 0 elsewhere. DH_MASK can either possess N samples in longitude (SAMPLING=1) or 2*N samples in longitude (SAMPLING=2). Given the approximate way in which the elements of the space-concentration kernel are calculated (see I<ComputeDMap> for details), SAMPLING=2 should be preferred. Furthermore, the effective spherical harmonic bandwidth (L=N/2-1) of the grid DH_MASK determines the accuracy of the results, and experience shows that this should be about 4 times larger than LMAX. 
 
-The spherical harmonic coefficients of each window are given in the columns of TAPERS, and the corresponding concentration factors are given in EIGENVAULES. The spherical harmonic coefficients are ordered according to the scheme described in I<YilmIndex>, and the columns of TAPERS are ordered from best to worst concentrated. The localization windows are normalized such that they have unit power. If the optional parameter NTAPERS is specified, then only the NTAPERS largest eigenvalues and corresponding eigenfunctions will be calculated and returned.
+The spherical harmonic coefficients of each window are given in the columns of TAPERS, and the corresponding concentration factors are given in EIGENVAULES. The spherical harmonic coefficients are ordered according to the scheme described in I<YilmIndex>, which can be converted to matrix form using I<SHVectorToCilm>, and the columns of TAPERS are ordered from best to worst concentrated. The localization windows are normalized such that they have unit power. If the optional parameter NTAPERS is specified, then only the NTAPERS largest eigenvalues and corresponding eigenfunctions will be calculated and returned.
 
 =head1 ARGUMENTS
 
@@ -94,7 +94,7 @@ The number of best concentrated eigenvalues and corresponding eigenfunctions to 
 
 =head1 SEE ALSO
 
-computedmap(1), yilmindex(1)
+computedmap(1), yilmindex(1), shvectortocilm(1)
 
 L<http://shtools.ipgp.fr/>
 

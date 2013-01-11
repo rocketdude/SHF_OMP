@@ -14,11 +14,22 @@ Program TimingAccuracyGLQ
 	implicit none	
 		
 	integer, parameter ::	maxdeg = 2800
-	character*80 ::		outfile1, outfile2, outfile3, outfile4, outfile
-	real*8 ::		cilm(2,maxdeg+1,maxdeg+1), cilm2(2,maxdeg+1,maxdeg+1), &
-				zero(maxdeg+1), gridglq(maxdeg+1,2*maxdeg+1), w(maxdeg+1), &
-				huge8, maxerror, err1, err2, beta, rms, timein(3), timeout(3)
-	integer ::		lmax, l, m, seed
+	character*200 ::	outfile1, outfile2, outfile3, outfile4, outfile
+	real*8, allocatable ::	cilm(:,:,:), cilm2(:,:,:), zero(:), gridglq(:,:), w(:)
+	real*8 ::		huge8, maxerror, err1, err2, beta, rms, timein(3), timeout(3)
+	integer ::		lmax, l, m, seed, astat(5)
+
+	allocate(cilm(2,maxdeg+1,maxdeg+1), stat=astat(1))
+	allocate(cilm2(2,maxdeg+1,maxdeg+1), stat=astat(2))
+	allocate(zero(maxdeg+1), stat=astat(3))
+	allocate(gridglq(maxdeg+1,2*maxdeg+1), stat=astat(4))
+	allocate(w(maxdeg+1), stat=astat(5))
+	
+	if (sum(astat(1:5)) /= 0) then
+		print*, "Error --- TimingAccuracyGLQ"
+		print*, "Problem allocating arrays CILM, CILM2, ZERO, GRIDGLQ, W"
+		stop
+	endif
 	
 	print*, "Value of beta for power law Sff = l^(-beta) > "
 	read(*,*) beta

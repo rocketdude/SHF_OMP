@@ -64,13 +64,14 @@ subroutine SHLocalizedAdmitCorr(tapers, taper_order, lwin, lat, lon, g, t, lmax,
 !		Completely rewritten June 1 2006 to take into account non-zonal windows.
 !		April 2009: added the optional parameter MTDEF for defining two manners of calculating
 !			mutlitapered admittances and correlations.
+!		July 25, 2012. Replaced the calls to SHMultiTaperSE and SHMultiTaperCSE with their consituent
+!			calls to reduce redundant overhead. Save array DJ for use in multiple calls to the routine.
 !
 !	Copyright (c) 2009, Mark A. Wieczorek
 !	All rights reserved.
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	use SHTOOLS, only: SHMultiTaperSE, SHMultiTaperCSE, djpi2, SHRotateRealCoef, &
-				SHMultiply, SHCrossPowerSpectrum, SHPowerSpectrum
+	use SHTOOLS, only:  djpi2, SHRotateRealCoef, SHMultiply, SHCrossPowerSpectrum, SHPowerSpectrum
 			
 	implicit none
 
@@ -81,10 +82,12 @@ subroutine SHLocalizedAdmitCorr(tapers, taper_order, lwin, lat, lon, g, t, lmax,
 	integer, intent(in), optional ::	mtdef, k1linsig
 	real*8, intent(in), optional ::	taper_wt(:)
 	integer ::		lmaxwin, l, def, astat(5), phase, norm, i
+	integer, save :: 	first = 1, lwin_last = 0
 	real*8 ::		pi, g_power(2,lwin+lmax+1), t_power(2,lwin+lmax+1), gt_power(2,lwin+lmax+1), x(3), &
 				sgt(lmax-lwin+1, K), sgg(lmax-lwin+1, K), stt(lmax-lwin+1, K), admit_k(lmax-lwin+1, K), &
-				corr_k(lmax-lwin+1, K)
-	real*8, allocatable ::	dj(:,:,:), shwin(:,:,:), shwinrot(:,:,:), shloc_g(:,:,:), shloc_t(:,:,:)	
+				corr_k(lmax-lwin+1, K), factor
+	real*8, allocatable ::	shwin(:,:,:), shwinrot(:,:,:), shloc_g(:,:,:), shloc_t(:,:,:)	
+	real*8, allocatable, save ::	dj(:,:,:)
 
 	phase = 1
 	norm = 1
@@ -204,28 +207,113 @@ subroutine SHLocalizedAdmitCorr(tapers, taper_order, lwin, lat, lon, g, t, lmax,
 	!	Lmax - lwin should be interpretted.
 	!
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	
+	x(1) = 0.0d0
+	x(2) = -(90.0d0 - lat)*pi/180.0d0
+	x(3) =  -lon*pi/180.0d0
+		
+	if (first == 1) then
+		lwin_last = lwin
+		first = 0
+		allocate(dj(lwin+1,lwin+1,lwin+1), stat = astat(1))
+		if (astat(1) /= 0) then
+			print*, "Error --- SHLocalizedAdmitCorr"
+			print*, "Problem allocating array DJ", astat(1)
+			stop
+		endif
+		dj = 0.0d0
+		call djpi2(dj, lwin)
+	endif
+	
+	if (lwin > lwin_last) then
+		lwin_last = lwin
+		deallocate(dj)
+		allocate(dj(lwin+1,lwin+1,lwin+1), stat = astat(1))
+		if (astat(1) /= 0) then
+			print*, "Error --- SHLocalizedAdmitCorr"
+			print*, "Problem allocating array DJ", astat(1)
+			stop
+		endif
+		dj = 0.0d0
+		call djpi2(dj, lwin)
+	endif
+	
+	allocate(shwin(2,lwin+1,lwin+1), stat = astat(1))
+	allocate(shwinrot(2,lwin+1,lwin+1), stat = astat(2))
+	allocate(shloc_g(2, lmaxwin+1, lmaxwin+1), stat= astat(3))
+	allocate(shloc_t(2, lmaxwin+1, lmaxwin+1), stat= astat(4))
+		
+	if (sum(astat(1:4)) /= 0) then
+		print*, "Error --- SHLocalizedAdmitCorr"
+		print*, "Problem allocating arrays SHWIN, SHWINROT, SHLOC_G, SHLOC_T", &
+			astat(1), astat(2), astat(3), astat(4)
+		stop
+	endif
 		
 	if (def == 1) then
 	
-		if (present(taper_wt)) then
-
-			call SHMultiTaperSE(g_power(1,:), g_power(2,:), g, lmax, tapers(1:lwin+1,1:K), &
-				taper_order(1:K), lwin, K, lat=lat, lon=lon, taper_wt = taper_wt(1:K), csphase = phase)
-			call SHMultiTaperSE(t_power(1,:), t_power(2,:), t, lmax, tapers(1:lwin+1,1:K), &
-				taper_order(1:K), lwin, K, lat=lat, lon=lon, taper_wt = taper_wt(1:K), csphase = phase)
-			call SHMultiTaperCSE(gt_power(1,:), gt_power(2,:), g, lmax, t, lmax, tapers(1:lwin+1,1:K), &
-				taper_order(1:K), lwin, K, lat=lat, lon=lon, taper_wt = taper_wt(1:K), csphase = phase)
+		do i=1, K
 		
-		else
+			shwin = 0.0d0
+			if (taper_order(i) < 0) then
+				shwin(2,1:lwin+1,abs(taper_order(i))+1) = tapers(1:lwin+1,i)
+			else
+				shwin(1,1:lwin+1,taper_order(i)+1) = tapers(1:lwin+1,i)
+			endif
+			
+			call SHRotateRealCoef(shwinrot, shwin, lwin, x, dj)
+		
+			call SHMultiply(shloc_g, g, lmax, shwinrot, lwin, csphase = phase, norm = norm)
+			call SHMultiply(shloc_t, t, lmax, shwinrot, lwin, csphase = phase, norm = norm)
+			
+			call SHCrossPowerSpectrum(shloc_g, shloc_t, lmax-lwin, sgt(:,i))
+			call SHPowerSpectrum(shloc_g, lmax-lwin, sgg(:,i))
+			call SHPowerSpectrum(shloc_t, lmax-lwin, stt(:,i))
+			
+			if (present(taper_wt)) then
+
+				factor = sum(taper_wt(1:K))**2 - sum(taper_wt(1:K)**2)
+				factor = factor * sum(taper_wt(1:K))
+				factor= sum(taper_wt(1:K)**2) / factor
 	
-			call SHMultiTaperSE(g_power(1,:), g_power(2,:), g, lmax, tapers(1:lwin+1,1:K), &
-				taper_order(1:K), lwin, K, lat=lat, lon=lon, csphase = phase)
-			call SHMultiTaperSE(t_power(1,:), t_power(2,:), t, lmax, tapers(1:lwin+1,1:K), &
-				taper_order(1:K), lwin, K, lat=lat, lon=lon, csphase = phase)
-			call SHMultiTaperCSE(gt_power(1,:), gt_power(2,:), g, lmax, t, lmax, tapers(1:lwin+1,1:K), &
-				taper_order(1:K), lwin, K, lat=lat, lon=lon, csphase = phase)
-		endif
+				do l=0, lmax-lwin, 1
+					g_power(1,l+1) = dot_product(sgg(l+1,1:K), taper_wt(1:K)) / sum(taper_wt(1:K))
+					t_power(1,l+1) = dot_product(stt(l+1,1:K), taper_wt(1:K)) / sum(taper_wt(1:K))
+					gt_power(1,l+1) = dot_product(sgt(l+1,1:K), taper_wt(1:K)) / sum(taper_wt(1:K))
+		
+					if (K > 1) then 
+						g_power(2,l+1) = dot_product( (sgg(l+1,1:K) - g_power(1,l+1) )**2, taper_wt(1:K) ) * factor
+						t_power(2,l+1) = dot_product( (stt(l+1,1:K) - t_power(1,l+1) )**2, taper_wt(1:K) ) * factor
+						gt_power(2,l+1) = dot_product( (sgt(l+1,1:K) - gt_power(1,l+1) )**2, taper_wt(1:K) ) * factor
+					endif
+		
+				enddo
+		
+			else
+			
+				do l=0, lmax-lwin, 1
+					g_power(1,l+1) = sum(sgg(l+1,1:K))/dble(K)
+					t_power(1,l+1) = sum(stt(l+1,1:K))/dble(K)
+					gt_power(1,l+1) = sum(sgt(l+1,1:K))/dble(K)
 	
+					if (K > 1) then 
+						g_power(2,l+1) = sum( ( sgg(l+1,1:K) - g_power(1,l+1) )**2 ) / dble(K-1) / dble(K) ! standard error!
+						t_power(2,l+1) = sum( ( stt(l+1,1:K) - t_power(1,l+1) )**2 ) / dble(K-1) / dble(K) ! standard error!
+						gt_power(2,l+1) = sum( ( sgt(l+1,1:K) - gt_power(1,l+1) )**2 ) / dble(K-1) / dble(K) ! standard error!
+					endif	
+				
+				enddo
+	
+			endif
+			
+			if (K > 1) then
+				g_power(2,1:lmax-lwin+1) = sqrt(g_power(2,1:lmax-lwin+1) )
+				t_power(2,1:lmax-lwin+1) = sqrt(t_power(2,1:lmax-lwin+1) )
+				gt_power(2,1:lmax-lwin+1) = sqrt(gt_power(2,1:lmax-lwin+1) )
+			endif
+	
+		enddo
+		
 		admit(1:lmax-lwin+1) = gt_power(1,1:lmax-lwin+1) / t_power(1,1:lmax-lwin+1)
 		corr(1:lmax-lwin+1) =  gt_power(1,1:lmax-lwin+1) / sqrt(t_power(1,1:lmax-lwin+1)*g_power(1,1:lmax-lwin+1))
 
@@ -262,31 +350,7 @@ subroutine SHLocalizedAdmitCorr(tapers, taper_order, lwin, lat, lon, g, t, lmax,
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	else
-		
-		x(1) = 0.0d0
-		x(2) = -(90.0d0 - lat)*pi/180.0d0
-		x(3) =  -lon*pi/180.0d0
-		
-		allocate(dj(lwin+1,lwin+1,lwin+1), stat = astat(1))
-		allocate(shwin(2,lwin+1,lwin+1), stat = astat(2))
-		allocate(shwinrot(2,lwin+1,lwin+1), stat = astat(3))
-		allocate(shloc_g(2, lmaxwin+1, lmaxwin+1), stat= astat(4))
-		allocate(shloc_t(2, lmaxwin+1, lmaxwin+1), stat= astat(5))
-		
-		if (astat(1) /= 0 .or. astat(2) /= 0 .or. astat(3) /= 0 .or. astat(4) /= 0 .or. astat(5) /= 0) then
-			print*, "Error --- SHLocalizedAdmitCorr"
-			print*, "Problem allocating arrays DJ, SHWIN, SHWINROT, SHLOC_G, SHLOC_T", &
-				astat(1), astat(2), astat(3), astat(4), astat(5)
-			stop
-		endif
-		
-		dj = 0.0d0
-		shwinrot = 0.0d0
-		shloc_g = 0.0d0
-		shloc_t = 0.0d0
-		
-		call djpi2(dj, lwin)	! Create rotation matrix used in the rotation routine.
-		
+				
 		do i=1, K
 			shwin = 0.0d0
 			if (taper_order(i) < 0) then
@@ -355,16 +419,13 @@ subroutine SHLocalizedAdmitCorr(tapers, taper_order, lwin, lat, lon, g, t, lmax,
 			enddo
 			
 		endif
-			
-			
-		deallocate(dj)
-		deallocate(shwin)
-		deallocate(shwinrot)
-		deallocate(shloc_g)
-		deallocate(shloc_t)
 		
 	endif	
 	
+	deallocate(shwin)
+	deallocate(shwinrot)
+	deallocate(shloc_g)
+	deallocate(shloc_t)
+	
 end subroutine SHLocalizedAdmitCorr
-
 

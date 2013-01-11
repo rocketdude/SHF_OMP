@@ -33,9 +33,11 @@ subroutine PLegendreA_d1(p, dp, lmax, z, csphase)
 !
 !	Dependencies:	CSPHASE_DEFAULT
 !
+!	August 14 2012. Converted PHASE from REAL*8 to INTEGER*1.
+!
 !	Written by Mark Wieczorek 2003
 !
-!	Copyright (c) 2005, Mark A. Wieczorek
+!	Copyright (c) 2005-2012, Mark A. Wieczorek
 !	All rights reserved.
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -47,8 +49,9 @@ subroutine PLegendreA_d1(p, dp, lmax, z, csphase)
 	real*8, intent(out) ::	p(:), dp(:)
        	real*8, intent(in) ::	z
        	integer, intent(in), optional ::	csphase
-       	real*8 ::	pm2, pm1, pmm, sinsq, sinsqr, fact, plm, phase
+       	real*8 ::	pm2, pm1, pmm, sinsq, sinsqr, fact, plm
       	integer ::	k, kstart, m, l, sdim
+      	integer*1 ::	phase
       	
       	sdim = (lmax+1)*(lmax+2)/2
 
@@ -81,9 +84,9 @@ subroutine PLegendreA_d1(p, dp, lmax, z, csphase)
      	
      	if (present(csphase)) then
      		if (csphase == -1) then
-     			phase = -1.0d0
+     			phase = -1
      		elseif (csphase == 1) then
-     			phase = 1.0d0
+     			phase = 1
      		else
      			print*, "PLegendreA_d1 --- Error"
      			print*, "CSPHASE must be 1 (exclude) or -1 (include)."
@@ -91,7 +94,7 @@ subroutine PLegendreA_d1(p, dp, lmax, z, csphase)
      			stop
      		endif
      	else
-     		phase = dble(CSPHASE_DEFAULT)
+     		phase = CSPHASE_DEFAULT
      	endif
 	
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -117,9 +120,9 @@ subroutine PLegendreA_d1(p, dp, lmax, z, csphase)
 
       	do l = 2, lmax, 1
          	k = k+l
-         	plm = ( z*dble(2*l-1)*pm1-dble(l-1)*pm2 )/ dble(l)
+         	plm = ( z*(2*l-1)*pm1-(l-1)*pm2 ) / dble(l)
          	p(k) = plm
-         	dp(k) = dble(l) * (pm1 -z*plm) / sinsq
+         	dp(k) = l * (pm1 -z*plm) / sinsq
          	pm2  = pm1
          	pm1  = plm
       	enddo
@@ -141,21 +144,21 @@ subroutine PLegendreA_d1(p, dp, lmax, z, csphase)
          	fact = fact+2.0d0
         	pmm = phase * pmm * sinsqr * fact
         	p(kstart) = pmm
-        	dp(kstart) = -dble(m)*z*pmm / sinsq
+        	dp(kstart) = -m*z*pmm / sinsq
         	pm2 = pmm
 
 		! Calculate P(m+1,m)
 		k = kstart+m+1
-	   	pm1 = z*pmm*dble(2*m+1)
+	   	pm1 = z*pmm*(2*m+1)
 	    	p(k) = pm1
-	    	dp(k) = ( dble(2*m+1)*pmm - dble(m+1)*z*pm1) / sinsq
+	    	dp(k) = ( (2*m+1)*pmm - (m+1)*z*pm1) / sinsq
 
 		! Calculate P(l,m)
                	do l = m+2, lmax, 1
                		k = k+l
-                  	plm  = ( z*dble(2*l-1)*pm1-dble(l+m-1)*pm2 ) / dble(l-m)
+                  	plm  = ( z*(2*l-1)*pm1-(l+m-1)*pm2 ) / dble(l-m)
                   	p(k) = plm
-                  	dp(k) = ( dble(l+m) * pm1 - dble(l)*z*plm) / sinsq
+                  	dp(k) = ( (l+m) * pm1 - l*z*plm) / sinsq
                   	pm2  = pm1
                   	pm1  = plm
                	enddo
@@ -167,7 +170,7 @@ subroutine PLegendreA_d1(p, dp, lmax, z, csphase)
         fact      = fact+2.0d0
         pmm       = phase * pmm * sinsqr * fact
         p(kstart) = pmm
-        dp(kstart) = -dble(lmax)*z*pmm / sinsq
+        dp(kstart) = -lmax*z*pmm / sinsq
 	
 end subroutine PLegendreA_d1
 

@@ -44,7 +44,6 @@ subroutine SHrtoc(rcilm, ccilm, degmax, convention, switchcs)
 	integer :: 			lmax, l, m
 	real*8 ::			pi
 	
-	
 	if (present(switchcs)) then
 		if (switchcs /= 1 .and. switchcs /=0) then
 			print*, "Error --- SHrtoc"
@@ -95,8 +94,7 @@ subroutine SHrtoc(rcilm, ccilm, degmax, convention, switchcs)
 	endif
 
 	pi = acos(-1.0d0)
-	ccilm= 0.0d0
-
+	ccilm = 0.0d0
 		
 	do l = 0, lmax, 1
 	
@@ -187,7 +185,6 @@ subroutine SHctor(ccilm, rcilm, degmax, convention, switchcs)
 	integer ::	lmax, l, m
 	real*8 ::	pi
 	
-	
 	if (present(switchcs)) then
 		if (switchcs /= 1 .and. switchcs /=0) then
 			print*, "Error --- SHrtoc"
@@ -237,10 +234,8 @@ subroutine SHctor(ccilm, rcilm, degmax, convention, switchcs)
 					
 	endif
 	
-	
 	pi = acos(-1.0d0)
 	rcilm = 0.0d0
-
 		
 	do l = 0, lmax, 1
 	
@@ -345,6 +340,8 @@ subroutine SHCilmToCindex(cilm, cindex, degmax)
 			stop
 		endif
 	endif
+	
+	cindex = 0.0d0
 		
 	do l=0, lmax
 		do m=0, l
@@ -411,6 +408,8 @@ subroutine SHCindexToCilm(cindex, cilm, degmax)
 			stop
 		endif
 	endif
+	
+	cilm = 0.0d0
 		
 	do l=0, lmax
 		do m=0, l

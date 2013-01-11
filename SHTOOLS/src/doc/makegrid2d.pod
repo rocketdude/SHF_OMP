@@ -14,7 +14,7 @@ Create a 2D cylindrical map from a set of spherical harmonic coefficients.
 
 =item SUBROUTINE MakeGrid2D ( 
 
-GRID, CILM, LMAX, INTERVAL, NLAT, NLONG, NORM, CSPHASE, F, A, NORTH, SOUTH, EAST, WEST )
+GRID, CILM, LMAX, INTERVAL, NLAT, NLONG, NORM, CSPHASE, F, A, NORTH, SOUTH, EAST, WEST, DEALLOC )
 
 =back
 
@@ -32,7 +32,7 @@ LMAX, NLAT, NLONG
 
 =item INTEGER, OPTIONAL
 
-NORM, CSPHASE
+NORM, CSPHASE, DEALLOC
 
 =item REAL*8, OPTIONAL
 
@@ -135,6 +135,12 @@ The maximum longitude of the output raster grid, in degrees. The default is 360 
 (input) REAL*8, OPTIONAL
 
 The minimum longitude of the output raster grid, in degrees. The default is 0 degrees.
+
+=item DEALLOC
+
+(input) INTEGER, OPTIONAL
+
+0 (default) = Save variables used in the external Legendre function calls. (1) Deallocate this memory at the end of the funcion call.
 
 =back
 

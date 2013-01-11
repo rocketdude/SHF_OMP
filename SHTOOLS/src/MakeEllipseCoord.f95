@@ -24,7 +24,10 @@ subroutine MakeEllipseCoord(coord, lat, lon, dec, A_theta, B_theta, cinterval, c
 !
 !	Written by Mark Wieczorek March 2010.
 !
-!	Copyright (c) 2010, Mark A. Wieczorek
+!	October 29, 2012. Modified the order of the output vectors so that the first
+!	point is directly north, and the following points are arranged clockwise.
+!
+!	Copyright (c) 2010-2012, Mark A. Wieczorek
 !	All rights reserved.
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -66,7 +69,7 @@ subroutine MakeEllipseCoord(coord, lat, lon, dec, A_theta, B_theta, cinterval, c
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		
 	do k=1, num
-		phi = dble(k-1)*(2.0d0*pi/dble(num))
+		phi = pi- dble(k-1)*(2.0d0*pi/dble(num))
 		r = a_theta*b_theta / sqrt( (b_theta*cos(phi))**2 + (a_theta*sin(phi))**2 ) 
 		xold = sin(r*pi/180.0d0)*cos(phi - dec*pi/180.0d0)
 		yold = sin(r*pi/180.0d0)*sin(phi - dec*pi/180.0d0)

@@ -50,7 +50,7 @@
 #
 #####################################################################################
 
-VERSION = 2.7
+VERSION = 2.8
 
 F95 = f95
 
@@ -85,7 +85,7 @@ all2: getflags
 	@echo ---------------------------------------------------------------------------------------------------
 	@echo Compile your code with the following flags:
 	@echo
-	@echo $(F95) $(MODFLAG) $(F95FLAGS) -L<libpath> -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s -m64
+	@echo $(F95) $(MODFLAG) $(F95FLAGS) -Llibpath -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s -m64
 	@echo
 	@echo where modpath and libpath are replaced with their respective paths.
 	@echo ---------------------------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ all3: getflags
 	@echo ---------------------------------------------------------------------------------------------------
 	@echo Compile your code with the following flags:
 	@echo
-	@echo $(F95) $(MODFLAG) $(F95FLAGS) -L<libpath> -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s -m64
+	@echo $(F95) $(MODFLAG) $(F95FLAGS) -Llibpath -lSHTOOLS$(VERSION) -lfftw3 -lm -O3 -s -m64
 	@echo
 	@echo where modpath and libpath are replaced with their respective paths.
 	@echo ---------------------------------------------------------------------------------------------------

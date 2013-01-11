@@ -15,11 +15,21 @@ Program TimingAccuracyDHC
 	implicit none	
 		
 	integer, parameter ::	maxdeg = 2800
-	character*80 ::		outfile1, outfile2, outfile3, outfile4, outfile
-	complex*16 ::		cilm(2,maxdeg+1,maxdeg+1), cilm2(2,maxdeg+1,maxdeg+1), &
-				griddh(2*maxdeg+2,4*maxdeg+4)
+	character*200 ::		outfile1, outfile2, outfile3, outfile4, outfile
+	complex*16, allocatable ::	cilm(:,:,:), cilm2(:,:,:), griddh(:,:)
 	real*8 ::		huge8, maxerror, err1, err2, beta, rms, timein(3), timeout(3)
-	integer ::		lmax, l, m, seed, n, sampling, lmaxout
+	integer ::		lmax, l, m, seed, n, sampling, lmaxout, astat(3)
+	
+	allocate(cilm(2,maxdeg+1,maxdeg+1), stat=astat(1))
+	allocate(cilm2(2,maxdeg+1,maxdeg+1), stat=astat(2))
+	allocate(griddh(2*maxdeg+2,4*maxdeg+4), stat=astat(3))
+	
+	if (sum(astat(1:3)) /= 0) then
+		print*, "Error --- TimingAccuracyDHC"
+		print*, "Problem allocating arrays CILM, CILM2, GRIDDH"
+		stop
+	endif
+	
 	
 	sampling = 1
 	print*, "Value of beta for power law Sff = l^(-beta) > "

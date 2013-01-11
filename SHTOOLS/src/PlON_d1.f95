@@ -83,20 +83,20 @@ subroutine PlON_d1(p, dp, lmax, z)
 
 		sinsq = (1.0d0 - z**2)
       	
-   		pm2  = 1.d0/sqrt(4.0d0*pi)
+   		pm2  = 1.d0/sqrt(4*pi)
       		p(1) = pm2
       		dp(1) = 0.0d0
       	
-      		pm1  = sqrt(3.0d0) * z / sqrt(4.0d0*pi)
+      		pm1  = sqrt(3.0d0) * z / sqrt(4*pi)
       		p(2) = pm1
-      		dp(2) = sqrt(3.0d0) / sqrt(4.0d0*pi)
+      		dp(2) = sqrt(3.0d0) / sqrt(4*pi)
       	      	
       		do l = 2, lmax
          		pl = ( sqrt(dble(2*l-1))  * z * pm1 - &
-         			dble(l-1) * pm2 / sqrt(dble(2*l-3)) ) * &
+         			(l-1) * pm2 / sqrt(dble(2*l-3)) ) * &
          			sqrt(dble(2*l+1))/dble(l)
          		p(l+1) = pl
-         		dp(l+1) = dble(l) *( sqrt( dble(2*l+1)/dble(2*l-1) ) * &
+         		dp(l+1) = l *( sqrt( dble(2*l+1)/dble(2*l-1) ) * &
       				p(l) - z * pl ) / sinsq
          		pm2  = pm1
          		pm1  = pl

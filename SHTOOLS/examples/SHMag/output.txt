@@ -1,9 +1,0 @@
-SHMag < input.txt
- Reference radius of spherical harmonic coefficients R0 (km) =   3390.00000000000
- Lmax of spherical harmonic model =   90
- Field calculated on a flattened ellipsoid with mean radius R (km) =   3534.50800000000
- Flattening =   5.887032058145086E-003
- Interval for gridded data (degrees) > 
- Elapsed time (sec) =   7.62952400000000
- Maximum and minimum intensity (nT) =   1563.78037843652  0.177376544422105
-   181  361

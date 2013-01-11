@@ -23,11 +23,13 @@ subroutine PLegendreA(p,lmax,z, csphase)
 !
 !	This code is based on the stable recursion relationships in numerical recipes.
 !
+!	August 14, 2012. 	Converted PHASE from REAL*8 to INTEGER*1.
+!
 !	Dependencies:	CSPHASE_DEFAULT
 !
 !	Written by Mark Wieczorek 2003
 !
-!	Copyright (c) 2005, Mark A. Wieczorek
+!	Copyright (c) 2005-2012, Mark A. Wieczorek
 !	All rights reserved.
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -39,8 +41,9 @@ subroutine PLegendreA(p,lmax,z, csphase)
 	real*8, intent(out) ::	p(:)
        	real*8, intent(in) ::	z
        	integer, intent(in), optional ::	csphase
-       	real*8 ::	pm2, pm1, pmm, sinsq, sinsqr, fact, plm, phase
+       	real*8 ::	pm2, pm1, pmm, sinsq, sinsqr, fact, plm
       	integer ::	k, kstart, m, l
+      	integer*1 ::	phase
 	
 	if (size(p) < (lmax+1)*(lmax+2)/2) then 
 		print*, "Error --- PLegendreA"
@@ -62,9 +65,9 @@ subroutine PLegendreA(p,lmax,z, csphase)
      	     	
      	if (present(csphase)) then
      		if (csphase == -1) then
-     			phase = -1.0d0
+     			phase = -1
      		elseif (csphase == 1) then
-     			phase = 1.0d0
+     			phase = 1
      		else
      			print*, "PLegendreA --- Error"
      			print*, "CSPHASE must be 1 (exclude) or -1 (include)."
@@ -72,7 +75,7 @@ subroutine PLegendreA(p,lmax,z, csphase)
      			stop
      		endif
      	else
-     		phase = dble(CSPHASE_DEFAULT)
+     		phase = CSPHASE_DEFAULT
      	endif
      	
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -96,7 +99,7 @@ subroutine PLegendreA(p,lmax,z, csphase)
 
       	do l = 2, lmax, 1
          	k = k+l
-         	plm = ( z*dble(2*l-1)*pm1-dble(l-1)*pm2 )/ dble(l)
+         	plm = ( z*(2*l-1)*pm1-(l-1)*pm2 ) / dble(l)
          	p(k) = plm
          	pm2  = pm1
          	pm1  = plm
@@ -123,13 +126,13 @@ subroutine PLegendreA(p,lmax,z, csphase)
 
 		! Calculate P(m+1,m)
 		k = kstart+m+1
-	   	pm1 = z*pmm*dble(2*m+1)
+	   	pm1 = z*pmm*(2*m+1)
 	    	p(k) = pm1
 
 		! Calculate P(l,m)
                	do l = m+2, lmax, 1
                		k = k+l
-                  	plm  = ( z*dble(2*l-1)*pm1-dble(l+m-1)*pm2 ) / dble(l-m)
+                  	plm  = ( z*(2*l-1)*pm1-(l+m-1)*pm2 ) / dble(l-m)
                   	p(k) = plm
                   	pm2  = pm1
                   	pm1  = plm

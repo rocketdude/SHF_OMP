@@ -49,6 +49,9 @@ subroutine PlmSchmidt(p, lmax, z, csphase, cnorm)
 !	Written by Mark Wieczorek September 25, 2005.
 !
 !	April 19, 2008: Added CNORM optional parameter compute complex normalized functions.
+!	August 14, 2012: Modified to save auxilliary variables whenever lmax <= lmax_old (instead of
+!			reinitializing whenever lmax /= lmax_old). Converted PHASE from REAL*8 to 
+!			INTEGER*1.
 !
 !	Copyright (c) 2008, Mark A. Wieczorek
 !	All rights reserved.
@@ -62,10 +65,11 @@ subroutine PlmSchmidt(p, lmax, z, csphase, cnorm)
 	real*8, intent(out) ::	p(:)
        	real*8, intent(in) ::	z
        	integer, intent(in), optional :: csphase, cnorm
-       	real*8 ::	pm2, pm1, pmm, plm, rescalem, phase, u, scalef
+       	real*8 ::	pm2, pm1, pmm, plm, rescalem, u, scalef
       	real*8, save, allocatable ::	f1(:), f2(:), sqr(:)
       	integer ::	k, kstart, m, l, astat(3)
       	integer, save ::	lmax_old = 0
+      	integer*1 ::	phase
 
 	if (lmax == -1) then
 		if (allocated(sqr)) deallocate(sqr)
@@ -94,9 +98,9 @@ subroutine PlmSchmidt(p, lmax, z, csphase, cnorm)
      	     	
      	if (present(csphase)) then
      		if (csphase == -1) then
-     			phase = -1.0d0
+     			phase = -1
      		elseif (csphase == 1) then
-     			phase = 1.0d0
+     			phase = 1
      		else
      			print*, "Error --- PlmSchmidt"
      			print*, "CSPHASE must be 1 (exclude) or -1 (include)."
@@ -104,13 +108,13 @@ subroutine PlmSchmidt(p, lmax, z, csphase, cnorm)
      			stop
      		endif
      	else
-     		phase = dble(CSPHASE_DEFAULT)
+     		phase = CSPHASE_DEFAULT
      	endif
 	
 	scalef = 1.0d-280
 
 
-	if (lmax /= lmax_old) then
+	if (lmax > lmax_old) then
 		
 		if (allocated(sqr)) deallocate(sqr)
 		if (allocated(f1)) deallocate(f1)

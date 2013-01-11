@@ -161,7 +161,7 @@ subroutine SHMultiTaperSE(mtse, sd, sh, lmax, tapers, taper_order, lmaxt, K, alp
 	allocate(shloc(2, lmax+lmaxt+1, lmax+lmaxt+1), stat = astat(2))
 	allocate(dj(lmaxt+1,lmaxt+1,lmaxt+1), stat = astat(3))
 	allocate(shwinrot(2,lmaxt+1,lmaxt+1), stat = astat(4))
-	if (astat(1) /= 0 .or. astat(2) /= 0 .or. astat(3) /= 0 .or. astat(4) /= 0) then
+	if (sum(astat(1:4)) /= 0) then
 		print*, "Error --- SHMultiTaperSE"
 		print*, "Problem allocating arrays SHWIN, SHLOC, DJ and SHWINROT", &
 			astat(1), astat(2), astat(3), astat(4)
@@ -170,7 +170,6 @@ subroutine SHMultiTaperSE(mtse, sd, sh, lmax, tapers, taper_order, lmaxt, K, alp
 	
 	mtse = 0.0d0
 	sd = 0.0d0
-	se = 0.0d0
 	
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	!

@@ -59,6 +59,8 @@ subroutine SHRotateCoef(x, cof, rcof, dj, lmax)
 		print*, "Input array is dimensioned ", size(dj(:,1,1)), size(dj(1,:,1)), size(dj(1,1,:))
 		stop
 	endif
+	
+	rcof = 0.0d0
 
 	pi2 = 1.570796326794895d0
 	

@@ -32,7 +32,7 @@
 >  <a href="../../SHTOOLS.html" class="dir">Home</a> > <a href="../documentation.html" class="dir">Documentation</a> > <a href="../transformations.html" class="dir">Spherical Harmonic Transformations</a></p>
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
-<B>MAKEGRID2D(1)</B>                     SHTOOLS 2.7                    <B>MAKEGRID2D(1)</B>
+<B>MAKEGRID2D(1)</B>                     SHTOOLS 2.8                    <B>MAKEGRID2D(1)</B>
 
 
 </PRE>
@@ -44,14 +44,15 @@
 </PRE>
 <H2 class="man">SYNOPSIS</H2 class="man"><PRE>
        SUBROUTINE MakeGrid2D ( GRID, CILM, LMAX, INTERVAL, NLAT, NLONG, NORM,
-                               CSPHASE, F, A, NORTH, SOUTH, EAST, WEST )
+                               CSPHASE, F, A, NORTH, SOUTH, EAST, WEST,
+                               DEALLOC )
 
            REAL*8             GRID(180/INTERVAL+1, 360/INTERVAL+1),
                               CILM(2, LMAX+1, LMAX+1), INTERVAL
 
            INTEGER            LMAX, NLAT, NLONG
 
-           INTEGER, OPTIONAL  NORM, CSPHASE
+           INTEGER, OPTIONAL  NORM, CSPHASE, DEALLOC
 
            REAL*8, OPTIONAL   F, A, NORTH, SOUTH, EAST, WEST
 
@@ -158,6 +159,12 @@
                   The minimum longitude of the output raster grid, in degrees.
                   The default is 0 degrees.
 
+       DEALLOC    (input) INTEGER, OPTIONAL
+
+                  0 (default) = Save variables used in the external Legendre
+                  function calls. (1) Deallocate this memory at the end of the
+                  funcion call.
+
 
 </PRE>
 <H2 class="man">SEE ALSO</H2 class="man"><PRE>
@@ -174,7 +181,7 @@
        This is free software; you can distribute and modify it under the terms
        of the revised BSD license.
 
-SHTOOLS 2.7                       2012-03-08                     <B>MAKEGRID2D(1)</B>
+SHTOOLS 2.8                       2012-08-08                     <B>MAKEGRID2D(1)</B>
 </PRE>
 
 	<p class="dir">

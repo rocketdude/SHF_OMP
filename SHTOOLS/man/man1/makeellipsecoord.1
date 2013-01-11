@@ -132,7 +132,7 @@
 .\" ========================================================================
 .\"
 .IX Title "MAKEELLIPSECOORD 1"
-.TH MAKEELLIPSECOORD 1 "2012-03-08" "SHTOOLS 2.7" "SHTOOLS 2.7"
+.TH MAKEELLIPSECOORD 1 "2012-10-30" "SHTOOLS 2.8" "SHTOOLS 2.8"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -162,7 +162,7 @@ Compute coordinates of an ellipse placed at a given latitude and longitude.
 .RE
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-\&\fIMakeEllipseCoord\fR will calculate the (lat, long) coordinates of an ellipse placed on a sphere at position (\s-1LAT\s0, \s-1LON\s0). The semi-major and semi-minor axes, expressed in angular radii in degrees, are given by A_THETA and B_THETA, respectively, and the semi-major axis of the ellipse is rotated clockwise by the angle \s-1DEC\s0 with respect to local north. This is useful for plotting ellipses on geographic maps.
+\&\fIMakeEllipseCoord\fR will calculate the (lat, long) coordinates of an ellipse placed on a sphere at position (\s-1LAT\s0, \s-1LON\s0). The semi-major and semi-minor axes, expressed in angular radii in degrees, are given by A_THETA and B_THETA, respectively. The semimajor axis of the ellipse is initially directed due north, and it is then rotated clockwise by the angle \s-1DEC\s0. This is useful for plotting ellipses on geographic maps. The first index in the output vectors corresponds to the northern rotated semimajor axis, and subsequent points are arranged in a clockwise manner. Input and output units are in \s-1DEGREES\s0.
 .SH "ARGUMENTS"
 .IX Header "ARGUMENTS"
 .IP "\s-1COORD\s0" 17

@@ -40,7 +40,7 @@ CNUM
 
 =head1 DESCRIPTION
 
-I<MakeCircleCoord> will calculate the (lat, long) coordinates of a circle of angular radius THETA0 placed on a sphere at position (LAT, LON). This is useful for plotting circles on geographic maps.
+I<MakeCircleCoord> will calculate the latitude and longitude coordinates of a circle of angular radius THETA0 placed on a sphere at position (LAT, LON). This is useful for plotting circles on geographic maps. The first index in the output vectors corresponds to the point directly north of the cirlce origin, and subsequent points are arranged in a clockwise manner. Input and output units are in DEGREES.
 
 =head1 ARGUMENTS
 

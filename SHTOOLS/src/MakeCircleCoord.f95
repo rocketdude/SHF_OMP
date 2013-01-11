@@ -3,7 +3,9 @@ subroutine MakeCircleCoord(coord, lat, lon, theta0, cinterval, cnum)
 !
 !	This subroutine will return the latitude and longitude
 !	coordinates of a circle of radius theta from a given 
-!	point.
+!	point. The first index in the output vectors corresponds
+!	to the point directly north of the central cirlce coordinates,
+!	and subsequent points arranged in a clockwise manner.
 !
 !	Calling Parameters:
 !		IN
@@ -14,12 +16,18 @@ subroutine MakeCircleCoord(coord, lat, lon, theta0, cinterval, cnum)
 !		OPTIONAL, IN
 !			cinterval:	Angular spacing of latitude and longitude points
 !					in degrees (default=1).
+!		OPTIONAL, OUT
+!			cnum:		Number of points in the output vectors.
+!		
 !
 !	Dependencies: None
 !
 !	Written by Mark Wieczorek December 2005.
 !
-!	Copyright (c) 2005, Mark A. Wieczorek
+!	October 29, 2012. Modified the order of the output vectors so that the first
+!	point is directly north, and the following points are arranged clockwise.
+!
+!	Copyright (c) 2005-2012, Mark A. Wieczorek
 !	All rights reserved.
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -72,7 +80,7 @@ subroutine MakeCircleCoord(coord, lat, lon, theta0, cinterval, cnum)
 	zold = cos(theta0*pi/180.0d0)
 		
 	do k=1, num
-		phi = dble(k)*(2.0d0*pi/dble(num))
+		phi = pi - dble(k-1)*(2.0d0*pi/dble(num))
 		xold = sin(theta0*pi/180.0d0)*cos(phi)
 		yold = sin(theta0*pi/180.0d0)*sin(phi)
 			
@@ -90,7 +98,5 @@ subroutine MakeCircleCoord(coord, lat, lon, theta0, cinterval, cnum)
 		coord(k,2) = atan2(y, x) * 180.0d0/pi
 
 	enddo
-		
-	
-end subroutine MakeCircleCoord
 
+end subroutine MakeCircleCoord

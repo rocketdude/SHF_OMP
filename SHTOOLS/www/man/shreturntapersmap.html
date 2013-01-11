@@ -32,7 +32,7 @@
 >  <a href="../../SHTOOLS.html" class="dir">Home</a> > <a href="../documentation.html" class="dir">Documentation</a> > <a href="../localized.html" class="dir">Localized Spectral Analysis</a></p>
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
-<B>SHRETURNTAPERSMAP(1)</B>              SHTOOLS 2.7             <B>SHRETURNTAPERSMAP(1)</B>
+<B>SHRETURNTAPERSMAP(1)</B>              SHTOOLS 2.8             <B>SHRETURNTAPERSMAP(1)</B>
 
 
 </PRE>
@@ -76,12 +76,12 @@
        The spherical harmonic coefficients of each window are given in the
        columns of TAPERS, and the corresponding concentration factors are
        given in EIGENVAULES. The spherical harmonic coefficients are ordered
-       according to the scheme described in <B>YilmIndex</B>, and the columns of
-       TAPERS are ordered from best to worst concentrated. The localization
-       windows are normalized such that they have unit power. If the optional
-       parameter NTAPERS is specified, then only the NTAPERS largest
-       eigenvalues and corresponding eigenfunctions will be calculated and
-       returned.
+       according to the scheme described in <B>YilmIndex</B>, which can be converted
+       to matrix form using <B>SHVectorToCilm</B>, and the columns of TAPERS are
+       ordered from best to worst concentrated. The localization windows are
+       normalized such that they have unit power. If the optional parameter
+       NTAPERS is specified, then only the NTAPERS largest eigenvalues and
+       corresponding eigenfunctions will be calculated and returned.
 
 
 </PRE>
@@ -131,7 +131,7 @@
 
 </PRE>
 <H2 class="man">SEE ALSO</H2 class="man"><PRE>
-       <B>computedmap(1)</B>, <B>yilmindex(1)</B>
+       <B>computedmap(1)</B>, <B>yilmindex(1)</B>, <B>shvectortocilm(1)</B>
 
        &lt;http://shtools.ipgp.fr/&gt;
 
@@ -152,7 +152,7 @@
        This is free software; you can distribute and modify it under the terms
        of the revised BSD license.
 
-SHTOOLS 2.7                       2012-03-08              <B>SHRETURNTAPERSMAP(1)</B>
+SHTOOLS 2.8                       2012-10-18              <B>SHRETURNTAPERSMAP(1)</B>
 </PRE>
 
 	<p class="dir">

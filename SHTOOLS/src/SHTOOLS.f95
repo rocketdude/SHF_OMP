@@ -32,71 +32,71 @@ module SHTOOLS
        			integer, intent(in), optional :: csphase, cnorm
 		end subroutine PlmBar_d1
        		
-       	subroutine PlBar(p, lmax, z)
+       		subroutine PlBar(p, lmax, z)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:)
        			real*8, intent(in) ::	z
-       	end subroutine PlBar
+       		end subroutine PlBar
        		
-       	subroutine PlBar_d1(p, dp, lmax, z)
+       		subroutine PlBar_d1(p, dp, lmax, z)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:), dp(:)
        			real*8, intent(in) ::	z
-       	end subroutine PlBar_d1
+       		end subroutine PlBar_d1
        		
-       	subroutine PlmSchmidt(p,lmax,z, csphase, cnorm)
+       		subroutine PlmSchmidt(p,lmax,z, csphase, cnorm)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:)
       		 	real*8, intent(in) ::	z
       		 	integer, intent(in), optional :: csphase, cnorm
-      	end subroutine PlmSchmidt
+      		end subroutine PlmSchmidt
       		
-      	subroutine PlSchmidt(p,lmax,z)
+      		subroutine PlSchmidt(p,lmax,z)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:)
       		 	real*8, intent(in) ::	z
-      	end subroutine PlSchmidt
+      		end subroutine PlSchmidt
       		
-      	subroutine PlmSchmidt_d1(p, dp, lmax, z, csphase, cnorm)
+      		subroutine PlmSchmidt_d1(p, dp, lmax, z, csphase, cnorm)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:), dp(:)
       		 	real*8, intent(in) ::	z
       		 	integer, intent(in), optional :: csphase, cnorm
-      	end subroutine PlmSchmidt_d1
+      		end subroutine PlmSchmidt_d1
       		
-      	subroutine PlSchmidt_d1(p, dp, lmax, z)
+      		subroutine PlSchmidt_d1(p, dp, lmax, z)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:), dp(:)
       		 	real*8, intent(in) ::	z
-      	end subroutine PlSchmidt_d1
+      		end subroutine PlSchmidt_d1
       		
-      	subroutine PLegendre(p,lmax,z)
+      		subroutine PLegendre(p,lmax,z)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:)
        			real*8, intent(in) ::	z
-       	end subroutine PLegendre
+       		end subroutine PLegendre
        		
-       	subroutine PLegendreA(p,lmax,z, csphase)
+       		subroutine PLegendreA(p,lmax,z, csphase)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:)
        			real*8, intent(in) ::	z
        			integer, intent(in), optional :: csphase
-       	end subroutine PLegendreA
+       		end subroutine PLegendreA
        		
-      	subroutine PLegendre_d1(p, dp, lmax, z)
+      		subroutine PLegendre_d1(p, dp, lmax, z)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:), dp(:)
        			real*8, intent(in) ::	z
-       	end subroutine PLegendre_d1
+       		end subroutine PLegendre_d1
        		
-       	subroutine PLegendreA_d1(p, dp, lmax, z, csphase)
+       		subroutine PLegendreA_d1(p, dp, lmax, z, csphase)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:), dp(:)
        			real*8, intent(in) ::	z
 			integer, intent(in), optional :: csphase
-       	end subroutine PLegendreA_d1
+       		end subroutine PLegendreA_d1
        	
-       	subroutine CilmPlus(cilm, gridin, lmax, nmax, mass, d, rho, gridtype, w, zero, plx, n, dref)
+       		subroutine CilmPlus(cilm, gridin, lmax, nmax, mass, d, rho, gridtype, w, zero, plx, n, dref)
 			real*8, intent(in) :: 	gridin(:,:), mass, rho
 			real*8, intent(in), optional :: w(:), zero(:), plx(:,:), dref
 			real*8, intent(out) :: 	cilm(:,:,:), d
@@ -131,12 +131,12 @@ module SHTOOLS
 		end subroutine HilmRhoH
 		
 		subroutine MakeGrid2d(grid, cilm, lmax, interval, nlat, nlong, norm, csphase, f, a, &
-			north, south, east, west)
+			north, south, east, west, dealloc)
 			real*8, intent(in) :: 	cilm(:,:,:), interval
 			real*8, intent(out) :: 	grid(:,:)
 			integer, intent(in) :: 	lmax
 			integer, intent(out) :: nlat, nlong
-			integer, intent(in), optional ::	norm, csphase
+			integer, intent(in), optional ::	norm, csphase, dealloc
 			real*8, intent(in), optional :: 	f, a, north, south, east, west
 		end subroutine MakeGrid2D
 
@@ -196,14 +196,14 @@ module SHTOOLS
 			integer, intent(in), optional ::	skip
 		end subroutine SHRead
 		
-		subroutine MakeMagGrid2D(rad, phi, theta, total, cilm, r0, a, f, lmax, interval, nlat, nlong, &
-			north, south, east, west)
-			real*8, intent(in) :: 	cilm(:,:,:), interval, r0, a, f
-			real*8, intent(out) :: 	rad(:,:), phi(:,:), theta(:,:), total(:,:)
+		subroutine MakeMagGridDH(cilm, lmax, r0, a, f, rad_grid, theta_grid, phi_grid, total_grid, n, sampling, lmax_calc, pot_grid)
+			real*8, intent(in) :: 	cilm(:,:,:), r0, a, f
+			real*8, intent(out) ::	rad_grid(:,:), theta_grid(:,:), phi_grid(:,:), total_grid(:,:)
+			real*8, intent(out), optional :: pot_grid(:,:)
 			integer, intent(in) :: 	lmax
-			integer, intent(out) :: nlat, nlong
-			real*8, intent(in), optional :: north, south, east, west
-		end subroutine MakeMagGrid2D
+			integer, intent(out) ::	n
+			integer, intent(in), optional :: sampling, lmax_calc
+		end subroutine MakeMagGridDH
 		
 		real*8 function SHPowerL(c, l)
 			real*8, intent(in) :: c(:,:,:)
@@ -311,10 +311,10 @@ module SHTOOLS
 			integer, intent(in), optional :: norm, sampling, csphase, lmax_calc
 		end subroutine MakeGridDH
 		
-		real*8 function MakeGridPoint(cilm, lmax, lat, longitude, norm, csphase)
+		real*8 function MakeGridPoint(cilm, lmax, lat, longitude, norm, csphase, dealloc)
 			real*8, intent(in) ::	cilm(:,:,:), lat, longitude
 			integer, intent(in) ::	lmax
-			integer, intent(in), optional ::	norm, csphase
+			integer, intent(in), optional ::	norm, csphase, dealloc
 		end function MakeGridPoint
 		
 		real*8 function Wl(l, half, r, d)
@@ -523,30 +523,30 @@ module SHTOOLS
 		subroutine PlmON(p, lmax, z, csphase, cnorm)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:)
-       		real*8, intent(in) ::	z
-       		integer, intent(in), optional :: csphase, cnorm
-       	end subroutine PlmON
+       			real*8, intent(in) ::	z
+       			integer, intent(in), optional :: csphase, cnorm
+       		end subroutine PlmON
        		
-       	subroutine PlON(p, lmax, z)
+       		subroutine PlON(p, lmax, z)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:)
-       		real*8, intent(in) ::	z
-       	end subroutine PlON
+       			real*8, intent(in) ::	z
+       		end subroutine PlON
 
 		subroutine PlmON_d1(p, dp, lmax, z, csphase, cnorm)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:), dp(:)
-       		real*8, intent(in) ::	z
-       		integer, intent(in), optional :: csphase, cnorm
-       	end subroutine PlmON_d1
+       			real*8, intent(in) ::	z
+       			integer, intent(in), optional :: csphase, cnorm
+       		end subroutine PlmON_d1
 
 		subroutine PlON_d1(p, dp, lmax, z)
 			integer, intent(in) ::	lmax
 			real*8, intent(out) ::	p(:), dp(:)
-       		real*8, intent(in) ::	z
-       	end subroutine PlON_d1
+       			real*8, intent(in) ::	z
+       		end subroutine PlON_d1
        		
-       	subroutine MakeCircleCoord(coord, lat, lon, theta0, cinterval, cnum)
+       		subroutine MakeCircleCoord(coord, lat, lon, theta0, cinterval, cnum)
 			real*8, intent(in) ::	lat, lon, theta0
 			real*8, intent(out) :: coord(:,:)
 			real*8, intent(in), optional ::	cinterval
@@ -581,17 +581,19 @@ module SHTOOLS
 			integer, intent(out) :: n
 		end subroutine SHMTDebias
 		
-		subroutine MakeGravGrid2D(rad, cilm, lmax, r0, a, f, gm, gravpot, interval, nlat, nlong, &
-			theta, phi, total, omega, north, south, east, west, normal_gravity)
-			real*8, intent(in) :: 	cilm(:,:,:), interval, f, r0, a, gm
-			real*8, intent(out) :: 	rad(:,:)
+		subroutine MakeGravGridDH(cilm, lmax, gm, r0, a, f, rad, theta, phi, total, n, sampling, lmax_calc, omega, normal_gravity, pot)
+			real*8, intent(in) :: 	cilm(:,:,:), gm, r0, a, f
+			real*8, intent(out) ::	rad(:,:), theta(:,:), phi(:,:), total(:,:)
+			real*8, intent(in), optional :: omega
+			real*8, intent(out), optional :: pot(:,:)
 			integer, intent(in) :: 	lmax
-			integer, intent(out) :: nlat, nlong
-			character*1, intent(in) ::	gravpot
-			real*8, intent(in), optional :: omega, north, south, east, west
-			real*8, intent(out), optional :: theta(:,:), phi(:,:), total(:,:)
-			integer, intent(in), optional :: normal_gravity
-		end subroutine MakeGravGrid2D
+			integer, intent(out) ::	n
+			integer, intent(in), optional :: sampling, lmax_calc, normal_gravity
+		end subroutine MakeGravGridDH
+		
+		real*8 function NormalGravity(geocentric_lat, GM, omega, a, b)
+			real*8, intent(in) ::	geocentric_lat, gm, omega, a, b
+		end function NormalGravity
 		
 		real*8 function SHConfidence(l_conf, r)
 			real*8, intent(in) :: r
@@ -612,8 +614,8 @@ module SHTOOLS
 		end subroutine SHMagPowerSpectrum
 		
 		subroutine SHExpandDHC(grid, n, cilm, lmax, norm, sampling, csphase, lmax_calc)
-     		complex*16, intent(in) ::	grid(:,:)
-     		complex*16, intent(out) ::	cilm(:,:,:)
+     			complex*16, intent(in) ::	grid(:,:)
+     			complex*16, intent(out) ::	cilm(:,:,:)
 			integer, intent(in) ::	n
 			integer, intent(out) ::	lmax
 			integer, intent(in), optional :: norm, sampling, csphase, lmax_calc
@@ -735,6 +737,14 @@ module SHTOOLS
 			real*8, intent(in), optional ::	cinterval
 			integer, intent(out), optional :: cnum
 		end subroutine MakeEllipseCoord
+		
+		subroutine MakeGravGradGridDH(cilm, lmax, gm, r0, a, f, vxx, vyy, vzz, vxy, vxz, vyz, n, sampling, lmax_calc)
+			real*8, intent(in) :: 	cilm(:,:,:), gm, r0, a, f
+			real*8, intent(out) ::	vxx(:,:), vyy(:,:), vzz(:,:), vxy(:,:), vxz(:,:), vyz(:,:)
+			integer, intent(in) :: 	lmax
+			integer, intent(out) ::	n
+			integer, intent(in), optional :: sampling, lmax_calc
+		end subroutine MakeGravGradGridDH
 
 	end interface
 	

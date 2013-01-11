@@ -91,17 +91,12 @@ subroutine SHRotateRealCoef(cilmrot, cilm, lmax, x, dj)
 	allocate(ccilm(2,lmax+1,lmax+1), stat = astat(1))
 	allocate(cof(2,(lmax+1)*(lmax+2)/2), stat = astat(2))
 	allocate(rcof(2,(lmax+1)*(lmax+2)/2), stat = astat(3))
-	if (astat(1) /= 0 .or. astat(2) /= 0 .or. astat(3) /= 0) then
+	if (sum(astat(1:3)) /= 0) then
 		print*, "Error --- SHRotateRealCoef"
 		print*, "Problem allocating arrays CCILM, COF, and RCOF", &
 			astat(1), astat(2), astat(3)
 		stop
 	endif
-
-	ccilm = 0.0d0
-	cof = 0.0d0
-	rcof = 0.0d0
-	cilmrot = 0.0d0
 	
 	if (CSPHASE_DEFAULT == 1) then
 		call SHrtoc(cilm, ccilm, degmax=lmax, convention=2, switchcs=1)		! Convert geodesy coefficients to Varshalovich et al. complex form

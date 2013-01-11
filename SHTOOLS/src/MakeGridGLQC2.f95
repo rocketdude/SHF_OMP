@@ -60,8 +60,11 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 !
 !	November 21, 2011	Fixed problem where saved variables used in Plm recursion were not recalculated
 !				if NORM changed from one call to the next (with the same value of N).
+!	August 8, 2012.		Changed variable type of symsign from real to integer*1 to increase speed. 
+!				Expanded indexed quantities with "k" to L and M in order to assure that 
+!				memory is adajent in do loops.
 !
-!	Copyright (c) 2005-2011, Mark A. Wieczorek
+!	Copyright (c) 2005-2012, Mark A. Wieczorek
 !	All rights reserved.
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -75,13 +78,14 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 	complex*16, intent(out) ::	gridglq(:,:)
 	integer, intent(in) :: 	lmax
 	integer, intent(in), optional :: norm, csphase, lmax_calc
-	integer :: 		l, m, i, nlat, nlong, l1, m1, lmax_comp, phase, i_s, astat(4), lnorm, &
-				k, kstart
+	integer :: 		l, m, i, nlat, nlong, l1, m1, lmax_comp, i_s, astat(4), lnorm, k
 	real*8 :: 		pi, scalef, rescalem, u, p, pmm, pm1, pm2, z
 	complex*16 ::		coef(2*lmax+1), coefs(2*lmax+1), grid(2*lmax+1)
 	integer*8 ::		plan
-	real*8, save, allocatable ::	f1(:), f2(:), sqr(:), symsign(:)
+	real*8, save, allocatable ::	ff1(:,:), ff2(:,:), sqr(:)
+	integer*1, save, allocatable ::	fsymsign(:,:)
 	integer, save ::	lmax_old=0, norm_old = 0
+	integer*1 ::		phase
 
 
 	if (size(cilm(:,1,1)) < 2) then
@@ -152,7 +156,15 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 	scalef = 1.0d-280
 	
 	if (present(lmax_calc)) then
-		lmax_comp = min(lmax, size(cilm(1,1,:))-1, size(cilm(1,:,1))-1, lmax_calc)
+		if (lmax_calc > lmax) then
+			print*, "Error --- MakeGridGLQC"
+			print*, "LMAX_CALC must be less than or equal to LMAX."
+			print*, "LMAX = ", lmax
+			print*, "LMAX_CALC = ", lmax_calc
+			stop
+		else
+			lmax_comp = min(lmax, size(cilm(1,1,:))-1, size(cilm(1,:,1))-1, lmax_calc)
+		endif
 	else
 		lmax_comp = min(lmax, size(cilm(1,1,:))-1, size(cilm(1,:,1))-1)
 	endif
@@ -163,21 +175,21 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 	!
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
-	if ( (lmax_comp /= lmax_old .or. lnorm / norm_old) .and. .not. present(plx)) then
+	if ( (lmax_comp /= lmax_old .or. lnorm /= norm_old) .and. .not. present(plx)) then
 		
 		if (allocated(sqr)) deallocate(sqr)
-		if (allocated(f1)) deallocate(f1)
-		if (allocated(f2)) deallocate(f2)
-		if (allocated(symsign)) deallocate(symsign)
+		if (allocated(ff1)) deallocate(ff1)
+		if (allocated(ff2)) deallocate(ff2)
+		if (allocated(fsymsign)) deallocate(fsymsign)
 		
 		allocate(sqr(2*lmax_comp+1), stat=astat(1))
-		allocate(f1((lmax_comp+1)*(lmax_comp+2)/2), stat=astat(2))
-		allocate(f2((lmax_comp+1)*(lmax_comp+2)/2), stat=astat(3))
-		allocate(symsign((lmax_comp+1)*(lmax_comp+2)/2), stat=astat(4))
+		allocate(ff1(lmax_comp+1,lmax_comp+1), stat=astat(2))
+		allocate(ff2(lmax_comp+1,lmax_comp+1), stat=astat(3))
+		allocate(fsymsign(lmax_comp+1,lmax_comp+1), stat=astat(4))
 		
-		if (astat(1) /= 0 .or. astat(2) /= 0 .or. astat(3) /= 0 .or. astat(4) /= 0) then
+		if (sum(astat(1:4)) /= 0) then
 			print*, "MakeGridGLQ --- Error"
-			print*, "Problem allocating arrays SQR, F1, F2, or SYMSIGN", astat(1), astat(2), astat(3), astat(4)
+			print*, "Problem allocating arrays SQR, FF1, FF2, or FSYMSIGN", astat(1), astat(2), astat(3), astat(4)
 			stop
 		endif
 		
@@ -187,14 +199,12 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 		!
 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		
-		k = 0
 		do l = 0, lmax_comp, 1
 			do m = 0, l, 1
-				k = k + 1
 				if (mod(l-m,2) == 0) then
-					symsign(k) = 1.0d0
+					fsymsign(l+1,m+1) = 1
 				else
-					symsign(k) = -1.0d0
+					fsymsign(l+1,m+1) = -1
 				endif
 			enddo
 		enddo
@@ -219,73 +229,57 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 		!
 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
-		k = 1
-		
 		select case(lnorm)
 		
 			case(1,4)
+	
 				if (lmax_comp /= 0) then
-					k = k + 1
-					f1(k) = sqr(3)
-					f2(k) = 0.0d0
-					k = k + 1
+					ff1(2,1) = sqr(3)
+					ff2(2,1) = 0.0d0
 				endif
 				
 				do l=2, lmax_comp, 1
-					k = k + 1
-					f1(k) = sqr(2*l-1) * sqr(2*l+1) / dble(l)
-					f2(k) = dble(l-1) * sqr(2*l+1) / sqr(2*l-3) / dble(l)
+					ff1(l+1,1) = sqr(2*l-1) * sqr(2*l+1) / dble(l)
+					ff2(l+1,1) = dble(l-1) * sqr(2*l+1) / sqr(2*l-3) / dble(l)
 					do m=1, l-2, 1
-						k = k+1
-						f1(k) = sqr(2*l+1) * sqr(2*l-1) / sqr(l+m) / sqr(l-m)
-                				f2(k) = sqr(2*l+1) * sqr(l-m-1) * sqr(l+m-1) &
+						ff1(l+1,m+1) = sqr(2*l+1) * sqr(2*l-1) / sqr(l+m) / sqr(l-m)
+                				ff2(l+1,m+1) = sqr(2*l+1) * sqr(l-m-1) * sqr(l+m-1) &
                   				 	/ sqr(2*l-3) / sqr(l+m) / sqr(l-m) 
 					enddo
-					k = k+1
-					f1(k) = sqr(2*l+1) * sqr(2*l-1) / sqr(l+m) / sqr(l-m)
-                			f2(k) = 0.0d0
-					k = k + 1
+					ff1(l+1,l) = sqr(2*l+1) * sqr(2*l-1) / sqr(l+m) / sqr(l-m)
+                			ff2(l+1,l) = 0.0d0
 				enddo
 			
 			case(2)
-				
+			
 				if (lmax_comp /= 0) then
-					k = k + 1
-					f1(k) = 1.0d0
-					f2(k) = 0.0d0
-					k = k + 1
+					ff1(2,1) = 1.0d0
+					ff2(2,1) = 0.0d0
 				endif
 				
 				do l=2, lmax_comp, 1
-					k = k + 1
-					f1(k) = dble(2*l-1) /dble(l)
-					f2(k) = dble(l-1) /dble(l)
+					ff1(l+1,1) = dble(2*l-1) /dble(l)
+					ff2(l+1,1) = dble(l-1) /dble(l)
 					do m=1, l-2, 1
-						k = k+1
-						f1(k) = dble(2*l-1) / sqr(l+m) / sqr(l-m)
-                  				f2(k) = sqr(l-m-1) * sqr(l+m-1) / sqr(l+m) / sqr(l-m)
+						ff1(l+1,m+1) = dble(2*l-1) / sqr(l+m) / sqr(l-m)
+                  				ff2(l+1,m+1) = sqr(l-m-1) * sqr(l+m-1) / sqr(l+m) / sqr(l-m)
 					enddo
-					k = k+1
-					f1(k) = dble(2*l-1) / sqr(l+m) / sqr(l-m)
-                  			f2(k) = 0.0d0
-					k = k + 1
+					ff1(l+1,l)= dble(2*l-1) / sqr(l+m) / sqr(l-m)
+                  			ff2(l+1,l) = 0.0d0
 				enddo
 			
-			case(3)		
-			
+			case(3)
+		
 				do l=1, lmax_comp, 1
-					k = k + 1
-					f1(k) = dble(2*l-1) /dble(l)
-					f2(k) = dble(l-1) /dble(l)
+					ff1(l+1,1) = dble(2*l-1) /dble(l)
+					ff2(l+1,1) = dble(l-1) /dble(l)
 					do m=1, l-1, 1
-						k = k+1
-						f1(k) = dble(2*l-1) / dble(l-m)
-                  				f2(k) = dble(l+m-1) / dble(l-m)
+						ff1(l+1,m+1) = dble(2*l-1) / dble(l-m)
+                  				ff2(l+1,m+1) = dble(l+m-1) / dble(l-m)
 					enddo
-					k = k + 1
 				enddo
 
-		end select
+		end select	
 	
 		lmax_old = lmax_comp
 		norm_old = lnorm
@@ -310,7 +304,6 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 		return
 	
 	endif
-
 	
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	!
@@ -339,7 +332,7 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 					k = l1*l/2 + m1
 					coef(m1) = coef(m1) + cilm(1,l1,m1) * plx(i,k)
 					coef(nlong-(m-1)) = coef(nlong-(m-1)) + &
-						cilm(2,l1,m1) * plx(i,k) * dble((-1)**mod(m,2))
+						cilm(2,l1,m1) * plx(i,k) * ((-1)**mod(m,2))
 				enddo
 			enddo
 			
@@ -365,15 +358,11 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 
 				coef(1) = coef(1) + cilm(1,1,1) * pm2
 				
-				k = 2
-				
 				do l=2, lmax_comp, 2
 					l1 = l+1
-					k = k + l
-					p = - f2(k) * pm2
+					p = - ff2(l1,1) * pm2
 					pm2 = p
 					coef(1) = coef(1) + cilm(1,l1,1) * p
-					k = k + l + 1
 				enddo
 				
 				select case(lnorm)
@@ -382,12 +371,10 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 				end select
 								
 				rescalem = 1.0d0/scalef
-				kstart = 1
 			
 				do m = 1, lmax_comp-1, 1
 				
 					m1 = m + 1
-					kstart = kstart + m + 1
 					
 					select case(lnorm)
 						case(1,4)
@@ -403,21 +390,17 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 					
 					coef(m1) = coef(m1) + cilm(1,m1,m1) * pm2
 					coef(nlong-(m-1)) = coef(nlong-(m-1)) + cilm(2,m1,m1) * pm2 
-										
-					k = kstart+m+1
 	   				
 					do l = m+2, lmax_comp, 2
 						l1 = l+1
-						k = k + l
-						p = - f2(k) * pm2
+						p = - ff2(l1,m1) * pm2
 						coef(m1) = coef(m1) + cilm(1,l1,m1) * p
 						coef(nlong-(m-1)) = coef(nlong-(m-1)) + cilm(2,l1,m1) * p 
 						pm2 = p
-						k = k + l + 1
 					enddo
 					
 					coef(m1) = coef(m1) * rescalem
-					coef(nlong-(m-1)) = coef(nlong-(m-1)) * rescalem * dble((-1)**mod(m,2))
+					coef(nlong-(m-1)) = coef(nlong-(m-1)) * rescalem * ((-1)**mod(m,2))
 										
 				enddo			
 				
@@ -429,7 +412,7 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
           			
         			coef(lmax_comp+1) = coef(lmax_comp+1) + cilm(1,lmax_comp+1,lmax_comp+1) * pmm
         			coef(nlong-(lmax_comp-1)) = coef(nlong-(lmax_comp-1)) + &
-        				cilm(2,lmax_comp+1,lmax_comp+1) * pmm  * dble((-1)**mod(lmax_comp,2))
+        				cilm(2,lmax_comp+1,lmax_comp+1) * pmm  * ((-1)**mod(lmax_comp,2))
 		
                			call dfftw_execute_(plan)	! take fourier transform
                 
@@ -450,19 +433,17 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 				end select
 
 				coef(1) = coef(1) + cilm(1,1,1) * pm2
-				coefs(1) = coefs(1) + cilm(1,1,1) * pm2 	! symsign is always 1 for l=m=0
+				coefs(1) = coefs(1) + cilm(1,1,1) * pm2 	! fsymsign is always 1 for l=m=0
 				
-				k = 2
-				pm1 =  f1(k) * z * pm2
+				pm1 =  ff1(2,1) * z * pm2
 				coef(1) = coef(1) + cilm(1,2,1) * pm1
-				coefs(1) = coefs(1) + cilm(1,2,1) * pm1 * symsign(k)
+				coefs(1) = coefs(1) - cilm(1,2,1) * pm1 ! fsymsign = -1
 				
 				do l=2, lmax_comp, 1
 					l1 = l+1
-					k = k+l
-					p = f1(k) * z * pm1 - f2(k) * pm2
+					p = ff1(l1,1) * z * pm1 - ff2(l1,1) * pm2
 					coef(1) = coef(1) + cilm(1,l1,1) * p
-					coefs(1) = coefs(1) + cilm(1,l1,1) * p * symsign(k)
+					coefs(1) = coefs(1) + cilm(1,l1,1) * p * fsymsign(l1,1)
 					pm2 = pm1
 					pm1 = p
 				enddo
@@ -473,13 +454,11 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 				end select
 				
 				rescalem = 1.0d0/scalef
-				kstart = 1
 			
 				do m = 1, lmax_comp-1, 1
 				
 					m1 = m+1
 					rescalem = rescalem * u
-					kstart = kstart+m+1
 					
 					select case(lnorm)
 						case(1,4)
@@ -497,33 +476,31 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
 					coef(nlong-(m-1)) = coef(nlong-(m-1)) + cilm(2,m1,m1) * pm2
 					coefs(m1) = coefs(m1) + cilm(1,m1,m1) * pm2
 					coefs(nlong-(m-1)) = coefs(nlong-(m-1)) + cilm(2,m1,m1) * pm2
-					! symsign(kstart) = 1
+					! fsymsign = 1
 										
-					k = kstart+m+1
-	   				pm1 = z * f1(k) * pm2
+	   				pm1 = z * ff1(m1+1,m1) * pm2
 	   				
 	   				coef(m1) = coef(m1) + cilm(1,m1+1,m1) * pm1
 	   				coef(nlong-(m-1)) = coef(nlong-(m-1)) + cilm(2,m1+1,m1) * pm1	
 					coefs(m1) = coefs(m1) - cilm(1,m1+1,m1) * pm1
 					coefs(nlong-(m-1)) = coefs(nlong-(m-1)) - cilm(2,m1+1,m1) * pm1
-					! symsign = -1
+					! fsymsign = -1
 	   				
 					do l = m+2, lmax_comp, 1
 						l1 = l+1
-						k = k + l
-						p = z * f1(k) * pm1 - f2(k) * pm2
+						p = z * ff1(l1,m1) * pm1 - ff2(l1,m1) * pm2
 						pm2 = pm1
                   				pm1 = p
 						coef(m1) = coef(m1) + cilm(1,l1,m1) * p
 						coef(nlong-(m-1)) = coef(nlong-(m-1)) + cilm(2,l1,m1) * p
-						coefs(m1) = coefs(m1) + cilm(1,l1,m1) * p * symsign(k)
-						coefs(nlong-(m-1)) = coefs(nlong-(m-1)) + cilm(2,l1,m1) * p * symsign(k)
+						coefs(m1) = coefs(m1) + cilm(1,l1,m1) * p * fsymsign(l1,m1)
+						coefs(nlong-(m-1)) = coefs(nlong-(m-1)) + cilm(2,l1,m1) * p * fsymsign(l1,m1)
 					enddo
 					
 					coef(m1) = coef(m1) * rescalem
-					coef(nlong-(m-1)) = coef(nlong-(m-1)) * rescalem * dble((-1)**mod(m,2))
+					coef(nlong-(m-1)) = coef(nlong-(m-1)) * rescalem * ((-1)**mod(m,2))
 					coefs(m1) = coefs(m1) * rescalem
-					coefs(nlong-(m-1)) = coefs(nlong-(m-1)) * rescalem * dble((-1)**mod(m,2))
+					coefs(nlong-(m-1)) = coefs(nlong-(m-1)) * rescalem * ((-1)**mod(m,2))
 					
 				enddo			
 								
@@ -532,16 +509,16 @@ subroutine MakeGridGLQC(gridglq, cilm, lmax, plx, zero, norm, csphase, lmax_calc
           			select case(lnorm)
             				case(1,4);	pmm = phase * pmm * sqr(2*lmax_comp+1) / sqr(2*lmax_comp) * rescalem
             				case(2);	pmm = phase * pmm / sqr(2*lmax_comp) * rescalem
-            				case(3);	pmm = phase * pmm * dble(2*lmax_comp-1) * rescalem
+            				case(3);	pmm = phase * pmm * (2*lmax_comp-1) * rescalem
         			end select
          			
         			coef(lmax_comp+1) = coef(lmax_comp+1) + cilm(1,lmax_comp+1,lmax_comp+1) * pmm
         			coef(nlong-(lmax_comp-1)) = coef(nlong-(lmax_comp-1)) + cilm(2,lmax_comp+1,lmax_comp+1) &
-        				* pmm * dble((-1)**mod(lmax_comp,2))
+        				* pmm * ((-1)**mod(lmax_comp,2))
 				coefs(lmax_comp+1) = coefs(lmax_comp+1) + cilm(1,lmax_comp+1,lmax_comp+1) * pmm
 				coefs(nlong-(lmax_comp-1)) = coefs(nlong-(lmax_comp-1)) + cilm(2,lmax_comp+1,lmax_comp+1) &
-					* pmm * dble((-1)**mod(lmax_comp,2))
-				! symsign = 1
+					* pmm * ((-1)**mod(lmax_comp,2))
+				! fsymsign = 1
                			
                			call dfftw_execute_(plan)	! take fourier transform
                			gridglq(i,1:nlong) = grid(1:nlong)

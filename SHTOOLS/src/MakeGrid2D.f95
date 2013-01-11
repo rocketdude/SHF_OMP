@@ -1,4 +1,4 @@
-subroutine MakeGrid2D(grid, cilm, lmax, interval, nlat, nlong, norm, csphase, f, a, north, south, east, west)
+subroutine MakeGrid2D(grid, cilm, lmax, interval, nlat, nlong, norm, csphase, f, a, north, south, east, west, dealloc)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !	Given the Spherical Harmonic coefficients cilm, this subroutine
@@ -36,6 +36,8 @@ subroutine MakeGrid2D(grid, cilm, lmax, interval, nlat, nlong, norm, csphase, f,
 !			south		Minimum latitude to compute, in degrees.
 !			east		Maximum longitude to compute, in degrees.
 !			west		Minimum latitude to compute, in degrees.
+!			dealloc		0 (default): Do not deallocate saved variables in the Legendre function
+!					routines. (1) Dellocate this memory at the end of the routine.
 !			
 !
 !	Notes:
@@ -55,6 +57,8 @@ subroutine MakeGrid2D(grid, cilm, lmax, interval, nlat, nlong, norm, csphase, f,
 !	July 21, 2007 	Reference ellipsoid is now calculated exactly using the flattening and semi-major
 !			axis instead of just the second degree Legendre expansion coefficient.
 !	August 19, 2007	Added option to calculate subdomains of a raster grid.
+!	August 8, 2012	Reorded the do loops to opimize access of adjacent memory. Compute cos(mx) and sin(mx)
+!			using a recursion relationship instead of the default intrinsic functions.
 !
 !	Copyright (c) 2005-2007, Mark A. Wieczorek
 !	All rights reserved.
@@ -69,7 +73,7 @@ subroutine MakeGrid2D(grid, cilm, lmax, interval, nlat, nlong, norm, csphase, f,
 	real*8, intent(out) :: 	grid(:,:)
 	integer, intent(in) :: 	lmax
 	integer, intent(out) :: nlat, nlong
-	integer, intent(in), optional :: norm, csphase
+	integer, intent(in), optional :: norm, csphase, dealloc
 	real*8, intent(in), optional :: f, a, north, south, east, west
 	integer :: 		l, m, j, k, index, l1, m1, lmax_comp, phase, lnorm, temp, astat(4)
 	real*8 :: 		pi, latmax, latmin, longmin, longmax, lat, longitude, &
@@ -177,8 +181,8 @@ subroutine MakeGrid2D(grid, cilm, lmax, interval, nlat, nlong, norm, csphase, f,
 	endif
 	
 	allocate(pl((lmax+1)*(lmax+2)/2), stat = astat(1))
-	allocate(cosm(int(360./interval + 1), lmax+1), stat = astat(2))
-	allocate(sinm(int(360./interval + 1), lmax+1), stat = astat(3))
+	allocate(cosm(lmax+1, int(360./interval + 1)), stat = astat(2))
+	allocate(sinm(lmax+1, int(360./interval + 1)), stat = astat(3))
 	allocate(cilm2(2,lmax+1,lmax+1), stat = astat(4))
 	if (astat(1) /= 0 .or. astat(2) /= 0 .or. astat(3) /=0 .or. astat(4) /= 0) then
 		print*, "Error --- MakeGrid2D"
@@ -206,16 +210,22 @@ subroutine MakeGrid2D(grid, cilm, lmax, interval, nlat, nlong, norm, csphase, f,
 	do k=1, nlong
 	
 		longitude = longmin*pi/180.0d0 + dble(k-1)*intervalrad
-		do m=0, lmax
-			cosm(k, m+1) = cos(m*longitude)
-			sinm(k, m+1) = sin(m*longitude)
+		sinm(1,k) = 0.0d0
+		cosm(1,k) = 1.0d0
+		if (lmax > 0) then
+			sinm(2,k) = sin(longitude)
+			cosm(2,k) = cos(longitude)
+		endif
+		do m=2, lmax, 1
+			sinm(m+1,k) = 2 * sinm(m,k)*cosm(2,k) - sinm(m-1,k)
+			cosm(m+1,k) = 2 * cosm(m,k)*cosm(2,k) - cosm(m-1,k)
 		enddo
 		
 	enddo
 
 	do j=1, nlat
 	
-		lat = latmax - dble(j-1)*interval
+		lat = latmax - (j-1)*interval
 		x = sin(lat*pi/180.0d0)
 		
 		if (lat == 90.0d0 .or. lat == -90.0d0) then
@@ -247,19 +257,24 @@ subroutine MakeGrid2D(grid, cilm, lmax, interval, nlat, nlong, norm, csphase, f,
 			
 			do k = 1, nlong
 			
-				do l = lmax_comp, 0, -1
-			
+				! do m = 0 term first
+				m1 = 1
+				do l=0, lmax_comp, 1
 					l1 = l+1
 					index = (l+1)*l/2 + 1
-					grid(j,k) = grid(j,k) + cilm2(1,l1,1) * pl(index)
-				
-					do m = 1, l, 1
-						m1 = m+1
+					grid(j,k) = grid(j,k) + cilm2(1,l1,1)*cosm(1,k) * pl(index)
+				enddo
+			
+				do m=1, lmax_comp, 1
+					m1 = m+1
+					do l=m, lmax_comp, 1
+						l1 = l+1
 						index = (l+1)*l/2 + m + 1
-						grid(j,k) = grid(j,k) + ( cilm2(1,l1,m1)*cosm(k,m+1) + &
-							cilm2(2,l1,m1)*sinm(k,m+1) ) * pl(index)
+						grid(j,k) = grid(j,k) + ( cilm2(1,l1,m1)*cosm(m1,k) + &
+							cilm2(2,l1,m1)*sinm(m1,k) ) * pl(index)
 					enddo
 				enddo
+			
 			
 			enddo
 		
@@ -276,11 +291,16 @@ subroutine MakeGrid2D(grid, cilm, lmax, interval, nlat, nlong, norm, csphase, f,
 		
 	
 	! deallocate memory
-	select case(lnorm)
-		case(1); call PlmBar(pl, -1, x, csphase = phase)
-		case(2); call PlmSchmidt(pl, -1, x, csphase = phase)
-		case(4); call PlmON(pl, -1, x, csphase = phase)
-	end select
+	if (present(dealloc)) then
+		if (dealloc == 1) then
+			select case(lnorm)
+				case(1); call PlmBar(pl, -1, x, csphase = phase)
+				case(2); call PlmSchmidt(pl, -1, x, csphase = phase)
+				case(4); call PlmON(pl, -1, x, csphase = phase)
+			end select
+		endif
+	endif
+	
 	deallocate(pl)
 	deallocate(cosm)
 	deallocate(sinm)

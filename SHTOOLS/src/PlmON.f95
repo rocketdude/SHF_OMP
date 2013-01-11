@@ -49,6 +49,9 @@ subroutine PlmON(p, lmax, z, csphase, cnorm)
 !	Written by Mark Wieczorek September 25, 2005.
 !
 !	April 19, 2008: Added CNORM optional parameter compute complex normalized functions.
+!	August 14, 2012: Modified to save auxilliary variables whenever lmax <= lmax_old (instead of
+!			reinitializing whenever lmax /= lmax_old). Converted PHASE from REAL*8 to 
+!			INTEGER*1.
 !
 !	Copyright (c) 2008, Mark A. Wieczorek
 !	All rights reserved.
@@ -62,10 +65,11 @@ subroutine PlmON(p, lmax, z, csphase, cnorm)
 	real*8, intent(out) ::	p(:)
        	real*8, intent(in) ::	z
        	integer, intent(in), optional :: csphase, cnorm
-       	real*8 ::	pm2, pm1, pmm, plm, rescalem, phase, pi, u, scalef
+       	real*8 ::	pm2, pm1, pmm, plm, rescalem, pi, u, scalef
       	real*8, save, allocatable ::	f1(:), f2(:), sqr(:)
       	integer ::	k, kstart, m, l, astat(3)
       	integer, save ::	lmax_old = 0
+      	integer*1 ::	phase
 
 	if (lmax == -1) then
 		if (allocated(sqr)) deallocate(sqr)
@@ -96,9 +100,9 @@ subroutine PlmON(p, lmax, z, csphase, cnorm)
      	
      	if (present(csphase)) then
      		if (csphase == -1) then
-     			phase = -1.0d0
+     			phase = -1
      		elseif (csphase == 1) then
-     			phase = 1.0d0
+     			phase = 1
      		else
      			print*, "PlmBar --- Error"
      			print*, "CSPHASE must be 1 (exclude) or -1 (include)."
@@ -106,13 +110,13 @@ subroutine PlmON(p, lmax, z, csphase, cnorm)
      			stop
      		endif
      	else
-     		phase = dble(CSPHASE_DEFAULT)
+     		phase = CSPHASE_DEFAULT
      	endif
      		
 	scalef = 1.0d-280
 	
 	
-	if (lmax /= lmax_old) then
+	if (lmax > lmax_old) then
 		
 		if (allocated(sqr)) deallocate(sqr)
 		if (allocated(f1)) deallocate(f1)
@@ -180,7 +184,7 @@ subroutine PlmON(p, lmax, z, csphase, cnorm)
       	
       	if (lmax == 0) return
       	
-      	pm1  = sqr(3)*z/sqrt(4.0d0*pi)
+      	pm1  = sqr(3)*z/sqrt(4*pi)
       	p(2) = pm1
       		
 	k = 2
@@ -201,12 +205,12 @@ subroutine PlmON(p, lmax, z, csphase, cnorm)
 	
  	if (present(cnorm)) then
 		if (cnorm == 1) then
-			pmm  = scalef/sqrt(4.0d0*pi)
+			pmm  = scalef/sqrt(4*pi)
 		else
-			pmm  = sqr(2)*scalef/sqrt(4.0d0*pi)
+			pmm  = sqr(2)*scalef/sqrt(4*pi)
 		endif
 	else
-      		pmm  = sqr(2)*scalef/sqrt(4.0d0*pi)
+      		pmm  = sqr(2)*scalef/sqrt(4*pi)
       	endif
 
       	rescalem = 1.0d0/scalef

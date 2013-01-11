@@ -52,8 +52,8 @@ module PlanetsConstants
 				
 	! Earth
 	
-	real*8, parameter ::	GM_Earth = 3986004.415d8, &	! EGM96		
-				R0_pot_Earth = 6378136.30d0, &	! EGM96
+	real*8, parameter ::	GM_Earth = 3986004.415d8, &	! EGM2008		
+				R0_pot_Earth = 6378136.30d0, &	! EGM2008
 				Mass_Earth = GM_Earth / Grav_constant, &
 				WGS84_a = 6378137.0d0, & !	WGS84 ellipsoid semi-major axis
 				WGS84_f = 1.0d0 /298.2572235630d0, & ! WGS84 ellipsoid flattening

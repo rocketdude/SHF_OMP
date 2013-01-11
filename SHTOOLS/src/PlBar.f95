@@ -59,7 +59,7 @@ subroutine PlBar(p,lmax,z)
       	
       	do l = 2, lmax
          	pl = ( sqrt(dble(2*l-1))  * z * pm1 - &
-         		dble(l-1) * pm2 / sqrt(dble(2*l-3)) ) * &
+         		(l-1) * pm2 / sqrt(dble(2*l-3)) ) * &
          		sqrt(dble(2*l+1))/dble(l)
          	p(l+1) = pl
          	pm2  = pm1

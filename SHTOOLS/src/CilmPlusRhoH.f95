@@ -54,6 +54,8 @@ subroutine CilmPlusRhoH(cilm, gridin, lmax, nmax, mass, d, rho, gridtype, w, zer
 !		April 2012. Modified to calculate GRID**k before sending in to the subroutine call in order to improve
 !			memory management
 !		May 2012. Modified to inlude lateral variations in crustal density.
+!		November 2, 2012. Modified the way in which the grid was scaled before cacluating the spherical
+!			harmonic transform.
 !
 !	Copyright (c) 2005-2012, Mark A. Wieczorek
 !	All rights reserved.
@@ -68,7 +70,7 @@ subroutine CilmPlusRhoH(cilm, gridin, lmax, nmax, mass, d, rho, gridtype, w, zer
 	real*8, intent(out) ::	cilm(:,:,:), d
 	integer, intent(in) ::	lmax, nmax, gridtype
 	integer, intent(in), optional :: n
-	real*8 ::		prod, pi
+	real*8 ::		prod, pi, scalef
 	real*8, allocatable ::	cilmn(:, :, :), grid(:, :)
 	integer ::		j, l, k, nlat, nlong, astat(2), lmax_dh
 
@@ -251,6 +253,7 @@ subroutine CilmPlusRhoH(cilm, gridin, lmax, nmax, mass, d, rho, gridtype, w, zer
 
 	
 	! Do k = 1 terms first
+	
 	grid(1:nlat, 1:nlong) = (gridin(1:nlat,1:nlong)-d) * rho(1:nlat,1:nlong) / d
 	
 	select case(gridtype)
@@ -272,8 +275,10 @@ subroutine CilmPlusRhoH(cilm, gridin, lmax, nmax, mass, d, rho, gridtype, w, zer
 		cilm(1:2,l+1,1:l+1) = 4.0d0*pi*(d**3)*cilmn(1:2,l+1,1:l+1) /mass /dble(2*l+1)
 	enddo
 	
+	scalef = maxval(abs(gridin(1:nlat,1:nlong)-d))
+	
 	do k=2, nmax
-		grid(1:nlat,1:nlong) = rho(1:nlat,1:nlong) * ((gridin(1:nlat,1:nlong)-d)/d)**k
+		grid(1:nlat,1:nlong) = rho(1:nlat,1:nlong) * ((gridin(1:nlat,1:nlong)-d)/scalef)**k
 		select case(gridtype)
 			case(1)
 				if (present(plx)) then
@@ -290,7 +295,7 @@ subroutine CilmPlusRhoH(cilm, gridin, lmax, nmax, mass, d, rho, gridtype, w, zer
 		end select
 		
 		do l = 0, lmax
-			prod = 4.0d0*pi*(d**3)/mass
+			prod = 4.0d0*pi*(d**3)/mass * (scalef/d)**k
 			do j=1, k
 				prod = prod * dble(l+4-j)
 			enddo

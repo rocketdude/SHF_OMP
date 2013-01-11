@@ -1,4 +1,4 @@
-real*8 function MakeGridPoint(cilm, lmax, lat, longitude, norm, csphase)
+real*8 function MakeGridPoint(cilm, lmax, lat, longitude, norm, csphase, dealloc)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !	This function will determine the value at a given latitude and 
@@ -7,19 +7,21 @@ real*8 function MakeGridPoint(cilm, lmax, lat, longitude, norm, csphase)
 !
 !	Calling Parameters:
 !		IN
-!			cilm:	Spherical harmonic coefficients, with dimensions
-!				(2, lmax+1, lmax+1).
-!			lmax:	Maximum degree used in the expansion.
-!			lat:	latitude (degrees).
-!			long:	longitude(degrees).
+!			cilm:		Spherical harmonic coefficients, with dimensions
+!					(2, lmax+1, lmax+1).
+!			lmax:		Maximum degree used in the expansion.
+!			lat:		latitude (degrees).
+!			long:		longitude(degrees).
 !		OPTIONAL (IN)
-!			norm	Spherical harmonic normalization:
-!					(1) "geodesy" (default)
-!					(2) Schmidt
-!					(3) unnormalized
-!					(4) orthonormalized
-!			csphase:	1: Do not include the phase factor of (-1)^m
-!					-1: Apply the phase factor of (-1)^m.
+!			norm		Spherical harmonic normalization:
+!						(1) "geodesy" (default)
+!						(2) Schmidt
+!						(3) unnormalized
+!						(4) orthonormalized
+!			csphase:		1: Do not include the phase factor of (-1)^m
+!						-1: Apply the phase factor of (-1)^m.
+!			dealloc		If (1) Deallocate saved memory in Legendre function routines.
+!					Default (0) is not to deallocate memory.
 !
 !
 !	Dependencies:		PlmBar, PlBar, PlmSchmidt, PlmON, CSPHASE_DEFAULT
@@ -31,7 +33,11 @@ real*8 function MakeGridPoint(cilm, lmax, lat, longitude, norm, csphase)
 !
 !	Written by Mark Wieczorek (June 2004)
 !
-!	Copyright (c) 2005, Mark A. Wieczorek
+!	August 8, 2012. Modified to precompute sin and cosine terms using a recusion relationship. Also, the default has been modified to 
+!			save variables used in the Legendre function routines. To deallocate this space, specify
+!			the new optional parameter DEALLOC to be 1.
+!
+!	Copyright (c) 2005-2012, Mark A. Wieczorek
 !	All rights reserved.
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -41,10 +47,10 @@ real*8 function MakeGridPoint(cilm, lmax, lat, longitude, norm, csphase)
 	
 	real*8, intent(in):: 	cilm(:,:,:), lat, longitude
 	integer, intent(in) ::	lmax
-	integer, intent(in), optional ::	norm, csphase
-	real*8 ::		pi, x, expand, lon, mlong
-	integer ::		index, l, m, l1, m1, lmax_comp, phase, astat
-	real*8, allocatable :: 	 pl(:)
+	integer, intent(in), optional ::	norm, csphase, dealloc
+	real*8 ::		pi, x, expand, lon
+	integer ::		index, l, m, l1, m1, lmax_comp, phase, astat(3)
+	real*8, allocatable :: 	 pl(:), cosm(:), sinm(:)
 	
 	
 	if (size(cilm(:,1,1)) < 2 .or. size(cilm(1,:,1)) < lmax+1 .or. size(cilm(1,1,:)) < lmax+1) then
@@ -77,13 +83,14 @@ real*8 function MakeGridPoint(cilm, lmax, lat, longitude, norm, csphase)
      		phase = dble(CSPHASE_DEFAULT)
      	endif
      	
-     	allocate(pl((lmax+1)*(lmax+2)/2), stat = astat)
-     	if (astat /= 0) then
+     	allocate(pl((lmax+1)*(lmax+2)/2), stat = astat(1))
+     	allocate(cosm(lmax+1), stat = astat(2))
+     	allocate(sinm(lmax+1), stat = astat(3))
+     	if (sum(astat(1:3)) /= 0) then
 		print*, "Error --- MakeGridPoint"
-		print*, "Problem allocating array PL", astat
+		print*, "Cannot allocate memory for arrays PL, MCOS and MSIN", astat(1), astat(2), astat(3)
 		stop
-	endif
- 
+	endif 
 
 	pi = acos(-1.0d0)
 	x = sin(lat*pi/180.0d0)
@@ -101,33 +108,51 @@ real*8 function MakeGridPoint(cilm, lmax, lat, longitude, norm, csphase)
 	endif
 	
 	expand = 0.0d0
+	
+	! Precompute sines and cosines. Use multiple angle identity to minimize number of calls to SIN and COS.
+	sinm(1) = 0.0d0
+	cosm(1) = 1.0d0
+	if (lmax_comp > 0) then
+		sinm(2) = sin(lon)
+		cosm(2) = cos(lon)
+	endif
+	do m=2, lmax_comp, 1
+		m1 = m+1
+		sinm(m1) = 2 * sinm(m)*cosm(2) - sinm(m-1)
+		cosm(m1) = 2 * cosm(m)*cosm(2) - cosm(m-1)
+	enddo
 
 	do l = lmax_comp, 0, -1
-	
 		l1 = l+1
 		index = (l+1)*l/2 + 1
 		expand = expand + cilm(1,l1,1) * pl(index)
 
 		do m = 1, l, 1
 			m1 = m+1
-			mlong = m*lon
-			index = (l+1)*l/2 + m + 1
-			expand = expand + ( cilm(1,l1,m1) * cos(mlong) + &
-				cilm(2,l1,m1) * sin(mlong) ) * pl(index)
+			index = index + 1
+			expand = expand + ( cilm(1,l1,m1) * cosm(m1) + &
+				cilm(2,l1,m1) * sinm(m1) ) * pl(index)
 		enddo
 	enddo
 	
 	MakeGridPoint = expand
 	
 	! deallocate memory
-	if (present(norm)) then
-		if (norm == 1) call PlmBar(pl, -1, x, csphase = phase)
-		if (norm == 2) call PlmSchmidt(pl, -1, x, csphase = phase)
-		if (norm == 4) call PlmON(pl, -1, x, csphase = phase)
-	else
-		call PlmBar(pl, -1, x, csphase = phase)
+	if (present(dealloc)) then
+		if (dealloc == 1) then
+			if (present(norm)) then
+				if (norm == 1) call PlmBar(pl, -1, x, csphase = phase)
+				if (norm == 2) call PlmSchmidt(pl, -1, x, csphase = phase)
+				if (norm == 4) call PlmON(pl, -1, x, csphase = phase)
+			else
+				call PlmBar(pl, -1, x, csphase = phase)
+			endif
+		endif
 	endif
+	
 	deallocate(pl)
+	deallocate(cosm)
+	deallocate(sinm)
 	
 end function MakeGridPoint
 

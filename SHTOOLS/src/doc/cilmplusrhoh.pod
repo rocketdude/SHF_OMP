@@ -90,7 +90,7 @@ The mass of the planet in kg.
 
 (output) REAL*8
 
-The mean radius of the relief as determined from GRIDGLQ in meters.
+The mean radius of the relief in meters.
 	
 =item RHO
 

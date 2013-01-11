@@ -132,7 +132,7 @@
 .\" ========================================================================
 .\"
 .IX Title "MAKEGRIDPOINT 1"
-.TH MAKEGRIDPOINT 1 "2012-03-08" "SHTOOLS 2.7" "SHTOOLS 2.7"
+.TH MAKEGRIDPOINT 1 "2012-08-08" "SHTOOLS 2.8" "SHTOOLS 2.8"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -146,7 +146,7 @@ Expand a set of spherical harmonic coefficients at a single point.
 .IX Header "SYNOPSIS"
 .IP "REAL*8 \s-1FUNCTION\s0 MakeGridPoint (" 32
 .IX Item "REAL*8 FUNCTION MakeGridPoint ("
-\&\s-1CILM\s0, \s-1LMAX\s0, \s-1LAT\s0, \s-1LON\s0, \s-1NORM\s0, \s-1CSPHASE\s0 )
+\&\s-1CILM\s0, \s-1LMAX\s0, \s-1LAT\s0, \s-1LON\s0, \s-1NORM\s0, \s-1CSPHASE\s0, \s-1DEALLOC\s0 )
 .RS 4
 .IP "REAL*8" 19
 .IX Item "REAL*8"
@@ -156,7 +156,7 @@ Expand a set of spherical harmonic coefficients at a single point.
 \&\s-1LMAX\s0
 .IP "\s-1INTEGER\s0, \s-1OPTIONAL\s0" 19
 .IX Item "INTEGER, OPTIONAL"
-\&\s-1NORM\s0, \s-1CSPHASE\s0
+\&\s-1NORM\s0, \s-1CSPHASE\s0, \s-1DEALLOC\s0
 .RE
 .RS 4
 .RE
@@ -195,6 +195,11 @@ The longitude of the point in \s-1DEGREES\s0.
 (input) \s-1INTEGER\s0, \s-1OPTIONAL\s0
 .Sp
 1 (default) = do not apply the Condon-Shortley phase factor to the associated Legendre functions; \-1 = append the Condon-Shortley phase factor of (\-1)^m to the associated Legendre functions.
+.IP "\s-1DEALLOC\s0" 11
+.IX Item "DEALLOC"
+(input) \s-1INTEGER\s0, \s-1OPTIONAL\s0
+.Sp
+0 (default) = Save variables used in the external Legendre function calls. (1) Deallocate this memory at the end of the funcion call.
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
 \&\fImakegrid2d\fR\|(1), \fImakegriddh\fR\|(1), \fImakegridglq\fR\|(1)

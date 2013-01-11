@@ -53,15 +53,15 @@ subroutine PlON(p,lmax,z)
       	
       	pi = acos(-1.0d0)
       	
-   	pm2  = 1.d0/sqrt(4.0d0*pi)
+   	pm2  = 1.d0/sqrt(4*pi)
       	p(1) = pm2
       	
-      	pm1  = sqrt(3.0d0) * z / sqrt(4.0d0*pi)
+      	pm1  = sqrt(3.0d0) * z / sqrt(4*pi)
       	p(2) = pm1
       	
       	do l = 2, lmax
-         	pl = ( sqrt(dble(2*l-1))  * z * pm1 - &
-         		dble(l-1) * pm2 / sqrt(dble(2*l-3)) ) * &
+         	pl = ( sqrt(dble(2*l-1)) * z * pm1 - &
+         		(l-1) * pm2 / sqrt(dble(2*l-3)) ) * &
          		sqrt(dble(2*l+1))/dble(l)
          	p(l+1) = pl
          	pm2  = pm1

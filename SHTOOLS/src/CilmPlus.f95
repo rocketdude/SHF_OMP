@@ -51,6 +51,8 @@ subroutine CilmPlus(cilm, gridin, lmax, nmax, mass, d, rho, gridtype, w, zero, p
 !			Added the optional parameter DREF, which sets the reference radius of the expansion.
 !		April 2012. Modified to calculate GRID**k before sending in to the subroutine call in order to improve
 !			memory management
+!		November 2, 2012. Modified the way in which the grid was scaled before cacluating the spherical
+!			harmonic transform.
 !
 !	Copyright (c) 2005-2012, Mark A. Wieczorek
 !	All rights reserved.
@@ -65,7 +67,7 @@ subroutine CilmPlus(cilm, gridin, lmax, nmax, mass, d, rho, gridtype, w, zero, p
 	real*8, intent(out) ::	cilm(:,:,:), d
 	integer, intent(in) ::	lmax, nmax, gridtype
 	integer, intent(in), optional :: n
-	real*8 ::		prod, pi
+	real*8 ::		prod, pi, scalef
 	real*8, allocatable ::	cilmn(:, :, :), grid(:, :)
 	integer ::		j, l, k, nlat, nlong, astat(2), lmax_dh
 
@@ -201,7 +203,6 @@ subroutine CilmPlus(cilm, gridin, lmax, nmax, mass, d, rho, gridtype, w, zero, p
 		endif
 	endif
 	
-	
 	allocate(cilmn(2, lmax+1, lmax+1), stat=astat(1))
 	allocate(grid(nlat, nlong), stat=astat(2))
 	if (astat(1) /= 0 .or. astat(2) /= 0) then
@@ -210,17 +211,19 @@ subroutine CilmPlus(cilm, gridin, lmax, nmax, mass, d, rho, gridtype, w, zero, p
 		stop
 	endif
 	
+	cilm = 0.0d0
+	cilmn = 0.0d0
+
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	!
 	!	Do the expansion.
 	!
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-	grid(1:nlat, 1:nlong) = gridin(1:nlat,1:nlong)
-	cilm = 0.0d0
-	cilmn = 0.0d0
-	
 	! Do k = 1 terms first
+	
+	grid(1:nlat, 1:nlong) = gridin(1:nlat,1:nlong)
+	
 	select case(gridtype)
 		case(1)
 			if (present(plx)) then
@@ -243,14 +246,17 @@ subroutine CilmPlus(cilm, gridin, lmax, nmax, mass, d, rho, gridtype, w, zero, p
 	endif
 	
 	cilmn(1,1,1) = cilmn(1,1,1) - d
-	cilmn(1:2,1:lmax+1,1:lmax+1) = cilmn(1:2,1:lmax+1,1:lmax+1)/d
 
 	do l=0, lmax
-		cilm(1:2,l+1,1:l+1) = 4.0d0*pi*rho*(d**3)*cilmn(1:2,l+1,1:l+1) /mass /dble(2*l+1)
+		cilm(1:2,l+1,1:l+1) = 4.0d0*pi*rho*(d**2)*cilmn(1:2,l+1,1:l+1) /mass /dble(2*l+1)
 	enddo
 	
+	grid(1:nlat, 1:nlong) = grid(1:nlat, 1:nlong) - d
+	scalef = maxval(abs(grid(1:nlat,1:nlong)))
+	grid(1:nlat, 1:nlong) = grid(1:nlat, 1:nlong) / scalef
+	
 	do k=2, nmax
-		grid(1:nlat,1:nlong) = ((gridin(1:nlat,1:nlong)-d)/d)**k
+		grid(1:nlat,1:nlong) = grid(1:nlat,1:nlong) * ((gridin(1:nlat,1:nlong)-d)/scalef)
 		select case(gridtype)
 			case(1)
 				if (present(plx)) then
@@ -267,9 +273,9 @@ subroutine CilmPlus(cilm, gridin, lmax, nmax, mass, d, rho, gridtype, w, zero, p
 		end select
 		
 		do l = 0, lmax
-			prod = 4.0d0*pi*rho*(d**3)/mass
+			prod = 4*pi*rho*(d**3)/mass * (scalef/d)**k
 			do j=1, k
-				prod = prod * dble(l+4-j)
+				prod = prod * (l+4-j)
 			enddo
 			prod = prod/( dble(2*l+1) * dble(l+3) * dble(fact(k)) )
 			
