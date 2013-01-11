@@ -21,11 +21,13 @@ subroutine SHCilmToVector(cilm, vector, lmax)
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	implicit none
-	real*8, intent(in) ::	cilm(:,:,:)
-	real*8, intent(out) ::	vector(:)
+        real*8, intent(in) ::   cilm(2,lmax+1,lmax+1)
+        real*8, intent(out) ::  vector( (lmax+1)**2 )
+!	real*8, intent(in) ::	cilm(:,:,:)
+!	real*8, intent(out) ::	vector(:)
 	integer, intent(in) ::	lmax
 	integer ::		i, l, m
-	
+
 	if (size(cilm(:,1,1)) < 2 .or. size(cilm(1,:,1)) < lmax+1 .or. size(cilm(1,1,:)) < lmax+1) then
 		print*, "Error --- SHCilmToVector"
 		print*, "CILM must be dimensioned as (2, LMAX+1, LMAX + 1)."
@@ -88,8 +90,10 @@ subroutine SHVectorToCilm(vector, cilm, lmax)
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	implicit none
-	real*8, intent(out) ::	cilm(:,:,:)
-	real*8, intent(in) ::	vector(:)
+	real*8, intent(out) ::	cilm(2,lmax+1,lmax+1)
+	real*8, intent(in) ::	vector((lmax+1)**2)
+!	real*8, intent(out) ::	cilm(:,:,:)
+!	real*8, intent(in) ::	vector(:)
 	integer, intent(in) ::	lmax
 	integer ::		k, i, l, m
 	
