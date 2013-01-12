@@ -26,7 +26,7 @@ LIBS = \
    -fexternal-blas -fblas-matmul-limit=2 \
    -ISHTOOLS/modules \
    -LSHTOOLS/lib \
-   -lSHTOOLS2.7 \
+   -lSHTOOLS2.8 \
    -I/opt/local/include -L/opt/local/lib \
    -lfftw3 -lm -m64 \
    -L/usr/local/hdf5/lib -I/usr/local/hdf5/include \

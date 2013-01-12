@@ -90,7 +90,7 @@
     tolA        = 1000.0D0              !Tolerance of solution
     tolF        = 0.1D0                 !Tolerance of residual
 
-    LWORK       = -1
+    LWORK       = 18496
 
     eps =  2.22044604925031308D-016 !Machine epsilon (precalculate)
  

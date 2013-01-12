@@ -51,11 +51,6 @@
         !Main subroutine
 
         MaxDA = 0.01D0
-            PRINT *,'what the hell is going on?'
-            PRINT *, '(Lmax+1)^2 =', 18*18
-            CALL SHCilmToVector(a,aVector,Lmax)
-            aVector = aVector - deltaA
-            CALL SHVectorToCilm(aVector,a,Lmax)
 
         DO it=1,Maxit
         
@@ -81,8 +76,9 @@
 
             !Not threadsafe
             DO l=0,Lmax
+
+                i = 1
                 DO ml=0,l
-                    DO i=1,2
 
                     !Setup differentiation grid
                     aEval(i,l+1,ml+1,1) = a(i,l+1,ml+1) - 2.0D0*da(i,l+1,ml+1)
@@ -114,14 +110,51 @@
 
                     !Transfer to Jacobian
                     ccol = YilmIndex(i,l,ml)
-                    PRINT *, 'size(dFnda) =', SHAPE(dFnda)
-                    PRINT *, 'size(Jacobian) =', SHAPE(Jacobian)
                     CALL SHCilmToVector(dFnda,Jacobian(:,ccol),Lmax)
 
                     !Restore aEval
                     aEval(i,l+1,ml+1,:) = a(i,l+1,ml+1)
 
-                    END DO
+                END DO
+
+                i = 2
+                DO ml=1,l
+
+                    !Setup differentiation grid
+                    aEval(i,l+1,ml+1,1) = a(i,l+1,ml+1) - 2.0D0*da(i,l+1,ml+1)
+                    aEval(i,l+1,ml+1,2) = a(i,l+1,ml+1) - da(i,l+1,ml+1)
+                    aEval(i,l+1,ml+1,3) = a(i,l+1,ml+1) + da(i,l+1,ml+1)
+                    aEval(i,l+1,ml+1,4) = a(i,l+1,ml+1) + 2.0D0*da(i,l+1,ml+1)
+
+                    !Evaluate the function at the different "grid" points
+                    CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&
+                        &GLQWeights,GLQZeros,R,theta,phi,&
+                        &aEval(:,:,:,1),Fn(:,:,:,1))
+
+                    CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&
+                        &GLQWeights,GLQZeros,R,theta,phi,&
+                        &aEval(:,:,:,2),Fn(:,:,:,2))
+
+                    CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&
+                        &GLQWeights,GLQZeros,R,theta,phi,&
+                        &aEval(:,:,:,3),Fn(:,:,:,3))
+
+                    CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&
+                        &GLQWeights,GLQZeros,R,theta,phi,&
+                        &aEval(:,:,:,4),Fn(:,:,:,4))
+
+                    !Calculate numerical derivatives
+                    dFnda = i12da*&
+                        &( Fn(:,:,:,1) - 8.0D0*Fn(:,:,:,2) +&
+                           8.0D0*Fn(:,:,:,3) - Fn(:,:,:,4) )
+
+                    !Transfer to Jacobian
+                    ccol = YilmIndex(i,l,ml)
+                    CALL SHCilmToVector(dFnda,Jacobian(:,ccol),Lmax)
+
+                    !Restore aEval
+                    aEval(i,l+1,ml+1,:) = a(i,l+1,ml+1)
+
                 END DO
             END DO
 
