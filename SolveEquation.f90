@@ -40,6 +40,7 @@
 
         REAL*8                  Fn(2,Lmax+1,Lmax+1,4)
         REAL*8                  dFnda(2,Lmax+1,Lmax+1)
+        REAL*8                  dFndaVector((Lmax+1)**2)
         REAL*8                  Jacobian((Lmax+1)**2,(Lmax+1)**2)
         REAL*8                  invJacobian((Lmax+1)**2,(Lmax+1)**2)
 
@@ -61,8 +62,17 @@
                     da(1,i,j) = MIN( MaxDA*a(1,i,j), MaxDA )
                     da(2,i,j) = MIN( MaxDA*a(2,i,j), MaxDA )
 
-                    i12da(1,i,j) = 1.0D0/(12.0D0*da(1,i,j))
-                    i12da(2,i,j) = 1.0D0/(12.0D0*da(2,i,j))
+                    IF( da(1,i,j) .NE. 0.0D0 ) THEN
+                        i12da(1,i,j) = 1.0D0/(12.0D0*da(1,i,j))
+                    ELSE
+                        i12da(1,i,j) = 0.0D0
+                    END IF
+
+                    IF( da(2,i,j) .NE. 0.0D0 ) THEN
+                        i12da(2,i,j) = 1.0D0/(12.0D0*da(2,i,j))
+                    ELSE
+                        i12da(2,i,j) = 0.0D0
+                    END IF
                 END DO
             END DO
             !$OMP END PARALLEL DO
@@ -71,8 +81,6 @@
             aEval(:,:,:,2) = a
             aEval(:,:,:,3) = a
             aEval(:,:,:,4) = a
-
-            Jacobian = 0.0D0
 
             !Not threadsafe
             DO l=0,Lmax
@@ -109,8 +117,9 @@
                            8.0D0*Fn(:,:,:,3) - Fn(:,:,:,4) )
 
                     !Transfer to Jacobian
+                    CALL SHCilmToVector(dFnda,dFndaVector,Lmax)
                     ccol = YilmIndex(i,l,ml)
-                    CALL SHCilmToVector(dFnda,Jacobian(:,ccol),Lmax)
+                    Jacobian(:,ccol) = dFndaVector
 
                     !Restore aEval
                     aEval(i,l+1,ml+1,:) = a(i,l+1,ml+1)
@@ -149,16 +158,15 @@
                            8.0D0*Fn(:,:,:,3) - Fn(:,:,:,4) )
 
                     !Transfer to Jacobian
+                    CALL SHCilmToVector(dFnda,dFndaVector,Lmax)
                     ccol = YilmIndex(i,l,ml)
-                    CALL SHCilmToVector(dFnda,Jacobian(:,ccol),Lmax)
+                    Jacobian(:,ccol) = dFndaVector
 
                     !Restore aEval
                     aEval(i,l+1,ml+1,:) = a(i,l+1,ml+1)
 
                 END DO
             END DO
-
-            PRINT *, 'Done evaluating Jacobian'
 
             !Calculate the residual
             CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&

@@ -1,7 +1,7 @@
 # MAKEFILE
 # Define variables
 
-PROG = a.out
+PROG = SolveRadiation
 
 MODS =
 #Place objects related to modules first

@@ -34,7 +34,7 @@
 !     Declare Locals                                     !
 !--------------------------------------------------------!
 
-        INTEGER*4        l
+        INTEGER*4        l, ml
         REAL*8           S(Nth,Nphi)
 
 
@@ -50,6 +50,11 @@
         !$OMP PARALLEL DO
         DO l=0,Lmax
             a(:,l+1,:) = a(:,l+1,:) / (R**l)
+            
+            DO ml=0,Lmax
+                IF( a(1,l+1,ml+1) .EQ. 0.0D0 ) a(1,l+1,ml+1) = 1.0D-12
+                IF( a(2,l+1,ml+1) .EQ. 0.0D0 ) a(2,l+1,ml+1) = 1.0D-12
+            END DO
         END DO
         !$OMP END PARALLEL DO
         
