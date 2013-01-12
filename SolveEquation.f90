@@ -175,7 +175,7 @@
             CALL SHCilmToVector(Res,ResVector,Lmax)
 
             !Check if residual is small enough
-            errF = SQRT( DOT_PRODUCT(ResVector, ResVector) )
+            errF = SQRT( DOT_PRODUCT(ResVector, ResVector) ) / ((Lmax+1)**2)
             IF( errF .LE. tolF ) THEN
                 PRINT *, 'error in residual is within tolerance'
                 RETURN
@@ -207,7 +207,7 @@
 
             !Check if a is within tolerance
             deltaA = MATMUL(invJacobian,ResVector)
-            errA = SQRT( DOT_PRODUCT(deltaA, deltaA) )
+            errA = SQRT( DOT_PRODUCT(deltaA, deltaA) ) / ((Lmax+1)**2)
             IF( errA .LE. tolA ) THEN
                 PRINT *, 'error in solution is within tolerance' 
                 RETURN
