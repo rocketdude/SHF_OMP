@@ -51,7 +51,7 @@
 
         !Main subroutine
 
-        MaxDA = 0.01D0
+        MaxDA = 1.0D-2
 
         DO it=1,Maxit
         
@@ -208,10 +208,10 @@
             !Check if a is within tolerance
             deltaA = MATMUL(invJacobian,ResVector)
             errA = SQRT( DOT_PRODUCT(deltaA, deltaA) ) / ((Lmax+1)**2)
-            IF( errA .LE. tolA ) THEN
-                PRINT *, 'error in solution is within tolerance' 
-                RETURN
-            END IF
+            !IF( errA .LE. tolA ) THEN
+            !    PRINT *, 'error in solution is within tolerance' 
+            !    RETURN
+            !END IF
 
             !Update the solution
             CALL SHCilmToVector(a,aVector,Lmax)

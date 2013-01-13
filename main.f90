@@ -8,8 +8,8 @@
     USE                HDF5
     IMPLICIT           none
 
-    INTEGER*4, PARAMETER ::        Lmax     = 13
-    INTEGER*4, PARAMETER ::        Lgrid    = 13
+    INTEGER*4, PARAMETER ::        Lmax     = 16
+    INTEGER*4, PARAMETER ::        Lgrid    = 16
 
     INTEGER*4, PARAMETER ::        Nth      = Lgrid+1
     INTEGER*4, PARAMETER ::        Nphi     = 2*Lgrid+1
@@ -81,14 +81,14 @@
     !Parameters related to initial conditions
 
     !Termination conditions
-    Maxit = 20
+    Maxit = 100
 
     !Parameters related to the heat problem
-    T0          = 234.2D0               !Initial temperature guess in K
+    T0          = 0.1D0                 !Initial temperature guess in K
     R           = 0.2D0                 !Radius of the object in meters
     !Tolerances
-    tolA        = 1.0D-9                !Tolerance of solution
-    tolF        = 1.0D-9                !Tolerance of residual
+    tolA        = 1.0D-16                !Tolerance of solution
+    tolF        = 1.0D-18                !Tolerance of residual
 
     LWORK       = 18496
 
