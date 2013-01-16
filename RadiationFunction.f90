@@ -32,9 +32,9 @@
 
         !Parameters related to the problem
         SolPhi      = 1366.0D0              !Solar constant in W/m^2
-        eps         = 0.90D0                !emissivity
+        eps         = 0.10D0                !emissivity
         alp         = 0.45D0                !absorptivity
-        kappa       = 2.0D2                 !heat conductivity in W/m-K
+        kappa       = 173.0D0               !heat conductivity in W/m-K
 
         !Stefan-Boltzmann constant
         sigma       = 5.670373D-8

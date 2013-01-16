@@ -9,6 +9,7 @@ OBJS = \
        IO.o \
        main.o \
        Functions.o \
+       GetFilter.o \
        GetInitialData.o \
        GetResults.o \
        RadiationFunction.o \

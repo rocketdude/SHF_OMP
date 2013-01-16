@@ -8,8 +8,8 @@
     USE                HDF5
     IMPLICIT           none
 
-    INTEGER*4, PARAMETER ::        Lmax     = 16
-    INTEGER*4, PARAMETER ::        Lgrid    = 16
+    INTEGER*4, PARAMETER ::        Lmax     = 13
+    INTEGER*4, PARAMETER ::        Lgrid    = 13
 
     INTEGER*4, PARAMETER ::        Nth      = Lgrid+1
     INTEGER*4, PARAMETER ::        Nphi     = 2*Lgrid+1
@@ -62,6 +62,7 @@
 
     INTEGER*4           l, ml       !Degree of spherical harmonics
     INTEGER*4           LWORK       !For inverting Jacobian
+    INTEGER*4           p           !Filter degree
  
 !--------------------------------------------------------!
 !     Declare Local Parameters                           !
@@ -84,15 +85,17 @@
     Maxit = 100
 
     !Parameters related to the heat problem
-    T0          = 0.1D0                 !Initial temperature guess in K
+    T0          = 404.56D0              !Initial temperature guess in K
     R           = 0.2D0                 !Radius of the object in meters
     !Tolerances
-    tolA        = 1.0D-16                !Tolerance of solution
-    tolF        = 1.0D-18                !Tolerance of residual
+    tolA        = 1.0D-8                !Tolerance of solution
+    tolF        = 1.0D-8                !Tolerance of residual
 
     LWORK       = 18496
 
-    eps =  2.22044604925031308D-016 !Machine epsilon (precalculate)
+    !Parameters needed for filter
+    p           =  32
+    eps         =  2.22044604925031308D-016 !Machine epsilon (precalculate)
  
 !--------------------------------------------------------!
 !     Timer Start                                        !
@@ -152,6 +155,7 @@
     & Nth, Nphi, Lmax, Lgrid, GLQWeights, GLQZeros,&
     & R, theta, phi,&
     & Maxit, tolA, tolF,&
+    & p, eps,&
     & LWORK,&
     & a) 
 
@@ -164,6 +168,18 @@
 
     PRINT *, '==============================='
 
+    DO l=0,Lmax
+       
+        
+        IF( a(1,l+1,1) .GT. tolA ) PRINT *, 'a(',l,',',0,') = ', a(1,l+1,1)
+
+        DO ml=1,Lmax
+            IF( a(1,l+1,ml+1) .GT. tolA ) &
+                &PRINT *, 'a(',l,',', ml,') = ', a(1,l+1,ml+1)
+            IF( a(2,l+1,ml+1) .GT. tolA ) &
+                &PRINT *, 'a(',l,',',-ml,') = ', a(2,l+1,ml+1)
+        END DO
+    END DO
 
 !--------------------------------------------------------!
 !     Timer Stop                                         !

@@ -34,14 +34,14 @@
 !     Declare Locals                                     !
 !--------------------------------------------------------!
 
-        INTEGER*4        l, ml, p
+        INTEGER*4        l, ml
         REAL*8           S(Nth,Nphi)
 
 
 !--------------------------------------------------------!
 !      Main Subroutine                                   !
 !--------------------------------------------------------!
-        p = 1280
+
         S = T0
 
         CALL AngularToSpectralTransform(Nth,Nphi,Lmax,Lgrid,&
