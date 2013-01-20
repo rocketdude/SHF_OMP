@@ -3,8 +3,8 @@
 # Job script
 #----------------------------------------------------
 
-#SBATCH -J SHES               # Job name
-#SBATCH -o SHES.%j.out        # Name of stdout output file (%j expands to jobId)
+#SBATCH -J SHF                # Job name
+#SBATCH -o SHF.%j.out         # Name of stdout output file (%j expands to jobId)
 #SBATCH -p normal             # Queue name
 #SBATCH -N 1                  # Total number of nodes requested (16 cores/node)
 #SBATCH -n 1                  # Total number of mpi tasks requested
