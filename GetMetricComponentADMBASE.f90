@@ -411,7 +411,8 @@
         IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) &
                 &  .AND. ALLOCATED(metric8) .AND. ALLOCATED(metric7) ) THEN
         !$OMP PARALLEL DO &
-        !$OMP &PRIVATE(i, k, x, y, z, Inside10, Inside9, dx, dy, dz, &
+        !$OMP &PRIVATE(i, k, x, y, z, Inside10, Inside9, Inside8, Inside7,&
+        !$OMP & dx, dy, dz, &
         !$OMP & ni, nj, nk, x0, y0, z0, cube, fatxyz, &
         !$OMP & rmax, rmin, r)
         DO j = 1, Nth
