@@ -443,7 +443,9 @@
              &GLQWeights, GLQZeros,&
              &gRR, gThTh, gPhiPhi,&
              &gRTh, gRPhi, gThPhi,&
-             &r, rho, theta, phi,&
+             &rmaxX, rmaxY, rmaxZ,&
+             &rminX, rminY, rminZ,&
+             &rho, theta, phi,&
              &a,&
              &it, WriteSit,&
              &U, Uave, USp,&

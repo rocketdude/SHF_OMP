@@ -7,7 +7,9 @@
 &GLQWeights, GLQZeros,&
 &gRR, gThTh, gPhiPhi,&
 &gRTh, gRPhi, gThPhi,&
-&r, rho, theta, phi,&
+&rmaxX, rmaxY, rmaxZ,&
+&rminX, rminY, rminZ,&
+&rho, theta, phi,&
 &a,&
 &it, WriteSit,&
 &U, Uave, USp,&
@@ -26,7 +28,9 @@
 
        INTEGER*4            :: Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM, it, WriteSit
 
-       REAL*8               :: r(Nr), rho(Nr), theta(Nth), phi(Nphi)
+       REAL*8               :: rmaxX, rmaxY, rmaxZ
+       REAL*8               :: rminX, rminY, rminZ
+       REAL*8               :: rho(Nr), theta(Nth), phi(Nphi)
        REAL*8               :: GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
 
        REAL*8               :: thetaSp(SpM)
@@ -67,6 +71,8 @@
        COMPLEX*16             S(Nr,Nth,Nphi)
        COMPLEX*16             TnYlm
     
+       REAL*8                 rmax, rmin
+       REAL*8                 r(Nr)
        REAL*8                 SLine(SpM,Nr)
        REAL*8                 U_r(Nr) 
        REAL*8                 U_r2(Nr) 
@@ -103,9 +109,13 @@
        !$OMP PARALLEL DO &
        !$OMP &PRIVATE(k, i, iindex, jkindex, U_r, U_r2, flag, gDD, gUU,&
        !$OMP &       g_r, rPolyInt, gPolyInt, jj, dii, ilow, ilow2,&
-       !$OMP &       deltar, rr, UU)
+       !$OMP &       deltar, rr, UU, rmax, rmin, r)
        DO j = 1, Nth
           DO k = 1, Nphi
+
+             CALL EvaluateRadialExtent(rmaxX,rmaxY,rmaxZ,theta(j),phi(k),rmax)
+             CALL EvaluateRadialExtent(rminX,rminY,rminZ,theta(j),phi(k),rmin)
+             r = 0.5D0*( (rmax-rmin) + (rmax-rmin)*rho )
 
              U_r = ABS(S(:,j,k))
 
@@ -197,7 +207,7 @@
                                &error) 
              
              !Now calculate g_rr * U^2
-             gRRUsqrd(j,k) = gDD(1) * U(j,k) * U(j,k)
+             gRRUsqrd(j,k) = gDD(1) * U(j,k) * U(j,k) !Don't think this is right
              
           END DO
        END DO
@@ -216,9 +226,16 @@
        !Calculate the values of U at the requested directions
        !$OMP PARALLEL DO &
        !$OMP &PRIVATE(i, n, l, ml, U_r2, flag,&
-       !$OMP &        ilow, ilow2, deltar, rr, UU, crow, TnYlm)
+       !$OMP &        ilow, ilow2, deltar, rr, UU, crow, TnYlm,&
+       !$OMP &        rmax, rmin, r)
        DO ss = 1, SpM
- 
+  
+             CALL EvaluateRadialExtent(rmaxX,rmaxY,rmaxZ,&
+                                    &thetaSp(ss),phiSp(ss),rmax)
+             CALL EvaluateRadialExtent(rminX,rminY,rminZ,&
+                                    &thetaSp(ss),phiSp(ss),rmin)
+             r = 0.5D0*( (rmax-rmin) + (rmax-rmin)*rho )
+
              !Calculate the second derivatives and store it into U_r2
              CALL ComputeSpline2ndDeriv(r,SLine(ss,:),Nr,1.0D31,1.0D31,U_r2)
 
