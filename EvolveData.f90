@@ -88,7 +88,7 @@
 
         !Calculate the derivatives S,r , S,theta, and S,phi
         CALL EvaluatedSdrho(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,rmax,rmin,a,dSdrho)
+                &rho,theta,phi,a,dSdrho)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
@@ -161,7 +161,7 @@
 
         !Calculate the derivatives S,r , S,theta, and S,phi
         CALL EvaluatedSdrho(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,rmax,rmin,a,dSdrho)
+                &rho,theta,phi,a,dSdrho)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
@@ -235,7 +235,7 @@
 
         !Calculate the derivatives S,r , S,theta, and S,phi
         CALL EvaluatedSdrho(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,rmax,rmin,a,dSdrho)
+                &rho,theta,phi,a,dSdrho)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
@@ -309,7 +309,7 @@
 
         !Calculate the derivatives S,r , S,theta, and S,phi
         CALL EvaluatedSdrho(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,rmax,rmin,a,dSdrho)
+                &rho,theta,phi,a,dSdrho)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
@@ -383,7 +383,7 @@
 
         !Calculate the derivatives S,r , S,theta, and S,phi
         CALL EvaluatedSdrho(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,rmax,rmin,a,dSdrho)
+                &rho,theta,phi,a,dSdrho)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&

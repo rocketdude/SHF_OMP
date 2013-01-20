@@ -20,9 +20,9 @@
 !      Main Subroutine                                   !
 !--------------------------------------------------------!
 
-        rmax = SQRT( ( X*SIN(theta)*COS(phi) )**2 +&
-                    &( Y*SIN(theta)*SIN(phi) )**2 +&
-                    &( Z*COS(theta) )**2 )
+        r = SQRT( ( X*SIN(theta)*COS(phi) )**2 +&
+                 &( Y*SIN(theta)*SIN(phi) )**2 +&
+                 &( Z*COS(theta) )**2 )
 
         RETURN
       END SUBROUTINE EvaluateRadialExtent

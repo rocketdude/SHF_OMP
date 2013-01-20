@@ -281,7 +281,7 @@
                 CALL EvaluateRadialExtent(rminX,rminY,rminZ,&
                                          &theta(j),phi(k),rmin)
 
-                IF( rmax .EQ. 0.0D0 )
+                IF( rmax .EQ. 0.0D0 ) THEN
                     drmaxdth = 0.0D0
                     drmaxdphi = 0.0D0
                 ELSE
@@ -293,7 +293,7 @@
                                 & SIN(phi(k))*COS(phi(k)) / rmax 
                 END IF
 
-                IF( rmin .EQ. 0.0D0 )
+                IF( rmin .EQ. 0.0D0 ) THEN
                     drmindth = 0.0D0
                     drmindphi = 0.0D0
                 ELSE

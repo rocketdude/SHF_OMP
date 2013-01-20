@@ -48,7 +48,7 @@
         JMatrix(3,1) = 0.0D0
         JMatrix(3,2) = 0.5D0 * (rmax - rmin) * SIN(theta) * SIN(phi)
         JMatrix(3,3) = 0.5D0 * (rho + 1.0D0) * &
-                        &( (drmaxth - drmindth) * SIN(theta) * SIN(phi) + &
+                        &( (drmaxdth - drmindth) * SIN(theta) * SIN(phi) + &
                         &  (rmax - rmin) * COS(theta) * SIN(phi) )
         JMatrix(3,4) = 0.5D0 * (rho + 1.0D0) * &
                         &( (drmaxdphi - drmindphi) * SIN(theta) * SIN(phi) + &

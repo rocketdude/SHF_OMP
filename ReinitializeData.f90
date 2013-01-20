@@ -46,7 +46,7 @@
 !      Main Subroutine                                   !
 !--------------------------------------------------------!
 
-        !$OMP PARALLEL DO SHARED(S, r, U, c) PRIVATE(i, k, rmax, rmin, r)
+        !$OMP PARALLEL DO SHARED(S, U, c) PRIVATE(i, k, rmax, rmin, r)
         DO j = 1, Nth
             DO k = 1, Nphi
 

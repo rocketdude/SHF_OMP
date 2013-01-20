@@ -417,8 +417,10 @@
         DO j = 1, Nth
             DO k = 1, Nphi
            
-                CALL EvaluateRadialExtent(rmaxX,rmaxY,rmaxZ,&                                         &theta(j),phi(k),rmax)
-                CALL EvaluateRadialExtent(rminX,rminY,rminZ,&                                         &theta(j),phi(k),rmin)
+                CALL EvaluateRadialExtent(rmaxX,rmaxY,rmaxZ,&
+                                        &theta(j),phi(k),rmax)
+                CALL EvaluateRadialExtent(rminX,rminY,rminZ,&
+                                        &theta(j),phi(k),rmin)
 
                 r = 0.5D0*( (rmax-rmin) + (rmax-rmin)*rho )
 
