@@ -62,19 +62,23 @@
         REAL*8, ALLOCATABLE, DIMENSION(:,:,:) :: metric10
         REAL*8, ALLOCATABLE, DIMENSION(:,:,:) :: metric9
         REAL*8, ALLOCATABLE, DIMENSION(:,:,:) :: metric8
+        REAL*8, ALLOCATABLE, DIMENSION(:,:,:) :: metric7
         INTEGER*4                                dims10(3)
         INTEGER*4                                dims9(3)
         INTEGER*4                                dims8(3)
+        INTEGER*4                                dims7(3)
 
         CHARACTER*32                format_string2
         CHARACTER*32                format_string1
         CHARACTER*100               dataset10(nchunks)
         CHARACTER*100               dataset9(nchunks)
         CHARACTER*100               dataset8(nchunks)
+        CHARACTER*100               dataset7(nchunks)
 
         INTEGER*4                   Ox10, Oy10, Oz10    !Index for the origin for rl=10
         INTEGER*4                   Ox9, Oy9, Oz9       !Index for the origin for rl=9
         INTEGER*4                   Ox8, Oy8, Oz8       !Index for the origin for rl=8
+        INTEGER*4                   Ox7, Oy7, Oz7       !Index for the origin for rl=7
 
         REAL*8                      Xmin10, Ymin10, Zmin10
         REAL*8                      Xmax10, Ymax10, Zmax10
@@ -82,16 +86,20 @@
         REAL*8                      Xmax9, Ymax9, Zmax9
         REAL*8                      Xmin8, Ymin8, Zmin8
         REAL*8                      Xmax8, Ymax8, Zmax8
+        REAL*8                      Xmin7, Ymin7, Zmin7
+        REAL*8                      Xmax7, Ymax7, Zmax7
         REAL*8                      delta10(3)          !Spatial discretization for rl=10
         REAL*8                      delta9(3)           !Spatial discretization for rl=9
         REAL*8                      delta8(3)           !Spatial discretization for rl=8
-        REAL*8                      time10, time9, time8
+        REAL*8                      delta7(3)           !Spatial discretization for rl=7
+        REAL*8                      time10, time9, time8, time7
 
 
         !Used for tricubic interpolation
         LOGICAL                     Inside10
         LOGICAL                     Inside9
         LOGICAL                     Inside8
+        LOGICAL                     Inside7
         REAL*8                      x, y, z
         REAL*8                      x0, y0, z0
         REAL*8                      dx, dy, dz
@@ -173,17 +181,20 @@
                 END IF
 
                 IF( DATASETFLAG .EQ. 1 ) THEN
-                    WRITE(dataset9(cnum), format_string1) 'ADMBASE::beta1 it=',iter,' tl=0 rl=9 c=',(cnum-1)
-                    WRITE(dataset8(cnum), format_string1) 'ADMBASE::beta1 it=',iter,' tl=0 rl=8 c=',(cnum-1)
-                    WRITE(dataset10(cnum), format_string2) 'ADMBASE::beta1 it=',iter,' tl=0 rl=10 c=',(cnum-1)
+                    WRITE(dataset9(cnum), format_string1) 'ADMBASE::betax it=',iter,' tl=0 rl=9 c=',(cnum-1)
+                    WRITE(dataset8(cnum), format_string1) 'ADMBASE::betax it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset7(cnum), format_string1) 'ADMBASE::betax it=',iter,' tl=0 rl=7 c=',(cnum-1)
+                    WRITE(dataset10(cnum), format_string2) 'ADMBASE::betax it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 2 ) THEN
-                    WRITE(dataset9(cnum), format_string1) 'ADMBASE::beta2 it=',iter,' tl=0 rl=9 c=',(cnum-1)
-                    WRITE(dataset8(cnum), format_string1) 'ADMBASE::beta2 it=',iter,' tl=0 rl=8 c=',(cnum-1)
-                    WRITE(dataset10(cnum), format_string2) 'ADMBASE::beta2 it=',iter,' tl=0 rl=10 c=',(cnum-1)
+                    WRITE(dataset9(cnum), format_string1) 'ADMBASE::betay it=',iter,' tl=0 rl=9 c=',(cnum-1)
+                    WRITE(dataset8(cnum), format_string1) 'ADMBASE::betay it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset7(cnum), format_string1) 'ADMBASE::betay it=',iter,' tl=0 rl=7 c=',(cnum-1)
+                    WRITE(dataset10(cnum), format_string2) 'ADMBASE::betay it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 3 ) THEN
-                    WRITE(dataset9(cnum), format_string1) 'ADMBASE::beta3 it=',iter,' tl=0 rl=9 c=',(cnum-1)
-                    WRITE(dataset8(cnum), format_string1) 'ADMBASE::beta3 it=',iter,' tl=0 rl=8 c=',(cnum-1)
-                    WRITE(dataset10(cnum), format_string2) 'ADMBASE::beta3 it=',iter,' tl=0 rl=10 c=',(cnum-1)
+                    WRITE(dataset9(cnum), format_string1) 'ADMBASE::betaz it=',iter,' tl=0 rl=9 c=',(cnum-1)
+                    WRITE(dataset8(cnum), format_string1) 'ADMBASE::betaz it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset7(cnum), format_string1) 'ADMBASE::betaz it=',iter,' tl=0 rl=7 c=',(cnum-1)
+                    WRITE(dataset10(cnum), format_string2) 'ADMBASE::betaz it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 END IF
             ELSE
                 IF( (cnum .LE. 10) .AND. (iter .LT. 10) ) THEN
@@ -244,30 +255,37 @@
                 IF( DATASETFLAG .EQ. 0 ) THEN
                     WRITE(dataset9(cnum), format_string1) 'ADMBASE::alp it=',iter,' tl=0 rl=9 c=',(cnum-1)
                     WRITE(dataset8(cnum), format_string1) 'ADMBASE::alp it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset7(cnum), format_string1) 'ADMBASE::alp it=',iter,' tl=0 rl=7 c=',(cnum-1)
                     WRITE(dataset10(cnum), format_string2) 'ADMBASE::alp it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 4 ) THEN
                     WRITE(dataset9(cnum), format_string1) 'ADMBASE::gxx it=',iter,' tl=0 rl=9 c=',(cnum-1)
                     WRITE(dataset8(cnum), format_string1) 'ADMBASE::gxx it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset7(cnum), format_string1) 'ADMBASE::gxx it=',iter,' tl=0 rl=7 c=',(cnum-1)
                     WRITE(dataset10(cnum), format_string2) 'ADMBASE::gxx it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 5 ) THEN
                     WRITE(dataset9(cnum), format_string1) 'ADMBASE::gyy it=',iter,' tl=0 rl=9 c=',(cnum-1)
                     WRITE(dataset8(cnum), format_string1) 'ADMBASE::gyy it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset7(cnum), format_string1) 'ADMBASE::gyy it=',iter,' tl=0 rl=7 c=',(cnum-1)
                     WRITE(dataset10(cnum), format_string2) 'ADMBASE::gyy it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 6 ) THEN
                     WRITE(dataset9(cnum), format_string1) 'ADMBASE::gzz it=',iter,' tl=0 rl=9 c=',(cnum-1)
                     WRITE(dataset8(cnum), format_string1) 'ADMBASE::gzz it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset7(cnum), format_string1) 'ADMBASE::gzz it=',iter,' tl=0 rl=7 c=',(cnum-1)
                     WRITE(dataset10(cnum), format_string2) 'ADMBASE::gzz it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 7 ) THEN
                     WRITE(dataset9(cnum), format_string1) 'ADMBASE::gxy it=',iter,' tl=0 rl=9 c=',(cnum-1)
                     WRITE(dataset8(cnum), format_string1) 'ADMBASE::gxy it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset7(cnum), format_string1) 'ADMBASE::gxy it=',iter,' tl=0 rl=7 c=',(cnum-1)
                     WRITE(dataset10(cnum), format_string2) 'ADMBASE::gxy it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 8 ) THEN
                     WRITE(dataset9(cnum), format_string1) 'ADMBASE::gxz it=',iter,' tl=0 rl=9 c=',(cnum-1)
                     WRITE(dataset8(cnum), format_string1) 'ADMBASE::gxz it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset7(cnum), format_string1) 'ADMBASE::gxz it=',iter,' tl=0 rl=7 c=',(cnum-1)
                     WRITE(dataset10(cnum), format_string2) 'ADMBASE::gxz it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 ELSE IF( DATASETFLAG .EQ. 9 ) THEN
                     WRITE(dataset9(cnum), format_string1) 'ADMBASE::gyz it=',iter,' tl=0 rl=9 c=',(cnum-1)
                     WRITE(dataset8(cnum), format_string1) 'ADMBASE::gyz it=',iter,' tl=0 rl=8 c=',(cnum-1)
+                    WRITE(dataset7(cnum), format_string1) 'ADMBASE::gyz it=',iter,' tl=0 rl=7 c=',(cnum-1)
                     WRITE(dataset10(cnum), format_string2) 'ADMBASE::gyz it=',iter,' tl=0 rl=10 c=',(cnum-1)
                 END IF
 
@@ -346,6 +364,29 @@
         DEALLOCATE( hdfmetric, STAT=error )
         IF( error .NE. 0 ) STOP "*** Trouble deallocating ***" 
 
+        !----------------------------------------------------------!
+        !      Read rl=7 data                                      !
+        !----------------------------------------------------------!
+
+        CALL ReadHDF5MetricData(&
+                &Filename, dataset7,&
+                &DATASETFLAG,&
+                &nchunks,&
+                &time7,&
+                &bufsize,&
+                &Xmin7, Ymin7, Zmin7,&
+                &Xmax7, Ymax7, Zmax7,&
+                &delta7,&
+                &Ox7, Oy7, Oz7)
+
+        dims7 = metricdims
+        ALLOCATE( metric7(dims7(1), dims7(2), dims7(3)), STAT=error )
+        IF( error .NE. 0 ) STOP "*** Trouble allocating ***"
+
+        metric7 = hdfmetric
+
+        DEALLOCATE( hdfmetric, STAT=error )
+        IF( error .NE. 0 ) STOP "*** Trouble deallocating ***" 
 
 !!!        IF( (time10 .NE. time9) .OR. (time10 .NE. time8) ) THEN
 !!!            STOP "***ERROR*** Time discrepancy"
@@ -360,7 +401,10 @@
         !      Lekien-Marsden tricubic interpolation routine       !
         !----------------------------------------------------------!
 
-        IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) .AND. ALLOCATED(metric8) ) THEN
+        PRINT *, Xmax7, Ymax7, Zmax7
+
+        IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) &
+                &  .AND. ALLOCATED(metric8) .AND. ALLOCATED(metric7) ) THEN
         !$OMP PARALLEL DO &
         !$OMP &PRIVATE(j, k, x, y, z, Inside10, Inside9, dx, dy, dz, ni, nj, nk, x0, y0, z0, cube, fatxyz)
         DO i =  1, Nr
@@ -383,6 +427,10 @@
                                 &(ABS(y) .LE. (Ymax8-2*delta8(2))) .AND.&
                                 &(ABS(z) .LE. (Zmax8-2*delta8(3))) 
 
+                    Inside7 =    (ABS(x) .LE. (Xmax7-2*delta7(1))) .AND.&
+                                &(ABS(y) .LE. (Ymax7-2*delta7(2))) .AND.&
+                                &(ABS(z) .LE. (Zmax7-2*delta7(3))) 
+    
                     IF( Inside10 .EQV. .TRUE. )THEN
 
                         dx = delta10(1)
@@ -443,6 +491,26 @@
 
                         cube = metric8( (ni-1):(ni+2), (nj-1):(nj+2), (nk-1):(nk+2) )
 
+                    ELSEIF( (Inside8 .EQV. .FALSE.) .AND. (Inside7 .EQV. .TRUE.) ) THEN
+
+                        dx = delta7(1)
+                        dy = delta7(2)
+                        dz = delta7(3)
+
+                        ni = IDINT( x/dx ) + Ox7
+                        nj = IDINT( y/dy ) + Oy7
+                        nk = IDINT( z/dz ) + Oz7
+
+                        IF( x .LT. 0.0D0 ) ni = ni-1
+                        IF( y .LT. 0.0D0 ) nj = nj-1
+                        IF( z .LT. 0.0D0 ) nk = nk-1
+
+                        x0 = (ni-Ox7)*dx
+                        y0 = (nj-Oy7)*dy
+                        z0 = (nk-Oz7)*dz
+
+                        cube = metric7( (ni-1):(ni+2), (nj-1):(nj+2), (nk-1):(nk+2) )
+                                                                              
                     ELSE
                         PRINT *, 'ERROR: The spherical grid is larger than the grid for the metric'
                         STOP
@@ -469,6 +537,7 @@
         DEALLOCATE( metric10 )
         DEALLOCATE( metric9 )
         DEALLOCATE( metric8 )
+        DEALLOCATE( metric7 )
 
         RETURN
       END SUBROUTINE GetMetricComponent
