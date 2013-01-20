@@ -183,7 +183,7 @@
     SFLAG = 0                       !If SFLAG = 1, 
                                     !we are continuing previous run: 
                                     !change t, Startit and aFile
-    t = 50.0D0                      !Last time from previous run
+    t = 200.0D0                     !Last time from previous run
     Startit = 6751                  !Startit = last iteration + 1
     aFile = 'a10.dat'
 
@@ -195,7 +195,7 @@
        Startit = 1                  !Starting from iteration 1
     END IF
 
-    X0 = 0.675D0                    !Initial axes of the spheroids in the
+    X0 = 0.575D0                    !Initial axes of the spheroids in the
     Y0 = 0.675D0                    !X, Y, and Z directions
     Z0 = 0.575D0
 
@@ -215,13 +215,13 @@
     reinit = 15
 
     !Spheroidal grid parameters
-    rmaxX = 1.20D0                   !maximum value of r in the X direction
+    rmaxX = 1.00D0                   !maximum value of r in the X direction
     rminX = 0.20D0                   !minimum value of r in the X direction
 
-    rmaxY = 1.20D0                   !maximum value of r in the Y direction
+    rmaxY = 1.10D0                   !maximum value of r in the Y direction
     rminY = 0.20D0                   !minimum value of r in the Y direction
 
-    rmaxZ = 1.20D0                   !maximum value of r in the Z direction
+    rmaxZ = 1.00D0                   !maximum value of r in the Z direction
     rminZ = 0.20D0                   !minimum value of r in the Z direction
 
     !Additional directions we'd like to compute U
@@ -229,11 +229,11 @@
     phiSp = (/ 0.0D0, 0.0D0, 0.0D0, PI/2.0D0, PI, 1.5D0*PI /)
     
     !Parameters related to reading HDF5 files--do h5dump to check these
-    nchunks = 16
+    nchunks = 64
     bufsize(1) = 50 !Buffer sizes need to be bigger than datasets
     bufsize(2) = 50
     bufsize(3) = 50
-    it_data_max = 8000
+    it_data_max = 40000
     it_data_min = 0
     delta_it_data = 4
 
@@ -312,7 +312,7 @@
     END DO
 
     !then set the value of dt
-    dt = tdir * cfl * drho * MIN(rmaxX-rminX,rmaxY-rminY,rmaxZ-rminZ)
+    dt = tdir * cfl * drho * MAX(rmaxX-rminX,rmaxY-rminY,rmaxZ-rminZ)
     
 !--------------------------------------------------------!
 !     Initial Data                                       !
