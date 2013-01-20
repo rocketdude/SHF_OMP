@@ -9,7 +9,9 @@
     &iter, nchunks,&
     &DATASETFLAG,&
     &Filename,&
-    &r, theta, phi,&
+    &rmaxX, rmaxY, rmaxZ,&
+    &rminX, rminY, rminZ,&
+    &rho, theta, phi,&
     &MetricData)
 
         !We read in the metric data from the HDF5 file for a single iteration,
@@ -46,7 +48,9 @@
 
         INTEGER(HSIZE_T)            :: bufsize(3)        
 
-        REAL*8                      :: r(Nr)
+        REAL*8                      :: rmaxX, rmaxY, rmaxZ
+        REAL*8                      :: rminX, rminY, rminZ 
+        REAL*8                      :: rho(Nr)
         REAL*8                      :: theta(Nth)
         REAL*8                      :: phi(Nphi)
 
@@ -92,6 +96,9 @@
         LOGICAL                     Inside10
         LOGICAL                     Inside9
         LOGICAL                     Inside8
+        REAL*8                      r(Nr)
+        REAL*8                      rX, rY, rZ
+        REAL*8                      rmax, rmin
         REAL*8                      x, y, z
         REAL*8                      x0, y0, z0
         REAL*8                      dx, dy, dz
@@ -314,13 +321,24 @@
         !      Lekien-Marsden tricubic interpolation routine       !
         !----------------------------------------------------------!
 
-        IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) .AND. ALLOCATED(metric8) ) THEN
+        IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) &
+                &  .AND. ALLOCATED(metric8) ) THEN
         !$OMP PARALLEL DO &
-        !$OMP &PRIVATE(j, k, x, y, z, Inside10, Inside9, dx, dy, dz, ni, nj, nk, x0, y0, z0, cube, fatxyz)
-        DO i =  1, Nr
-            DO j = 1, Nth
-                DO k = 1, Nphi
-                 
+        !$OMP &PRIVATE(i, k, x, y, z, Inside10, Inside9, Inside8, dx, dy, dz, &
+        !$OMP & ni, nj, nk, x0, y0, z0, cube, fatxyz, &
+        !$OMP & rmax, rmin, r)
+        DO j = 1, Nth
+            DO k = 1, Nphi
+            
+                CALL EvaluateRadialExtent(rmaxX,rmaxY,rmaxZ,&
+                                        &theta(j),phi(k),rmax)
+                CALL EvaluateRadialExtent(rminX,rminY,rminZ,&
+                                        &theta(j),phi(k),rmin)
+
+                r = 0.5D0*( (rmax-rmin) + (rmax-rmin)*rho )
+
+                DO i = 1, Nr
+     
                     x = r(i) * SIN( theta(j) ) * COS( phi(k) )
                     y = r(i) * SIN( theta(j) ) * SIN( phi(k) )
                     z = r(i) * COS( theta(j) ) 
