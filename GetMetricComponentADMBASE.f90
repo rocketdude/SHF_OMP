@@ -9,7 +9,9 @@
     &iter, nchunks,&
     &DATASETFLAG,&
     &Filename,&
-    &r, theta, phi,&
+    &rmaxX, rmaxY, rmaxZ,&
+    &rminX, rminY, rminZ,&
+    &rho, theta, phi,&
     &MetricData)
 
         !We read in the metric data from the HDF5 file for a single iteration,
@@ -46,7 +48,9 @@
 
         INTEGER(HSIZE_T)            :: bufsize(3)        
 
-        REAL*8                      :: r(Nr)
+        REAL*8                      :: rmaxX, rmaxY, rmaxZ
+        REAL*8                      :: rminX, rminY, rminZ
+        REAL*8                      :: rho(Nr)
         REAL*8                      :: theta(Nth)
         REAL*8                      :: phi(Nphi)
 
@@ -100,6 +104,9 @@
         LOGICAL                     Inside9
         LOGICAL                     Inside8
         LOGICAL                     Inside7
+        REAL*8                      r(Nr)
+        REAL*8                      rX, rY, rZ
+        REAL*8                      rmax, rmin
         REAL*8                      x, y, z
         REAL*8                      x0, y0, z0
         REAL*8                      dx, dy, dz
@@ -401,16 +408,29 @@
         !      Lekien-Marsden tricubic interpolation routine       !
         !----------------------------------------------------------!
 
-        PRINT *, Xmax7, Ymax7, Zmax7
-
         IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) &
                 &  .AND. ALLOCATED(metric8) .AND. ALLOCATED(metric7) ) THEN
         !$OMP PARALLEL DO &
-        !$OMP &PRIVATE(j, k, x, y, z, Inside10, Inside9, dx, dy, dz, ni, nj, nk, x0, y0, z0, cube, fatxyz)
-        DO i =  1, Nr
-            DO j = 1, Nth
-                DO k = 1, Nphi
-                 
+        !$OMP &PRIVATE(i, k, x, y, z, Inside10, Inside9, dx, dy, dz, &
+        !$OMP & ni, nj, nk, x0, y0, z0, cube, fatxyz, &
+        !$OMP & rX, rY, rZ, rmax, rmin, r)
+        DO j = 1, Nth
+            DO k = 1, Nphi
+           
+                rX = rmaxX * SIN( theta(j) ) * COS( phi(k) )
+                rY = rmaxY * SIN( theta(j) ) * SIN( phi(k) )
+                rZ = rmaxZ * COS( theta(j) )
+                rmax = SQRT( rX*rX + rY*rY + rZ*rZ )
+
+                rX = rminX * SIN( theta(j) ) * COS( phi(k) )
+                rY = rminY * SIN( theta(j) ) * SIN( phi(k) )
+                rZ = rminZ * COS( theta(j) )
+                rmin = SQRT( rX*rX + rY*rY + rZ*rZ )
+
+                r = 0.5D0*( (rmax-rmin) + (rmax-rmin)*rho )
+
+                DO i = 1, Nr
+
                     x = r(i) * SIN( theta(j) ) * COS( phi(k) )
                     y = r(i) * SIN( theta(j) ) * SIN( phi(k) )
                     z = r(i) * COS( theta(j) ) 
