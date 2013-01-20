@@ -7,7 +7,9 @@
 &iter, nchunks,&
 &bufsize,&
 &time,&
-&r, theta, phi,&
+&rmaxX, rmaxY, rmaxZ,&
+&rminX, rminY, rminZ,&
+&rho, theta, phi,&
 &alpha,&
 &betaR, betaTh, betaPhi,&
 &gRR, gThTh, gPhiPhi,&
@@ -27,7 +29,9 @@
 
         INTEGER(HSIZE_T)        :: bufsize(3)        
 
-        REAL*8                  :: r(Nr)
+        REAL*8                  :: rmaxX, rmaxY, rmaxZ
+        REAL*8                  :: rminX, rminY, rminZ
+        REAL*8                  :: rho(Nr)
         REAL*8                  :: theta(Nth)
         REAL*8                  :: phi(Nphi)
 
@@ -50,7 +54,8 @@
 !       Declare local variables                             !
 !-----------------------------------------------------------!
 
-        CHARACTER*32            format_string_LapseShift(nchunks)
+        CHARACTER*32            format_string_Lapse(nchunks)
+        CHARACTER*32            format_string_Shift(nchunks)
         CHARACTER*32            format_string_SpatMetric(nchunks)
 
         CHARACTER*32            alphafilename(nchunks)
@@ -75,6 +80,9 @@
         REAL*8                  gXZ(Nr,Nth,Nphi)
         REAL*8                  gYZ(Nr,Nth,Nphi)
 
+        REAL*8                  rmax, rmin
+        REAL*8                  drmaxdth, drmindth
+        REAL*8                  drmaxdphi, drmindphi
         REAL*8                  JMatrix(4,4)
         REAL*8                  gcart(4,4)
         REAL*8                  gsph(4,4)
@@ -93,51 +101,52 @@
         !$OMP PARALLEL DO PRIVATE(j)
         DO i = 1,nchunks
             j = i - 1
-            
+
+            IF( j .LT. 10 ) THEN
+                format_string_Lapse(i) = '(A19,I1,A3)'
+                format_string_Shift(i) = '(A19,I1,A3)'
+                format_string_SpatMetric(i) = '(A17,I1,A3)'
+            ELSEIF( (j .GE. 10) .AND. (j .LT. 100) ) THEN
+                format_string_Lapse(i) = '(A19,I2,A3)'
+                format_string_Shift(i) = '(A19,I2,A3)'
+                format_string_SpatMetric(i) = '(A17,I2,A3)'
+            ELSEIF( (j .GE. 100) .AND. (j .LT. 1000) ) THEN
+                format_string_Lapse(i) = '(A19,I3,A3)'
+                format_string_Shift(i) = '(A19,I3,A3)'
+                format_string_SpatMetric(i) = '(A17,I3,A3)'
+            END IF
+
             IF( iter .LE. 8000 ) THEN
-                IF( j .LT. 10 ) THEN
-                    format_string_LapseShift(i) = '(A18,I1,A3)'
-                    format_string_SpatMetric(i) = '(A16,I1,A3)'
-                ELSE
-                    format_string_LapseShift(i) = '(A18,I2,A3)'
-                    format_string_SpatMetric(i) = '(A16,I2,A3)'
-                END IF
-                
-                WRITE(alphafilename(i), format_string_LapseShift(i)) 't0_t50/alpha.file_', j, '.h5'
-                WRITE(beta1filename(i), format_string_LapseShift(i)) 't0_t50/beta1.file_', j, '.h5'
-                WRITE(beta2filename(i), format_string_LapseShift(i)) 't0_t50/beta2.file_', j, '.h5'
-                WRITE(beta3filename(i), format_string_LapseShift(i)) 't0_t50/beta3.file_', j, '.h5'
-                WRITE(gxxfilename(i), format_string_SpatMetric(i)) 't0_t50/gxx.file_', j, '.h5'
-                WRITE(gyyfilename(i), format_string_SpatMetric(i)) 't0_t50/gyy.file_', j, '.h5'
-                WRITE(gzzfilename(i), format_string_SpatMetric(i)) 't0_t50/gzz.file_', j, '.h5'
-                WRITE(gxyfilename(i), format_string_SpatMetric(i)) 't0_t50/gxy.file_', j, '.h5'
-                WRITE(gxzfilename(i), format_string_SpatMetric(i)) 't0_t50/gxz.file_', j, '.h5'
-                WRITE(gyzfilename(i), format_string_SpatMetric(i)) 't0_t50/gyz.file_', j, '.h5'
+ 
+                WRITE(alphafilename(i), format_string_Lapse(i)) 't00_t50/alpha.file_', j, '.h5'
+                WRITE(beta1filename(i), format_string_Shift(i)) 't00_t50/beta1.file_', j, '.h5'
+                WRITE(beta2filename(i), format_string_Shift(i)) 't00_t50/beta2.file_', j, '.h5'
+                WRITE(beta3filename(i), format_string_Shift(i)) 't00_t50/beta3.file_', j, '.h5'
+                WRITE(gxxfilename(i), format_string_SpatMetric(i)) 't00_t50/gxx.file_', j, '.h5'
+                WRITE(gyyfilename(i), format_string_SpatMetric(i)) 't00_t50/gyy.file_', j, '.h5'
+                WRITE(gzzfilename(i), format_string_SpatMetric(i)) 't00_t50/gzz.file_', j, '.h5'
+                WRITE(gxyfilename(i), format_string_SpatMetric(i)) 't00_t50/gxy.file_', j, '.h5'
+                WRITE(gxzfilename(i), format_string_SpatMetric(i)) 't00_t50/gxz.file_', j, '.h5'
+                WRITE(gyzfilename(i), format_string_SpatMetric(i)) 't00_t50/gyz.file_', j, '.h5'
+
             ELSE
-                IF( j .LT. 10 ) THEN
-                    format_string_LapseShift(i) = '(A19,I1,A3)'
-                    format_string_SpatMetric(i) = '(A17,I1,A3)'
-                ELSE
-                    format_string_LapseShift(i) = '(A19,I2,A3)'
-                    format_string_SpatMetric(i) = '(A17,I2,A3)'
-                END IF
-                
-                WRITE(alphafilename(i), format_string_LapseShift(i)) 't50_t75/alpha.file_', j, '.h5'
-                WRITE(beta1filename(i), format_string_LapseShift(i)) 't50_t75/beta1.file_', j, '.h5'
-                WRITE(beta2filename(i), format_string_LapseShift(i)) 't50_t75/beta2.file_', j, '.h5'
-                WRITE(beta3filename(i), format_string_LapseShift(i)) 't50_t75/beta3.file_', j, '.h5'
+
+                WRITE(alphafilename(i), format_string_Lapse(i)) 't50_t75/alpha.file_', j, '.h5'
+                WRITE(beta1filename(i), format_string_Shift(i)) 't50_t75/beta1.file_', j, '.h5'
+                WRITE(beta2filename(i), format_string_Shift(i)) 't50_t75/beta2.file_', j, '.h5'
+                WRITE(beta3filename(i), format_string_Shift(i)) 't50_t75/beta3.file_', j, '.h5'
                 WRITE(gxxfilename(i), format_string_SpatMetric(i)) 't50_t75/gxx.file_', j, '.h5'
                 WRITE(gyyfilename(i), format_string_SpatMetric(i)) 't50_t75/gyy.file_', j, '.h5'
                 WRITE(gzzfilename(i), format_string_SpatMetric(i)) 't50_t75/gzz.file_', j, '.h5'
                 WRITE(gxyfilename(i), format_string_SpatMetric(i)) 't50_t75/gxy.file_', j, '.h5'
                 WRITE(gxzfilename(i), format_string_SpatMetric(i)) 't50_t75/gxz.file_', j, '.h5'
                 WRITE(gyzfilename(i), format_string_SpatMetric(i)) 't50_t75/gyz.file_', j, '.h5'
+
             END IF
-                
-            
+
         END DO
         !$OMP END PARALLEL DO
-            
+                
         !ALPHA
         CALL GetMetricComponent(&
             &Nr, Nth, Nphi,&
@@ -146,7 +155,9 @@
             &iter, nchunks,&
             &0,&
             &alphafilename,&
-            &r, theta, phi,&
+            &rmaxX, rmaxY, rmaxZ,&
+            &rminX, rminY, rminZ,&
+            &rho, theta, phi,&
             &alphaXYZ)
 
         !BETA1
@@ -157,7 +168,9 @@
             &iter, nchunks,&
             &1,&
             &beta1filename,&
-            &r, theta, phi,&
+            &rmaxX, rmaxY, rmaxZ,&
+            &rminX, rminY, rminZ,&
+            &rho, theta, phi,&
             &betaX)
 
         !BETA2
@@ -168,7 +181,9 @@
             &iter, nchunks,&
             &2,&
             &beta2filename,&
-            &r, theta, phi,&
+            &rmaxX, rmaxY, rmaxZ,&
+            &rminX, rminY, rminZ,&
+            &rho, theta, phi,&
             &betaY)
 
         !BETA3
@@ -179,7 +194,9 @@
             &iter, nchunks,&
             &3,&
             &beta3filename,&
-            &r, theta, phi,&
+            &rmaxX, rmaxY, rmaxZ,&
+            &rminX, rminY, rminZ,&
+            &rho, theta, phi,&
             &betaZ)
 
         !GXX
@@ -190,7 +207,9 @@
             &iter, nchunks,&
             &4,&
             &gxxfilename,&
-            &r, theta, phi,&
+            &rmaxX, rmaxY, rmaxZ,&
+            &rminX, rminY, rminZ,&
+            &rho, theta, phi,&
             &gXX)
 
         !GYY
@@ -201,7 +220,9 @@
             &iter, nchunks,&
             &5,&
             &gyyfilename,&
-            &r, theta, phi,&
+            &rmaxX, rmaxY, rmaxZ,&
+            &rminX, rminY, rminZ,&
+            &rho, theta, phi,&
             &gYY)
 
         !GZZ
@@ -212,7 +233,9 @@
             &iter, nchunks,&
             &6,&
             &gzzfilename,&
-            &r, theta, phi,&
+            &rmaxX, rmaxY, rmaxZ,&
+            &rminX, rminY, rminZ,&
+            &rho, theta, phi,&
             &gZZ)
 
         !GXY
@@ -223,7 +246,9 @@
             &iter, nchunks,&
             &7,&
             &gxyfilename,&
-            &r, theta, phi,&
+            &rmaxX, rmaxY, rmaxZ,&
+            &rminX, rminY, rminZ,&
+            &rho, theta, phi,&
             &gXY)
 
         !GXZ
@@ -234,7 +259,9 @@
             &iter, nchunks,&
             &8,&
             &gxzfilename,&
-            &r, theta, phi,&
+            &rmaxX, rmaxY, rmaxZ,&
+            &rminX, rminY, rminZ,&
+            &rho, theta, phi,&
             &gXZ)
 
         !GYZ
@@ -245,10 +272,12 @@
             &iter, nchunks,&
             &9,&
             &gyzfilename,&
-            &r, theta, phi,&
+            &rmaxX, rmaxY, rmaxZ,&
+            &rminX, rminY, rminZ,&
+            &rho, theta, phi,&
             &gYZ)
-        
-        
+
+
         DO i = 1, 9
             IF( timeofdata(i) .NE. timeofdata(10) ) &
             & STOP "Metric components time discrepancy."
@@ -257,16 +286,51 @@
         time = timeofdata(10)
 
         !Now we need to perform coordinate transformation 
-        !from (t,x,y,z) to (t,r,th,phi)
+        !from (t,x,y,z) to (t,rho,th,phi)
         !Both g_sph and g_cart are of down indices
  
-        !$OMP PARALLEL DO PRIVATE(j, k, JMatrix, gcart, gsph, error)
-        DO i = 1, Nr
-            DO j = 1, Nth
-                DO k = 1, Nphi
+        !$OMP PARALLEL DO PRIVATE(i, k, rmax, rmin, &
+        !$OMP & drmaxdth, drmindth, drmaxdphi, drmindphi, &
+        !$OMP & JMatrix, gcart, gsph, error)
+        DO j = 1, Nth
+            DO k = 1, Nphi
             
+                CALL EvaluateRadialExtent(rmaxX,rmaxY,rmaxZ,&
+                                         &theta(j),phi(k),rmax)
+                CALL EvaluateRadialExtent(rminX,rminY,rminZ,&
+                                         &theta(j),phi(k),rmin)
+
+                IF( rmax .EQ. 0.0D0 ) THEN
+                    drmaxdth = 0.0D0
+                    drmaxdphi = 0.0D0
+                ELSE
+                    drmaxdth = ( ( rmaxX*COS(phi(k)) )**2 +&
+                                &( rmaxY*SIN(phi(k)) )**2 -&
+                                &  rmaxZ**2 ) * &
+                                & SIN(theta(j))*COS(theta(j)) / rmax
+                    drmaxdphi = ( rmaxY**2 - rmaxX**2 )*SIN(theta(j))**2 *&
+                                & SIN(phi(k))*COS(phi(k)) / rmax 
+                END IF
+
+                IF( rmin .EQ. 0.0D0 ) THEN
+                    drmindth = 0.0D0
+                    drmindphi = 0.0D0
+                ELSE
+                    drmindth = ( ( rminX*COS(phi(k)) )**2 +&
+                                &( rminY*SIN(phi(k)) )**2 -&
+                                &  rminZ**2 ) * &
+                                & SIN(theta(j))*COS(theta(j)) / rmin
+                    drmindphi = ( rminY**2 - rminX**2 )*SIN(theta(j))**2 *&
+                                & SIN(phi(k))*COS(phi(k)) / rmin
+                END IF
+
+                DO i = 1, Nr
+
                     !Build the Jacobian matrix JMatrix
-                    CALL EvaluateJacobian(r(i),theta(j),phi(k),JMatrix)
+                    CALL EvaluateJacobian(rmax,rmin,&
+                                        &drmaxdth,drmindth,drmaxdphi,drmindphi,&
+                                        &rho(i),theta(j),phi(k),&
+                                        &JMatrix)
  
                     ! Build the matrix g_cart
                     CALL EvaluateMatrixofMetric(&
