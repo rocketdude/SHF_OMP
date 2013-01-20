@@ -16,7 +16,7 @@
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Mr       = 40
-    INTEGER*4, PARAMETER ::        Lmax     = 30
+    INTEGER*4, PARAMETER ::        Lmax     = 16
     INTEGER*4, PARAMETER ::        Lgrid    = 32
     INTEGER*4, PARAMETER ::        TP       = 4
     INTEGER*4, PARAMETER ::        SpM      = 6
@@ -90,18 +90,15 @@
     REAL*8            tfinal      !Final time
     REAL*8            tdir        !Direction of time
     REAL*8            dt          !Time increment
-    REAL*8            dx          !Smallest distance between two points
-    REAL*8            rdtheta     !Smallest distance in the theta direction
-    REAL*8            rsinthdphi  !Smallest distance in the phi direction
+    REAL*8            drho        !Smallest distance between two points
     REAL*8            walltime_start, walltime_stop  !calc. total wall time
     REAL*8            cputime_start, cputime_stop    !calc. program speed
     REAL*8            eps         !Machine epsilon (needs to be pre-computed)
     REAL*8            rootsign    !Choose the sign of the root (+/-)
 
     REAL*8            rho(Nr)   !Canonical radial coord. for Chebyshev poly.
-    REAL*8            r(Nr)     !The radial coordinate r
-    REAL*8            rmax, rmin  !rmax and rmin define the radial domain,
-                                  !used to calculate rho
+    REAL*8            rmaxX, rmaxY, rmaxZ !Used to determine the radial domain
+    REAL*8            rminX, rminY, rminZ !to relate r and rho
 
     REAL*8              theta(Nth)      !The angle theta
     REAL*8              phi(Nphi)        !The angle phi
@@ -222,19 +219,25 @@
     tdir = -1.0D0                   !Direction of time, choose +1.0D0 or -1.0D0
     reinit = 15
 
-    !Spherical grid parameters
-    rmax = 1.20D0                   !maximum value of r
-    rmin = 0.20D0                   !minimum value of r
+    !Spheroidal grid parameters
+    rmaxX = 1.20D0                   !maximum value of r in the X direction
+    rminX = 0.20D0                   !minimum value of r in the X direction
+
+    rmaxY = 1.20D0                   !maximum value of r in the Y direction
+    rminY = 0.20D0                   !minimum value of r in the Y direction
+
+    rmaxZ = 1.20D0                   !maximum value of r in the Z direction
+    rminZ = 0.20D0                   !minimum value of r in the Z direction
 
     !Additional directions we'd like to compute U
     thetaSp = (/ 0.0D0, PI, PI/2.0D0, PI/2.0D0, PI/2.0D0, PI/2.0D0 /)
     phiSp = (/ 0.0D0, 0.0D0, 0.0D0, PI/2.0D0, PI, 1.5D0*PI /)
     
     !Parameters related to reading HDF5 files--do h5dump to check these
-    nchunks = 144
-    bufsize(1) = 30 !Buffer sizes need to be bigger than datasets
-    bufsize(2) = 30
-    bufsize(3) = 30
+    nchunks = 16
+    bufsize(1) = 50 !Buffer sizes need to be bigger than datasets
+    bufsize(2) = 50
+    bufsize(3) = 50
     it_data_max = 8000
     it_data_min = 0
     delta_it_data = 4
@@ -282,7 +285,6 @@
     !$OMP PARALLEL DO
     DO i = 0, Mr
        rho(i+1) = -COS(PI*DBLE(2*i + 1) / DBLE(2*(Mr+1)) )
-       r(i+1) = 0.5D0*( (rmax + rmin) + (rmax - rmin)*rho(i+1) )
     END DO
     !$OMP END PARALLEL DO
 
@@ -307,15 +309,15 @@
 !     Find smallest spatial increment                    !
 !--------------------------------------------------------!
 
-    dx = rmax - rmin
+    drho = 1.0D0
     DO i = 1, Mr
-       IF( (r(i+1) - r(i)) .LT. dx ) THEN
-          dx = r(i+1) - r(i)
+       IF( ABS(rho(i+1) - rho(i)) .LT. drho ) THEN
+          drho = ABS(rho(i+1) - rho(i))
        END IF
     END DO
-    
+
     !then set the value of dt
-    dt = tdir * cfl * dx
+    dt = tdir * cfl * drho * MIN(rmaxX-rminX,rmaxY-rminY,rmaxZ-rminZ)
     
 !--------------------------------------------------------!
 !     Initial Data                                       !
@@ -338,7 +340,9 @@
             & GLQWeights, GLQZeros,&
             & c,&
             & X0, Y0, Z0,&
-            & r, rho, theta, phi,&
+            & rmaxX, rmaxY, rmaxZ,&
+            & rminX, rminY, rminZ,&
+            & rho, theta, phi,&
             & a)
     END IF
 
