@@ -153,6 +153,7 @@
                 WRITE(gxyfilename(i), format_string_SpatMetric(i)) 'Metric2/gxy.file_', j, '.h5'
                 WRITE(gxzfilename(i), format_string_SpatMetric(i)) 'Metric2/gxz.file_', j, '.h5'
                 WRITE(gyzfilename(i), format_string_SpatMetric(i)) 'Metric2/gyz.file_', j, '.h5'
+            END IF
 
         END DO
         !$OMP END PARALLEL DO
