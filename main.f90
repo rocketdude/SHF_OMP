@@ -73,11 +73,6 @@
 !     Declare Level Set Data                             !
 !--------------------------------------------------------!
 
-    ! We use the usual spherical coordinates
-    ! X = r*sin(theta)*cos(phi)
-    ! Y = r*sin(theta)*sin(phi)
-    ! Z = r*cos(theta)
-
     ! Things that need to be allocated due to sph. harmonic FFTW
     COMPLEX*16        a(Mr+1,2,Lmax+1,Lmax+1) 
             !time-dependent coefficients a_nlm(t)
@@ -421,7 +416,9 @@
              &t_data, it_data,&    
              &nchunks,&
              &bufsize,&
-             &r, theta, phi,&
+             &rmaxX, rmaxY, rmaxZ,&
+             &rminX, rminY, rminZ,&
+             &rho, theta, phi,&
              &Balpha, BbetaR, BbetaTh, BbetaPhi,&
              &BgRR, BgThTh, BgPhiPhi,&
              &BgRTh, BgRPhi, BgThPhi,&
@@ -429,29 +426,29 @@
              &gRR, gThTh, gPhiPhi,&
              &gRTh, gRPhi, gThPhi)
 
-       CALL EvolveData(&
-            &Nr, Nth, Nphi, Mr, Lmax, Lgrid,&
-            &GLQWeights, GLQZeros,&
-            &rootsign, rmin, rmax,&
-            &rho, theta, phi,&
-            &alpha,&
-            &betaR, betaTh, betaPhi,&
-            &gRR, gThTh, gPhiPhi,&
-            &gRTh, gRPhi, gThPhi,&
-            &t, dt,&
-            &a)
+        CALL EvolveData(&
+             &Nr, Nth, Nphi, Mr, Lmax, Lgrid,&
+             &GLQWeights, GLQZeros,&
+             &rootsign,&
+             &rho, theta, phi,&
+             &alpha,&
+             &betaR, betaTh, betaPhi,&
+             &gRR, gThTh, gPhiPhi,&
+             &gRTh, gRPhi, gThPhi,&
+             &t, dt,&
+             &a)
  
-       CALL FindU(&
-            &Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM,&
-            &GLQWeights, GLQZeros,&
-            &gRR, gThTh, gPhiPhi,&
-            &gRTh, gRPhi, gThPhi,&
-            &r, rho, theta, phi,&
-            &a,&
-            &it, WriteSit,&
-            &U, Uave, USp,&
-            &thetaSp, phiSp,&
-            &g_rrUsqrd, g_rrUsqrdAve)
+        CALL FindU(&
+             &Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM,&
+             &GLQWeights, GLQZeros,&
+             &gRR, gThTh, gPhiPhi,&
+             &gRTh, gRPhi, gThPhi,&
+             &r, rho, theta, phi,&
+             &a,&
+             &it, WriteSit,&
+             &U, Uave, USp,&
+             &thetaSp, phiSp,&
+             &g_rrUsqrd, g_rrUsqrdAve)
 
 
        !--------------------------------------------------------!

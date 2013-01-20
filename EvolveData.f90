@@ -5,7 +5,7 @@
       SUBROUTINE EvolveData(&
 &Nr, Nth, Nphi, Mr, Lmax, Lgrid,&
 &GLQWeights, GLQZeros,&
-&rootsign, rmin, rmax,&
+&rootsign,&
 &rho, theta, phi,&
 &alpha,&
 &betaR, betaTh, betaPhi,&
@@ -30,8 +30,6 @@
         INTEGER*4               :: Nr,Nth,Nphi,Mr,Lmax,Lgrid
 
         REAL*8                  :: rootsign
-        REAL*8                  :: rmin
-        REAL*8                  :: rmax
         REAL*8                  :: GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
         REAL*8                  :: rho(Nr), theta(Nth), phi(Nphi)
 
@@ -63,7 +61,7 @@
         
         COMPLEX*16      sqrtterm
 
-        COMPLEX*16      dSdr(Nr,Nth,Nphi)
+        COMPLEX*16      dSdrho(Nr,Nth,Nphi)
         COMPLEX*16      dSdth(Nr,Nth,Nphi)
         COMPLEX*16      dSdphi(Nr,Nth,Nphi)
         COMPLEX*16      dSdt(Nr,Nth,Nphi)
@@ -89,8 +87,8 @@
         !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdrho(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,a,dSdrho)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
@@ -116,16 +114,16 @@
                  ELSE
                     !INNER POINTS
                     sqrtterm = SQRT(&
-                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
+                         &gRR(i,j,k)*dSdrho(i,j,k)*dSdrho(i,j,k) +&
                          &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
                          &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
-                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gRTh(i,j,k)*dSdrho(i,j,k)*dSdth(i,j,k) +&
+                         &2.0D0*gRPhi(i,j,k)*dSdrho(i,j,k)*dSdphi(i,j,k) +&
                          &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
                     dSdt(i,j,k) = &
-                         &betaR(i,j,k)*dSdr(i,j,k) + &
+                         &betaR(i,j,k)*dSdrho(i,j,k) + &
                          &betaTh(i,j,k)*dSdth(i,j,k) + &
                          &betaPhi(i,j,k)*dSdphi(i,j,k) + &
                          &rootsign*alpha(i,j,k)*sqrtterm
@@ -162,8 +160,8 @@
         !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdrho(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,a,dSdrho)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
@@ -189,16 +187,16 @@
                  ELSE
                     !INNER POINTS
                     sqrtterm = SQRT(&
-                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
+                         &gRR(i,j,k)*dSdrho(i,j,k)*dSdrho(i,j,k) +&
                          &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
                          &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
-                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gRTh(i,j,k)*dSdrho(i,j,k)*dSdth(i,j,k) +&
+                         &2.0D0*gRPhi(i,j,k)*dSdrho(i,j,k)*dSdphi(i,j,k) +&
                          &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
                     dSdt(i,j,k) = &
-                         &betaR(i,j,k)*dSdr(i,j,k) + &
+                         &betaR(i,j,k)*dSdrho(i,j,k) + &
                          &betaTh(i,j,k)*dSdth(i,j,k) + &
                          &betaPhi(i,j,k)*dSdphi(i,j,k) + &
                          &rootsign*alpha(i,j,k)*sqrtterm
@@ -236,8 +234,8 @@
         !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdrho(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,a,dSdrho)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
@@ -263,16 +261,16 @@
                  ELSE
                     !INNER POINTS
                     sqrtterm = SQRT(&
-                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
+                         &gRR(i,j,k)*dSdrho(i,j,k)*dSdrho(i,j,k) +&
                          &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
                          &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
-                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gRTh(i,j,k)*dSdrho(i,j,k)*dSdth(i,j,k) +&
+                         &2.0D0*gRPhi(i,j,k)*dSdrho(i,j,k)*dSdphi(i,j,k) +&
                          &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
                     dSdt(i,j,k) = &
-                         &betaR(i,j,k)*dSdr(i,j,k) + &
+                         &betaR(i,j,k)*dSdrho(i,j,k) + &
                          &betaTh(i,j,k)*dSdth(i,j,k) + &
                          &betaPhi(i,j,k)*dSdphi(i,j,k) + &
                          &rootsign*alpha(i,j,k)*sqrtterm
@@ -310,8 +308,8 @@
         !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdrho(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,a,dSdrho)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
@@ -337,16 +335,16 @@
                  ELSE
                     !INNER POINTS
                     sqrtterm = SQRT(&
-                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
+                         &gRR(i,j,k)*dSdrho(i,j,k)*dSdrho(i,j,k) +&
                          &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
                          &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
-                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gRTh(i,j,k)*dSdrho(i,j,k)*dSdth(i,j,k) +&
+                         &2.0D0*gRPhi(i,j,k)*dSdrho(i,j,k)*dSdphi(i,j,k) +&
                          &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
                     dSdt(i,j,k) = &
-                         &betaR(i,j,k)*dSdr(i,j,k) + &
+                         &betaR(i,j,k)*dSdrho(i,j,k) + &
                          &betaTh(i,j,k)*dSdth(i,j,k) + &
                          &betaPhi(i,j,k)*dSdphi(i,j,k) + &
                          &rootsign*alpha(i,j,k)*sqrtterm
@@ -384,8 +382,8 @@
         !$OMP END PARALLEL DO
 
         !Calculate the derivatives S,r , S,theta, and S,phi
-        CALL EvaluatedSdr(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,rmax,rmin,a,dSdr)
+        CALL EvaluatedSdrho(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
+                &rho,theta,phi,rmax,rmin,a,dSdrho)
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
@@ -411,16 +409,16 @@
                  ELSE
                     !INNER POINTS
                     sqrtterm = SQRT(&
-                         &gRR(i,j,k)*dSdr(i,j,k)*dSdr(i,j,k) +&
+                         &gRR(i,j,k)*dSdrho(i,j,k)*dSdrho(i,j,k) +&
                          &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
                          &gPhiPhi(i,j,k)*dSdphi(i,j,k)*dSdphi(i,j,k) +&
-                         &2.0D0*gRTh(i,j,k)*dSdr(i,j,k)*dSdth(i,j,k) +&
-                         &2.0D0*gRPhi(i,j,k)*dSdr(i,j,k)*dSdphi(i,j,k) +&
+                         &2.0D0*gRTh(i,j,k)*dSdrho(i,j,k)*dSdth(i,j,k) +&
+                         &2.0D0*gRPhi(i,j,k)*dSdrho(i,j,k)*dSdphi(i,j,k) +&
                          &2.0D0*gThPhi(i,j,k)*dSdth(i,j,k)*dSdphi(i,j,k)&
                          &)
 
                     dSdt(i,j,k) = &
-                         &betaR(i,j,k)*dSdr(i,j,k) + &
+                         &betaR(i,j,k)*dSdrho(i,j,k) + &
                          &betaTh(i,j,k)*dSdth(i,j,k) + &
                          &betaPhi(i,j,k)*dSdphi(i,j,k) + &
                          &rootsign*alpha(i,j,k)*sqrtterm
