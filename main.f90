@@ -189,15 +189,15 @@
 
     !Termination conditions
     Maxit = 80000
-    tfinal = 2.5D0
+    tfinal = 150.0D0
 
     IF( SFLAG .EQ. 0 ) THEN
        Startit = 1                  !Starting from iteration 1
     END IF
 
-    X0 = 0.575D0                    !Initial axes of the spheroids in the
-    Y0 = 0.675D0                    !X, Y, and Z directions
-    Z0 = 0.575D0
+    X0 = 0.600D0                    !Initial axes of the spheroids in the
+    Y0 = 0.600D0                    !X, Y, and Z directions
+    Z0 = 0.450D0
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, 
@@ -216,13 +216,13 @@
 
     !Spheroidal grid parameters
     rmaxX = 1.00D0                   !maximum value of r in the X direction
-    rminX = 0.20D0                   !minimum value of r in the X direction
+    rminX = 0.10D0                   !minimum value of r in the X direction
 
     rmaxY = 1.10D0                   !maximum value of r in the Y direction
-    rminY = 0.20D0                   !minimum value of r in the Y direction
+    rminY = 0.10D0                   !minimum value of r in the Y direction
 
     rmaxZ = 1.00D0                   !maximum value of r in the Z direction
-    rminZ = 0.20D0                   !minimum value of r in the Z direction
+    rminZ = 0.10D0                   !minimum value of r in the Z direction
 
     !Additional directions we'd like to compute U
     thetaSp = (/ 0.0D0, PI, PI/2.0D0, PI/2.0D0, PI/2.0D0, PI/2.0D0 /)
@@ -505,6 +505,9 @@
        PRINT *, 'Iteration #:', it
        PRINT *, 'Time= ', t
        PRINT *, 'Average R= ', Uave
+       PRINT *, 'X = ', USp(3), USp(5)
+       PRINT *, 'Y = ', USp(4), USp(6)
+       PRINT *, 'Z = ', USp(1), USp(2)
        PRINT *, 'Metric data used: '
        DO i = 1, TP
            PRINT *, 'Iteration#:', it_data(i)
