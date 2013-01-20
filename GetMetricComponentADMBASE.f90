@@ -413,19 +413,12 @@
         !$OMP PARALLEL DO &
         !$OMP &PRIVATE(i, k, x, y, z, Inside10, Inside9, dx, dy, dz, &
         !$OMP & ni, nj, nk, x0, y0, z0, cube, fatxyz, &
-        !$OMP & rX, rY, rZ, rmax, rmin, r)
+        !$OMP & rmax, rmin, r)
         DO j = 1, Nth
             DO k = 1, Nphi
            
-                rX = rmaxX * SIN( theta(j) ) * COS( phi(k) )
-                rY = rmaxY * SIN( theta(j) ) * SIN( phi(k) )
-                rZ = rmaxZ * COS( theta(j) )
-                rmax = SQRT( rX*rX + rY*rY + rZ*rZ )
-
-                rX = rminX * SIN( theta(j) ) * COS( phi(k) )
-                rY = rminY * SIN( theta(j) ) * SIN( phi(k) )
-                rZ = rminZ * COS( theta(j) )
-                rmin = SQRT( rX*rX + rY*rY + rZ*rZ )
+                CALL EvaluateRadialExtent(rmaxX,rmaxY,rmaxZ,&                                         &theta(j),phi(k),rmax)
+                CALL EvaluateRadialExtent(rminX,rminY,rminZ,&                                         &theta(j),phi(k),rmin)
 
                 r = 0.5D0*( (rmax-rmin) + (rmax-rmin)*rho )
 
