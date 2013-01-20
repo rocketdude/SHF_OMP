@@ -495,7 +495,9 @@
                    &Nr, Nth, Nphi,&
                    &Mr, Lmax, Lgrid,&
                    &GLQWeights, GLQZeros,&
-                   &r, rho, theta, phi,&
+                   &rmaxX, rmaxY, rmaxZ,&
+                   &rminX, rminY, rminZ,&
+                   &rho, theta, phi,&
                    &c, U, a)
 
        END IF
