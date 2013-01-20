@@ -43,8 +43,8 @@
         INTEGER*4        i, j, k
         INTEGER*4        n
         COMPLEX*16       S(Nr, Nth, Nphi)
-        REAL*8           x,y,z,r0
-        REAL*8           rmax,rmin,rX,rY,rZ
+        REAL*8           r0
+        REAL*8           rmax,rmin
         REAL*8           r(Nr)
 
 !--------------------------------------------------------!
@@ -54,25 +54,18 @@
         PRINT *, 'Evaluating initial S'
 
         !$OMP PARALLEL DO SHARED(S, r, c) &
-        !$OMP &PRIVATE(k,i,x,y,z,r0,rX,rY,rZ,rmax,rmin,r)
+        !$OMP &PRIVATE(k,i,r0,rmax,rmin,r)
         DO j = 1, Nth
             DO k = 1, Nphi
-                rX = rmaxX*SIN(theta(j))*COS(phi(k)) 
-                rY = rmaxY*SIN(theta(j))*SIN(phi(k))
-                rZ = rmaxZ*COS(theta(j))
-                rmax = SQRT( rX*rX + rY*rY + rZ*rZ )
-
-                rX = rminX*SIN(theta(j))*COS(phi(k)) 
-                rY = rminY*SIN(theta(j))*SIN(phi(k))
-                rZ = rminZ*COS(theta(j))
-                rmin = SQRT( rX*rX + rY*rY + rZ*rZ )
                 
+                CALL EvaluateRadialExtent(rmaxX,rmaxY,rmaxZ,&
+                                         &theta(j),phi(k),rmax)
+                CALL EvaluateRadialExtent(rminX,rminY,rminZ,&
+                                         &theta(j),phi(k),rmin)
+
                 r = 0.5D0*( (rmax-rmin) + (rmax-rmin)*rho )
 
-                x = X0*SIN(theta(j))*COS(phi(k))
-                y = Y0*SIN(theta(j))*SIN(phi(k))
-                z = Z0*COS(theta(j))
-                r0 = SQRT( x*x + y*y + z*z )
+                CALL EvaluateRadialExtent(X0,Y0,Z0,theta(j),phi(k),r0)
 
                 DO i = 1, Nr
 
