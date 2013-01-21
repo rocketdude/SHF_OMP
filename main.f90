@@ -8,7 +8,7 @@
     USE                HDF5
     IMPLICIT           none
 
-    INTEGER*4, PARAMETER ::        Lmax     = 13
+    INTEGER*4, PARAMETER ::        Lmax     = 15
     INTEGER*4, PARAMETER ::        Lgrid    = Lmax
 
     INTEGER*4, PARAMETER ::        Nth      = Lgrid+1
@@ -57,7 +57,9 @@
     REAL*8              phi(Nphi)       !The angle phi
 
     REAL*8              T0          !Initial temperature
-    REAL*8              tolA        !Tolerance of the solution
+    REAL*8              epsA        !Some small value of a
+
+    REAL*8              tolMin      !Tolerance of the gradient
     REAL*8              tolF        !Tolerance of the residual
 
     INTEGER*4           l, ml       !Degree of spherical harmonics
@@ -81,19 +83,19 @@
     !Parameters related to initial conditions
 
     !Termination conditions
-    Maxit = 20
+    Maxit       = 1000
+    !Tolerances
+    tolF        = 1.0D-12                !Tolerance of residual
+    tolMin      = 1.0D-9                 !Tolerance to gradient
 
     !Parameters related to the heat problem
-    T0          = 405.58D0               !Initial temperature guess in K
-    R           = 0.2D0                 !Radius of the object in meters
-    !Tolerances
-    tolA        = 1.0D-8                !Tolerance of solution
-    tolF        = 1.0D-8                !Tolerance of residual
+    T0          = 400.000D0              !Initial temperature guess in K
+    R           = 0.2D0                  !Radius of the object in meters
 
     LWORK       = 18496
 
     eps         =  2.22044604925031308D-016 !Machine epsilon (precalculate)
- 
+
 !--------------------------------------------------------!
 !     Timer Start                                        !
 !--------------------------------------------------------!	  
@@ -144,14 +146,14 @@
     & Nth, Nphi,&
     & Lmax, Lgrid,&
     & GLQWeights, GLQZeros,&
-    & T0, tolA, eps,&
+    & T0, eps, eps,&
     & R, theta, phi,&
     & a)
 
     CALL SolveEquation(&
     & Nth, Nphi, Lmax, Lgrid, GLQWeights, GLQZeros,&
     & R, theta, phi,&
-    & Maxit, tolA, tolF,&
+    & Maxit, tolF, tolMin,&
     & LWORK,&
     & a) 
 
@@ -165,15 +167,12 @@
     PRINT *, '==============================='
 
     DO l=0,Lmax
-       
-        
-        IF( a(1,l+1,1) .GT. tolA ) PRINT *, 'a(',l,',',0,') = ', a(1,l+1,1)
-
+        IF(a(1,l+1,1).GT.tolF) PRINT *, 'a(',l,',',0,') = ', a(1,l+1,1)
         DO ml=1,Lmax
-            IF( a(1,l+1,ml+1) .GT. tolA ) &
-                &PRINT *, 'a(',l,',', ml,') = ', a(1,l+1,ml+1)
-            IF( a(2,l+1,ml+1) .GT. tolA ) &
-                &PRINT *, 'a(',l,',',-ml,') = ', a(2,l+1,ml+1)
+            IF(a(1,l+1,ml+1).GT.tolF) &
+                PRINT *, 'a(',l,',', ml,') = ', a(1,l+1,ml+1)
+            IF(a(2,l+1,ml+1).GT.tolF) &
+                PRINT *, 'a(',l,',',-ml,') = ', a(2,l+1,ml+1)
         END DO
     END DO
 
