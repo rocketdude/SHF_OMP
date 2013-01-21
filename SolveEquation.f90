@@ -62,7 +62,7 @@
 
         CALL GetFilter(Lmax,p,eps,Filter)
 
-        MaxDA = 1.0D-2
+        MaxDA = 1.0D-3
 
         DO it=1,Maxit
         
@@ -185,55 +185,54 @@
                 &a,Res)
             CALL SHCilmToVector(Res,ResVector,Lmax)
 
-            !Check if residual is small enough
-            errF = SQRT( DOT_PRODUCT(ResVector, ResVector) ) / ((Lmax+1)**2)
-            IF( errF .LE. tolF ) THEN
-                PRINT *, 'error in residual is within tolerance'
-                RETURN
-            END IF
+            !Check the maximum value of the Jacobian vs. the minimum value
+            PRINT *, 'Maximum value = ', MAXVAL(Jacobian)
+            PRINT *, 'Minimum value = ', MINVAL(Jacobian)
+            PRINT *, 'Ratio of max/min = ', MAXVAL(Jacobian)/MINVAL(Jacobian)
 
             !Invert the Jacobian
-!!$            invJacobian = Jacobian
-!!$            CALL DGETRF( (Lmax+1)**2, (Lmax+1)**2, invJacobian,&
-!!$                        &(Lmax+1)**2, IPIV, INFO)
-!!$            IF( INFO .NE. 0 ) THEN
-!!$                PRINT *, 'Error in LU factorization:'
-!!$                PRINT *, 'Info =', INFO
-!!$                STOP
-!!$            END IF
-!!$
-!!$            CALL DGETRI( (Lmax+1)**2, invJacobian, (Lmax+1)**2,&
-!!$                        &IPIV, WORK, LWORK, INFO)
-!!$
-!!$            IF( INFO .NE. 0 ) THEN
-!!$                PRINT *, 'Error in inversion:'
-!!$                PRINT *, 'Info =', INFO
-!!$                STOP
-!!$            END IF
-!!$
-!!$            IF( LWORK .EQ. -1 ) THEN
-!!$                PRINT *, 'Work space query, optimal LWORK =', WORK(1)
-!!$                STOP
-!!$            END IF
+            invJacobian = Jacobian
+            CALL DGETRF( (Lmax+1)**2, (Lmax+1)**2, invJacobian,&
+                        &(Lmax+1)**2, IPIV, INFO)
+            IF( INFO .NE. 0 ) THEN
+                PRINT *, 'Error in LU factorization:'
+                PRINT *, 'Info =', INFO
+                STOP
+            END IF
 
-            !Invert the Jacobian using Moore-Penrose inverse using SVD
-            CALL DGESVD('S','S',(Lmax+1)**2,(Lmax+1)**2,Jacobian,&
-                    &(Lmax+1)**2,S,U,(Lmax+1)**2,VT,(Lmax+1)**2,WORK,LWORK,INFO)
+            CALL DGETRI( (Lmax+1)**2, invJacobian, (Lmax+1)**2,&
+                        &IPIV, WORK, LWORK, INFO)
+
+            IF( INFO .NE. 0 ) THEN
+                PRINT *, 'Error in inversion:'
+                PRINT *, 'Info =', INFO
+                STOP
+            END IF
 
             IF( LWORK .EQ. -1 ) THEN
                 PRINT *, 'Work space query, optimal LWORK =', WORK(1)
                 STOP
             END IF
 
-            !Compute invJ = VT**t * SIGMA * U**t
-            !$OMP PARALLEL DO
-            DO i=1,(Lmax+1)**2
-                CALL DSCAL((Lmax+1)**2,(1.0D0/S(i)),U(1,i),1)
-            END DO
-            !$OMP END PARALLEL DO
 
-            CALL DGEMM('C','C',(Lmax+1)**2,(Lmax+1)**2,(Lmax+1)**2,1.0D0,&
-                &VT,(Lmax+1)**2,U,(Lmax+1)**2,0.0D0,invJacobian,(Lmax+1)**2)
+!!$            !Invert the Jacobian using Moore-Penrose inverse using SVD
+!!$            CALL DGESVD('S','S',(Lmax+1)**2,(Lmax+1)**2,Jacobian,&
+!!$                    &(Lmax+1)**2,S,U,(Lmax+1)**2,VT,(Lmax+1)**2,WORK,LWORK,INFO)
+!!$
+!!$            IF( LWORK .EQ. -1 ) THEN
+!!$                PRINT *, 'Work space query, optimal LWORK =', WORK(1)
+!!$                STOP
+!!$            END IF
+!!$
+!!$            !Compute invJ = VT**t * SIGMA * U**t
+!!$            !$OMP PARALLEL DO
+!!$            DO i=1,(Lmax+1)**2
+!!$                CALL DSCAL((Lmax+1)**2,(1.0D0/S(i)),U(1,i),1)
+!!$            END DO
+!!$            !$OMP END PARALLEL DO
+!!$
+!!$            CALL DGEMM('C','C',(Lmax+1)**2,(Lmax+1)**2,(Lmax+1)**2,1.0D0,&
+!!$                &VT,(Lmax+1)**2,U,(Lmax+1)**2,0.0D0,invJacobian,(Lmax+1)**2)
 
             !Check if a is within tolerance
             deltaA = MATMUL(invJacobian,ResVector)
@@ -247,6 +246,13 @@
             CALL SHCilmToVector(a,aVector,Lmax)
             aVector = aVector - deltaA
             CALL SHVectorToCilm(aVector,a,Lmax)
+
+            !Check if residual is small enough
+            errF = SQRT( DOT_PRODUCT(ResVector, ResVector) ) / ((Lmax+1)**2)
+            IF( errF .LE. tolF ) THEN
+                PRINT *, 'error in residual is within tolerance'
+                RETURN
+            END IF
 
             !$OMP PARALLEL DO
             DO l=0, Lmax

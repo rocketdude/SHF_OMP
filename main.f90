@@ -85,7 +85,7 @@
     Maxit = 100
 
     !Parameters related to the heat problem
-    T0          = 404.56D0              !Initial temperature guess in K
+    T0          = 405.58D0               !Initial temperature guess in K
     R           = 0.2D0                 !Radius of the object in meters
     !Tolerances
     tolA        = 1.0D-8                !Tolerance of solution
