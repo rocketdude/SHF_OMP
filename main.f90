@@ -312,7 +312,7 @@
     END DO
 
     !then set the value of dt
-    dt = tdir * cfl * drho * MAX(rmaxX-rminX,rmaxY-rminY,rmaxZ-rminZ)
+    dt = tdir * cfl * drho * 0.5D0 * MIN(rmaxX-rminX,rmaxY-rminY,rmaxZ-rminZ)
     
 !--------------------------------------------------------!
 !     Initial Data                                       !
