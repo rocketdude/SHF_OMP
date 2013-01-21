@@ -8,7 +8,7 @@
     USE                HDF5
     IMPLICIT           none
 
-    INTEGER*4, PARAMETER ::        Lmax     = 16
+    INTEGER*4, PARAMETER ::        Lmax     = 18
     INTEGER*4, PARAMETER ::        Lgrid    = Lmax
 
     INTEGER*4, PARAMETER ::        Nth      = Lgrid+1
@@ -84,19 +84,19 @@
     !Parameters related to initial conditions
 
     !Termination conditions
-    Maxit       = 1000
+    Maxit       = 1000000
     !Tolerances
     tolF        = 1.0D-12                !Tolerance of residual
     tolMin      = 1.0D-9                 !Tolerance to gradient
 
     !Parameters related to the heat problem
     TInit       = .TRUE.                !If true initialize from temperature
-    T0          = 2000.000D0              !Initial temperature guess in K
+    T0          = 400.0D0               !Initial temperature guess in K
     aFile       = 'a14.dat'
 
     R           = 0.2D0                  !Radius of the object in meters
 
-    LWORK       = 19363
+    LWORK       = 29547
     eps         = 2.22044604925031308D-016 !Machine epsilon (precalculate)
 
 !--------------------------------------------------------!

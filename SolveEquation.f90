@@ -26,14 +26,18 @@
         REAL*8                  errF, errA
 
         REAL*8                  aV((Lmax+1)**2),aVOld((Lmax+1)**2)
-        REAL*8                  Fn((Lmax+1)**2)
+        REAL*8                  Fn((Lmax+1)**2),FnOld((Lmax+1)**2)
         REAL*8                  g((Lmax+1)**2), p((Lmax+1)**2)
+        REAL*8                  y((Lmax+1)**2)
+        REAL*8                  da((Lmax+1)**2)
+        REAL*8                  dJ((Lmax+1)**2,(Lmax+1)**2)
         REAL*8                  Jacobian((Lmax+1)**2,(Lmax+1)**2)
-        REAL*8                  invJacobian((Lmax+1)**2,(Lmax+1)**2)
+        REAL*8                  JDummy((Lmax+1)**2,(Lmax+1)**2)
 
         REAL*8                  fOld,f,stpmax
         REAL*8                  tolX,stpmx
         LOGICAL                 check
+        LOGICAL                 restart
 
         !Needed for solving the J . dx = -F
         REAL*8                  WORK(MAX(1,LWORK))
@@ -58,27 +62,31 @@
             RETURN
         END IF
 
-        stpmax = stpmx*MAX(SQRT(DOT_PRODUCT(aV,aV)),DBLE((Lmax+1)**2))
+        !Compute the Jacobian by numerical differentiation
+        CALL FDJacobian(Nth,Nphi,Lmax,Lgrid,&
+            &GLQWeights,GLQZeros,R,theta,phi,&
+            &aV,Jacobian)
 
+        stpmax = stpmx*MAX(SQRT(DOT_PRODUCT(aV,aV)),DBLE((Lmax+1)**2))
+        restart = .FALSE.
         DO it=1,Maxit
         
-            !Compute the Jacobian by numerical differentiation
-            CALL FDJacobian(Nth,Nphi,Lmax,Lgrid,&
-                &GLQWeights,GLQZeros,R,theta,phi,&
-                &aV,Jacobian)
-
             !Check the maximum value of the Jacobian vs. the minimum value
             PRINT *, 'Maximum value = ', MAXVAL(Jacobian)
             PRINT *, 'Minimum value = ', MINVAL(Jacobian)
             PRINT *, 'Ratio of max/min = ', MAXVAL(Jacobian)/MINVAL(Jacobian)
 
             g = MATMUL(Fn(:),Jacobian(:,:))
+
             aVOld = aV
+            FnOld = Fn
             fold = f
+
             p = -1.0D0*Fn
 
             !Compute da by using SVD
-            CALL DGELSS((Lmax+1)**2,(Lmax+1)**2,1,Jacobian,&
+            JDummy = Jacobian
+            CALL DGELSS((Lmax+1)**2,(Lmax+1)**2,1,JDummy,&
                     &(Lmax+1)**2,p,(Lmax+1)**2,S,-1.0D0,RANK,WORK,LWORK,INFO)
 
             IF( LWORK .EQ. -1 ) THEN
@@ -115,11 +123,17 @@
 !!$                RETURN
 !!$            END IF
 
-            errA = MAXVAL(ABS(aV-aVOld)/MAX(ABS(aV),1.0D0))
-            IF( errA < tolX ) THEN
-                PRINT *, 'delta a converges'
+            da = aV - aVOld
+            errA = MAXVAL(ABS(da)/MAX(ABS(aV),1.0D0))
+            IF( (errA.LT.tolX) .AND. (restart .EQV. .FALSE.) ) THEN
+                PRINT *, 'delta a converges, attempt restart'
+                restart = .TRUE.
+            ELSEIF( (errA.LT.tolX) .AND. restart ) THEN
+                PRINT *, 'delta a converges, FAILS'
                 CALL SHVectorToCilm(aV,a,Lmax)
                 RETURN
+            ELSE
+                restart = .FALSE.
             END IF
 
             !Output to user
@@ -127,6 +141,19 @@
             PRINT *, 'error in residual =', errF
             PRINT *, 'error in solution =', errA
             PRINT *, '========================='
+
+            IF(restart) THEN
+                !Compute the Jacobian by numerical differentiation
+                CALL FDJacobian(Nth,Nphi,Lmax,Lgrid,&
+                    &GLQWeights,GLQZeros,R,theta,phi,&
+                    &aV,Jacobian)
+            ELSE
+                !Update using Broyden's method
+                y = Fn - FnOld
+                dJ = SPREAD(y-MATMUL(Jacobian,da),DIM=2,NCOPIES=(Lmax+1)**2) *&
+                    &SPREAD(da,DIM=1,NCOPIES=(Lmax+1)**2)
+                Jacobian(:,:) = Jacobian(:,:) + dJ/DOT_PRODUCT(da,da)
+            END IF 
             
         END DO
 
@@ -217,3 +244,5 @@
 
     RETURN
     END SUBROUTINE lnsrch
+
+!=================================================================!
