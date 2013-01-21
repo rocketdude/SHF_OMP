@@ -10,7 +10,6 @@ OBJS = \
        main.o \
        Functions.o \
        FDJacobian.o \
-       GetFilter.o \
        GetInitialData.o \
        GetResults.o \
        RadiationFunction.o \

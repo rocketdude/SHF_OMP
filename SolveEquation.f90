@@ -1,12 +1,12 @@
 !---------------------------------------------------------!
-!   Solve the equation using Newton-Raphson               !
+!   Solve the equation using globally convergent          !
+!   Newton-Raphson method                                 !
 !---------------------------------------------------------!
 
     SUBROUTINE  SolveEquation(&
                 &Nth, Nphi, Lmax, Lgrid, GLQWeights, GLQZeros,&
                 &R, theta, phi,&
                 &Maxit, tolA, tolF,&
-                &p, eps,&
                 &LWORK,&
                 &a)
 
@@ -15,12 +15,10 @@
     
         !Declare passed variables
         INTEGER*4               Nth, Nphi, Lmax, Lgrid, Maxit
-        INTEGER*4               p
         INTEGER*4               LWORK
         REAL*8                  GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
         REAL*8                  R, theta(Nth), phi(Nphi)
         REAL*8                  tolA, tolF
-        REAL*8                  eps
         REAL*8                  a(2,Lmax+1,Lmax+1)
 
         !Declare local variables
@@ -141,3 +139,6 @@
         CALL SHVectorToCilm(aV,a,Lmax)
         RETURN
     END SUBROUTINE
+
+
+!=================================================================!

@@ -9,7 +9,7 @@
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Lmax     = 13
-    INTEGER*4, PARAMETER ::        Lgrid    = 13
+    INTEGER*4, PARAMETER ::        Lgrid    = Lmax
 
     INTEGER*4, PARAMETER ::        Nth      = Lgrid+1
     INTEGER*4, PARAMETER ::        Nphi     = 2*Lgrid+1
@@ -62,7 +62,6 @@
 
     INTEGER*4           l, ml       !Degree of spherical harmonics
     INTEGER*4           LWORK       !For inverting Jacobian
-    INTEGER*4           p           !Filter degree
  
 !--------------------------------------------------------!
 !     Declare Local Parameters                           !
@@ -93,8 +92,6 @@
 
     LWORK       = 18496
 
-    !Parameters needed for filter
-    p           =  32
     eps         =  2.22044604925031308D-016 !Machine epsilon (precalculate)
  
 !--------------------------------------------------------!
@@ -155,7 +152,6 @@
     & Nth, Nphi, Lmax, Lgrid, GLQWeights, GLQZeros,&
     & R, theta, phi,&
     & Maxit, tolA, tolF,&
-    & p, eps,&
     & LWORK,&
     & a) 
 
