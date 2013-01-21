@@ -190,49 +190,49 @@
             PRINT *, 'Minimum value = ', MINVAL(Jacobian)
             PRINT *, 'Ratio of max/min = ', MAXVAL(Jacobian)/MINVAL(Jacobian)
 
-            !Invert the Jacobian
-            invJacobian = Jacobian
-            CALL DGETRF( (Lmax+1)**2, (Lmax+1)**2, invJacobian,&
-                        &(Lmax+1)**2, IPIV, INFO)
-            IF( INFO .NE. 0 ) THEN
-                PRINT *, 'Error in LU factorization:'
-                PRINT *, 'Info =', INFO
-                STOP
-            END IF
+!!$            !Invert the Jacobian
+!!$            invJacobian = Jacobian
+!!$            CALL DGETRF( (Lmax+1)**2, (Lmax+1)**2, invJacobian,&
+!!$                        &(Lmax+1)**2, IPIV, INFO)
+!!$            IF( INFO .NE. 0 ) THEN
+!!$                PRINT *, 'Error in LU factorization:'
+!!$                PRINT *, 'Info =', INFO
+!!$                STOP
+!!$            END IF
+!!$
+!!$            CALL DGETRI( (Lmax+1)**2, invJacobian, (Lmax+1)**2,&
+!!$                        &IPIV, WORK, LWORK, INFO)
+!!$
+!!$            IF( INFO .NE. 0 ) THEN
+!!$                PRINT *, 'Error in inversion:'
+!!$                PRINT *, 'Info =', INFO
+!!$                STOP
+!!$            END IF
+!!$
+!!$            IF( LWORK .EQ. -1 ) THEN
+!!$                PRINT *, 'Work space query, optimal LWORK =', WORK(1)
+!!$                STOP
+!!$            END IF
 
-            CALL DGETRI( (Lmax+1)**2, invJacobian, (Lmax+1)**2,&
-                        &IPIV, WORK, LWORK, INFO)
 
-            IF( INFO .NE. 0 ) THEN
-                PRINT *, 'Error in inversion:'
-                PRINT *, 'Info =', INFO
-                STOP
-            END IF
+            !Invert the Jacobian using Moore-Penrose inverse using SVD
+            CALL DGESVD('S','S',(Lmax+1)**2,(Lmax+1)**2,Jacobian,&
+                    &(Lmax+1)**2,S,U,(Lmax+1)**2,VT,(Lmax+1)**2,WORK,LWORK,INFO)
 
             IF( LWORK .EQ. -1 ) THEN
                 PRINT *, 'Work space query, optimal LWORK =', WORK(1)
                 STOP
             END IF
 
+            !Compute invJ = VT**t * SIGMA * U**t
+            !$OMP PARALLEL DO
+            DO i=1,(Lmax+1)**2
+                CALL DSCAL((Lmax+1)**2,(1.0D0/S(i)),U(1,i),1)
+            END DO
+            !$OMP END PARALLEL DO
 
-!!$            !Invert the Jacobian using Moore-Penrose inverse using SVD
-!!$            CALL DGESVD('S','S',(Lmax+1)**2,(Lmax+1)**2,Jacobian,&
-!!$                    &(Lmax+1)**2,S,U,(Lmax+1)**2,VT,(Lmax+1)**2,WORK,LWORK,INFO)
-!!$
-!!$            IF( LWORK .EQ. -1 ) THEN
-!!$                PRINT *, 'Work space query, optimal LWORK =', WORK(1)
-!!$                STOP
-!!$            END IF
-!!$
-!!$            !Compute invJ = VT**t * SIGMA * U**t
-!!$            !$OMP PARALLEL DO
-!!$            DO i=1,(Lmax+1)**2
-!!$                CALL DSCAL((Lmax+1)**2,(1.0D0/S(i)),U(1,i),1)
-!!$            END DO
-!!$            !$OMP END PARALLEL DO
-!!$
-!!$            CALL DGEMM('C','C',(Lmax+1)**2,(Lmax+1)**2,(Lmax+1)**2,1.0D0,&
-!!$                &VT,(Lmax+1)**2,U,(Lmax+1)**2,0.0D0,invJacobian,(Lmax+1)**2)
+            CALL DGEMM('C','C',(Lmax+1)**2,(Lmax+1)**2,(Lmax+1)**2,1.0D0,&
+                &VT,(Lmax+1)**2,U,(Lmax+1)**2,0.0D0,invJacobian,(Lmax+1)**2)
 
             !Check if a is within tolerance
             deltaA = MATMUL(invJacobian,ResVector)
