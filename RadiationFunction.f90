@@ -5,7 +5,7 @@
     SUBROUTINE  RadiationFunction(&
                 &Nth, Nphi, Lmax, Lgrid, GLQWeights, GLQZeros,&
                 &R, theta, phi,&
-                &a, Fn)
+                &aVector, FnVector)
 
         USE         omp_lib
         IMPLICIT    none
@@ -15,17 +15,19 @@
         REAL*8                          GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
         REAL*8                          R
         REAL*8                          theta(Nth), phi(Nphi)
-        REAL*8                          a(2,Lmax+1,Lmax+1)
-        REAL*8, INTENT(OUT)         ::  Fn(2,Lmax+1,Lmax+1)
+        REAL*8                          aVector((Lmax+1)**2)
+        REAL*8, INTENT(OUT)         ::  FnVector((Lmax+1)**2)
 
         !Declare local variables
         INTEGER*4                       l, ml, j
         REAL*8                          SolPhi, eps, alp, kappa, sigma
         REAL*8                          epsStar, alpStar
         REAL*8                          PI
+        REAL*8                          a(2,Lmax+1,Lmax+1)
         REAL*8                          b(2,Lmax+1,Lmax+1)
         REAL*8                          bder(2,Lmax+1,Lmax+1)
         REAL*8                          c(2,Lmax+1,Lmax+1)
+        REAL*8                          Fn(2,Lmax+1,Lmax+1)
 
         REAL*8                          emit(Nth,Nphi)
         REAL*8                          absorb(Nth,Nphi)
@@ -41,6 +43,9 @@
         PI = 3.141592653589793238462643383279502884197D0
 
         !Main subroutine
+
+        CALL SHVectorToCilm(aVector,a,Lmax)
+
         !$OMP PARALLEL DO
         DO l = 0, Lmax
             b(:,l+1,:) = a(:,l+1,:)*( R**l )
@@ -75,6 +80,8 @@
             &GLQWeights,GLQZeros,theta,phi,absorb,c)
 
         Fn = bder + b + c
+
+        CALL SHCilmToVector(Fn,FnVector,Lmax)
 
         RETURN
     END SUBROUTINE

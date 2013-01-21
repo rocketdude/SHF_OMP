@@ -9,6 +9,7 @@ OBJS = \
        IO.o \
        main.o \
        Functions.o \
+       FDJacobian.o \
        GetFilter.o \
        GetInitialData.o \
        GetResults.o \

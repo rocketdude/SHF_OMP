@@ -82,7 +82,7 @@
     !Parameters related to initial conditions
 
     !Termination conditions
-    Maxit = 100
+    Maxit = 20
 
     !Parameters related to the heat problem
     T0          = 405.58D0               !Initial temperature guess in K

@@ -24,28 +24,14 @@
         REAL*8                  a(2,Lmax+1,Lmax+1)
 
         !Declare local variables
-        INTEGER*4               YilmIndex
-        INTEGER*4               i, j, k, it, l, ml, ccol
-        REAL*8                  MaxDA
+        INTEGER*4               i, j, k, it
         REAL*8                  errF, errA
- 
-        REAL*8                  Filter(Lmax+1)
-        
-        REAL*8                  aVector((Lmax+1)**2)
+
+        REAL*8                  aV((Lmax+1)**2)
         REAL*8                  deltaA((Lmax+1)**2)
     
-        REAL*8                  Res(2,Lmax+1,Lmax+1)
-        REAL*8                  ResVector((Lmax+1)**2)
+        REAL*8                  Res((Lmax+1)**2)
 
-        !Needed for calculating the Jacobian
-        REAL*8                  aEval(2,Lmax+1,Lmax+1,4)
-
-        REAL*8                  da(2,Lmax+1,Lmax+1)
-        REAL*8                  i12da(2,Lmax+1,Lmax+1) 
-
-        REAL*8                  Fn(2,Lmax+1,Lmax+1,4)
-        REAL*8                  dFnda(2,Lmax+1,Lmax+1)
-        REAL*8                  dFndaVector((Lmax+1)**2)
         REAL*8                  Jacobian((Lmax+1)**2,(Lmax+1)**2)
         REAL*8                  invJacobian((Lmax+1)**2,(Lmax+1)**2)
 
@@ -60,130 +46,19 @@
 
         !Main subroutine
 
-        CALL GetFilter(Lmax,p,eps,Filter)
-
-        MaxDA = 1.0D-3
+        CALL SHCilmToVector(a,aV,Lmax)
 
         DO it=1,Maxit
         
-            !Compute the Jacobian by numerical differentiation
-            !$OMP PARALLEL DO PRIVATE(i)
-            DO j=1,(Lmax+1)
-                DO i=1,(Lmax+1)
-                    da(1,i,j) = MIN( MaxDA*a(1,i,j), MaxDA )
-                    da(2,i,j) = MIN( MaxDA*a(2,i,j), MaxDA )
-
-                    IF( da(1,i,j) .NE. 0.0D0 ) THEN
-                        i12da(1,i,j) = 1.0D0/(12.0D0*da(1,i,j))
-                    ELSE
-                        i12da(1,i,j) = 0.0D0
-                    END IF
-
-                    IF( da(2,i,j) .NE. 0.0D0 ) THEN
-                        i12da(2,i,j) = 1.0D0/(12.0D0*da(2,i,j))
-                    ELSE
-                        i12da(2,i,j) = 0.0D0
-                    END IF
-                END DO
-            END DO
-            !$OMP END PARALLEL DO
-
-            aEval(:,:,:,1) = a
-            aEval(:,:,:,2) = a
-            aEval(:,:,:,3) = a
-            aEval(:,:,:,4) = a
-
-            !Not threadsafe
-            DO l=0,Lmax
-
-                i = 1
-                DO ml=0,l
-
-                    !Setup differentiation grid
-                    aEval(i,l+1,ml+1,1) = a(i,l+1,ml+1) - 2.0D0*da(i,l+1,ml+1)
-                    aEval(i,l+1,ml+1,2) = a(i,l+1,ml+1) - da(i,l+1,ml+1)
-                    aEval(i,l+1,ml+1,3) = a(i,l+1,ml+1) + da(i,l+1,ml+1)
-                    aEval(i,l+1,ml+1,4) = a(i,l+1,ml+1) + 2.0D0*da(i,l+1,ml+1)
-
-                    !Evaluate the function at the different "grid" points
-                    CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&
-                        &GLQWeights,GLQZeros,R,theta,phi,&
-                        &aEval(:,:,:,1),Fn(:,:,:,1))
-
-                    CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&
-                        &GLQWeights,GLQZeros,R,theta,phi,&
-                        &aEval(:,:,:,2),Fn(:,:,:,2))
-
-                    CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&
-                        &GLQWeights,GLQZeros,R,theta,phi,&
-                        &aEval(:,:,:,3),Fn(:,:,:,3))
-
-                    CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&
-                        &GLQWeights,GLQZeros,R,theta,phi,&
-                        &aEval(:,:,:,4),Fn(:,:,:,4))
-
-                    !Calculate numerical derivatives
-                    dFnda = i12da*&
-                        &( Fn(:,:,:,1) - 8.0D0*Fn(:,:,:,2) +&
-                           8.0D0*Fn(:,:,:,3) - Fn(:,:,:,4) )
-
-                    !Transfer to Jacobian
-                    CALL SHCilmToVector(dFnda,dFndaVector,Lmax)
-                    ccol = YilmIndex(i,l,ml)
-                    Jacobian(:,ccol) = dFndaVector
-
-                    !Restore aEval
-                    aEval(i,l+1,ml+1,:) = a(i,l+1,ml+1)
-
-                END DO
-
-                i = 2
-                DO ml=1,l
-
-                    !Setup differentiation grid
-                    aEval(i,l+1,ml+1,1) = a(i,l+1,ml+1) - 2.0D0*da(i,l+1,ml+1)
-                    aEval(i,l+1,ml+1,2) = a(i,l+1,ml+1) - da(i,l+1,ml+1)
-                    aEval(i,l+1,ml+1,3) = a(i,l+1,ml+1) + da(i,l+1,ml+1)
-                    aEval(i,l+1,ml+1,4) = a(i,l+1,ml+1) + 2.0D0*da(i,l+1,ml+1)
-
-                    !Evaluate the function at the different "grid" points
-                    CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&
-                        &GLQWeights,GLQZeros,R,theta,phi,&
-                        &aEval(:,:,:,1),Fn(:,:,:,1))
-
-                    CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&
-                        &GLQWeights,GLQZeros,R,theta,phi,&
-                        &aEval(:,:,:,2),Fn(:,:,:,2))
-
-                    CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&
-                        &GLQWeights,GLQZeros,R,theta,phi,&
-                        &aEval(:,:,:,3),Fn(:,:,:,3))
-
-                    CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&
-                        &GLQWeights,GLQZeros,R,theta,phi,&
-                        &aEval(:,:,:,4),Fn(:,:,:,4))
-
-                    !Calculate numerical derivatives
-                    dFnda = i12da*&
-                        &( Fn(:,:,:,1) - 8.0D0*Fn(:,:,:,2) +&
-                           8.0D0*Fn(:,:,:,3) - Fn(:,:,:,4) )
-
-                    !Transfer to Jacobian
-                    CALL SHCilmToVector(dFnda,dFndaVector,Lmax)
-                    ccol = YilmIndex(i,l,ml)
-                    Jacobian(:,ccol) = dFndaVector
-
-                    !Restore aEval
-                    aEval(i,l+1,ml+1,:) = a(i,l+1,ml+1)
-
-                END DO
-            END DO
-
             !Calculate the residual
             CALL RadiationFunction(Nth,Nphi,Lmax,Lgrid,&
                 &GLQWeights,GLQZeros,R,theta,phi,&
-                &a,Res)
-            CALL SHCilmToVector(Res,ResVector,Lmax)
+                &aV,Res)
+
+            !Compute the Jacobian by numerical differentiation
+            CALL FDJacobian(Nth,Nphi,Lmax,Lgrid,&
+                &GLQWeights,GLQZeros,R,theta,phi,&
+                &aV,Jacobian)
 
             !Check the maximum value of the Jacobian vs. the minimum value
             PRINT *, 'Maximum value = ', MAXVAL(Jacobian)
@@ -235,30 +110,24 @@
                 &VT,(Lmax+1)**2,U,(Lmax+1)**2,0.0D0,invJacobian,(Lmax+1)**2)
 
             !Check if a is within tolerance
-            deltaA = MATMUL(invJacobian,ResVector)
+            deltaA = MATMUL(invJacobian,Res)
             errA = SQRT( DOT_PRODUCT(deltaA, deltaA) ) / ((Lmax+1)**2)
-            !IF( errA .LE. tolA ) THEN
-            !    PRINT *, 'error in solution is within tolerance' 
-            !    RETURN
-            !END IF
+!!$            IF( errA .LE. tolA ) THEN
+!!$                PRINT *, 'error in solution is within tolerance' 
+!!$                CALL SHVectorToCilm(aV,a,Lmax)
+!!$                RETURN
+!!$            END IF
 
             !Update the solution
-            CALL SHCilmToVector(a,aVector,Lmax)
-            aVector = aVector - deltaA
-            CALL SHVectorToCilm(aVector,a,Lmax)
+            aV = aV - deltaA
 
             !Check if residual is small enough
-            errF = SQRT( DOT_PRODUCT(ResVector, ResVector) ) / ((Lmax+1)**2)
+            errF = SQRT( DOT_PRODUCT(Res, Res) ) / ((Lmax+1)**2)
             IF( errF .LE. tolF ) THEN
                 PRINT *, 'error in residual is within tolerance'
+                CALL SHVectorToCilm(aV,a,Lmax)
                 RETURN
             END IF
-
-            !$OMP PARALLEL DO
-            DO l=0, Lmax
-                a(:,l+1,:) = a(:,l+1,:) * Filter(l+1)
-            END DO
-            !$OMP END PARALLEL DO
 
             !Output to user
             PRINT *, 'Iteration # =', it
@@ -269,5 +138,6 @@
         END DO
 
         PRINT *, 'ERROR: Maximum number of iterations reached'
+        CALL SHVectorToCilm(aV,a,Lmax)
         RETURN
     END SUBROUTINE
