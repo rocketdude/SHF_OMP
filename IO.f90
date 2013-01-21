@@ -1124,7 +1124,7 @@
 !    Write a_nlm Array Subroutine                        !
 !========================================================!
 
-      SUBROUTINE Writea(n1, n2, n3, n4, Array, i)
+      SUBROUTINE Writea(n1, n2, n3, Array, i)
 
         IMPLICIT none
 
@@ -1132,8 +1132,8 @@
 !     Declare passed variables                              !
 !-----------------------------------------------------------!
 
-        INTEGER*4, INTENT(IN)::   n1,n2,n3,n4, i
-        COMPLEX*16, INTENT(IN)::    Array(n1,n2,n3,n4)
+        INTEGER*4, INTENT(IN)::   n1,n2,n3,i
+        REAL*8, INTENT(IN)   ::    Array(n1,n2,n3)
 
 !-----------------------------------------------------------!
 !     Declare local variables                               !
@@ -1166,7 +1166,7 @@
 
         WRITE(TestFile, format_string) 'a',i,'.dat'
 
-        CALL WRITE4dC(n1, n2, n3, n4, Array, TestFile)
+        CALL WRITE3d(n1, n2, n3, Array, TestFile)
 
         RETURN
       END SUBROUTINE Writea

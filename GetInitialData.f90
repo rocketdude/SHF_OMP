@@ -8,6 +8,7 @@
 & GLQWeights, GLQZeros,&
 & T0, tolA, eps,&
 & R, theta, phi,&
+& TInit, Filename,&
 & a)
 
         !This subroutine calculates the initial eikonal data S
@@ -28,6 +29,9 @@
         REAL*8                  :: phi(Nphi)
         REAL*8                  :: T0, tolA, eps
 
+        LOGICAL                 :: TInit
+        CHARACTER*32            :: Filename
+
         REAL*8, INTENT(out)     :: a(2, Lmax+1, Lmax+1)
 
 !--------------------------------------------------------!
@@ -42,16 +46,20 @@
 !      Main Subroutine                                   !
 !--------------------------------------------------------!
 
-        S = T0
+        IF( TInit ) THEN
+            S = T0
 
-        CALL AngularToSpectralTransform(Nth,Nphi,Lmax,Lgrid,&
+            CALL AngularToSpectralTransform(Nth,Nphi,Lmax,Lgrid,&
                                     &GLQWeights,GLQZeros,theta,phi,S,a)
 
-        !$OMP PARALLEL DO
-        DO l=0,Lmax
-            a(:,l+1,:) = a(:,l+1,:) / (R**l) 
-        END DO
-        !$OMP END PARALLEL DO 
+            !$OMP PARALLEL DO
+            DO l=0,Lmax
+                a(:,l+1,:) = a(:,l+1,:) / (R**l) 
+            END DO
+            !$OMP END PARALLEL DO 
+        ELSE
+            CALL Read3d(2,Lmax+1,Lmax+1,a,Filename)
+        END IF
 
         !$OMP PARALLEL DO
         DO l=0,Lmax

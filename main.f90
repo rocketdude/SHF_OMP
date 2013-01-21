@@ -8,7 +8,7 @@
     USE                HDF5
     IMPLICIT           none
 
-    INTEGER*4, PARAMETER ::        Lmax     = 15
+    INTEGER*4, PARAMETER ::        Lmax     = 16
     INTEGER*4, PARAMETER ::        Lgrid    = Lmax
 
     INTEGER*4, PARAMETER ::        Nth      = Lgrid+1
@@ -27,7 +27,7 @@
 !     DATA I/O                                          !
 !-------------------------------------------------------!
 
-    CHARACTER*32      CTemp
+    CHARACTER*32      aFile
     LOGICAL           FileExist
 
 !--------------------------------------------------------!
@@ -58,6 +58,7 @@
 
     REAL*8              T0          !Initial temperature
     REAL*8              epsA        !Some small value of a
+    LOGICAL             TInit       !Initialize from some temperature
 
     REAL*8              tolMin      !Tolerance of the gradient
     REAL*8              tolF        !Tolerance of the residual
@@ -89,12 +90,14 @@
     tolMin      = 1.0D-9                 !Tolerance to gradient
 
     !Parameters related to the heat problem
-    T0          = 400.000D0              !Initial temperature guess in K
+    TInit       = .TRUE.                !If true initialize from temperature
+    T0          = 2000.000D0              !Initial temperature guess in K
+    aFile       = 'a14.dat'
+
     R           = 0.2D0                  !Radius of the object in meters
 
-    LWORK       = 18496
-
-    eps         =  2.22044604925031308D-016 !Machine epsilon (precalculate)
+    LWORK       = 19363
+    eps         = 2.22044604925031308D-016 !Machine epsilon (precalculate)
 
 !--------------------------------------------------------!
 !     Timer Start                                        !
@@ -148,6 +151,7 @@
     & GLQWeights, GLQZeros,&
     & T0, eps, eps,&
     & R, theta, phi,&
+    & TInit, aFile,&
     & a)
 
     CALL SolveEquation(&
@@ -165,6 +169,8 @@
     & a, S)
 
     PRINT *, '==============================='
+
+    CALL Writea(2,Lmax+1,Lmax+1,a,Lmax)
 
     DO l=0,Lmax
         IF(a(1,l+1,1).GT.tolF) PRINT *, 'a(',l,',',0,') = ', a(1,l+1,1)
