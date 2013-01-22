@@ -8,7 +8,7 @@
     USE                HDF5
     IMPLICIT           none
 
-    INTEGER*4, PARAMETER ::        Lmax     = 18
+    INTEGER*4, PARAMETER ::        Lmax     = 16
     INTEGER*4, PARAMETER ::        Lgrid    = Lmax
 
     INTEGER*4, PARAMETER ::        Nth      = Lgrid+1
@@ -173,11 +173,11 @@
     CALL Writea(2,Lmax+1,Lmax+1,a,Lmax)
 
     DO l=0,Lmax
-        IF(a(1,l+1,1).GT.tolF) PRINT *, 'a(',l,',',0,') = ', a(1,l+1,1)
+        IF(ABS(a(1,l+1,1)).GT.tolF) PRINT *, 'a(',l,',',0,') = ', a(1,l+1,1)
         DO ml=1,Lmax
-            IF(a(1,l+1,ml+1).GT.tolF) &
+            IF(ABS(a(1,l+1,ml+1)).GT.tolF) &
                 PRINT *, 'a(',l,',', ml,') = ', a(1,l+1,ml+1)
-            IF(a(2,l+1,ml+1).GT.tolF) &
+            IF(ABS(a(2,l+1,ml+1)).GT.tolF) &
                 PRINT *, 'a(',l,',',-ml,') = ', a(2,l+1,ml+1)
         END DO
     END DO
