@@ -30,7 +30,7 @@
         !Main subroutine
 
         N = (Lmax+1)**2
-        MaxDA = 1.0D-3
+        MaxDA = 1.0D-8
 
         !$OMP PARALLEL DO
         DO i=1,N
