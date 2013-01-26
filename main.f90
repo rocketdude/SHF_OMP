@@ -5,7 +5,6 @@
   PROGRAM              RadiationBoundary
     USE                omp_lib
     USE                SHTOOLS
-    USE                HDF5
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Lmax     = 16
