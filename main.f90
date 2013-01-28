@@ -180,16 +180,16 @@
 !--------------------------------------------------------!
     
     !Parameters related to initial conditions
-    SFLAG = 0                       !If SFLAG = 1, 
+    SFLAG = 1                       !If SFLAG = 1, 
                                     !we are continuing previous run: 
                                     !change t, Startit and aFile
-    t = 200.0D0                     !Last time from previous run
-    Startit = 6751                  !Startit = last iteration + 1
-    aFile = 'a10.dat'
+    t = 180.103138249206D0          !Last time from previous run
+    Startit = 5001                  !Startit = last iteration + 1
+    aFile = 'a5000.dat'
 
     !Termination conditions
-    Maxit = 80000
-    tfinal = 150.0D0
+    Maxit = 10000
+    tfinal = 100.0D0
 
     IF( SFLAG .EQ. 0 ) THEN
        Startit = 1                  !Starting from iteration 1
@@ -233,7 +233,7 @@
     bufsize(1) = 50 !Buffer sizes need to be bigger than datasets
     bufsize(2) = 50
     bufsize(3) = 50
-    it_data_max = 40000
+    it_data_max = 30628
     it_data_min = 0
     delta_it_data = 4
 
@@ -313,6 +313,7 @@
 
     !then set the value of dt
     dt = tdir * cfl * drho * 0.5D0 * MIN(rmaxX-rminX,rmaxY-rminY,rmaxZ-rminZ)
+    PRINT *, 'dt = ', dt
     
 !--------------------------------------------------------!
 !     Initial Data                                       !
@@ -326,6 +327,45 @@
        PRINT *, 'Previous iteration=' ,(Startit-1)
 
        CALL Read4dC(Mr+1, 2, Lmax+1, Lmax+1, a, aFile)
+
+       gRR = 0.0D0
+       gThTh = 0.0D0
+       gPhiPhi = 0.0D0
+       gRTh = 0.0D0
+       gRPhi = 0.0D0
+       gThPhi = 0.0D0
+           
+       CALL FindU(&
+            &Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM,&
+            &GLQWeights, GLQZeros,&
+            &gRR, gThTh, gPhiPhi,&
+            &gRTh, gRPhi, gThPhi,&
+            &rmaxX, rmaxY, rmaxZ,&
+            &rminX, rminY, rminZ,&
+            &rho, theta, phi,&
+            &a,&
+            &(Startit-1), WriteSit,&
+            &U, Uave, USp,&
+            &thetaSp, phiSp,&
+            &g_rrUsqrd, g_rrUsqrdAve)
+
+       PRINT *, 'Time= ', t
+       PRINT *, 'Average R= ', Uave
+       PRINT *, 'X = ', USp(3), USp(5)
+       PRINT *, 'Y = ', USp(4), USp(6)
+       PRINT *, 'Z = ', USp(1), USp(2)
+
+       !Check if we need to reinitialize at the start
+       IF( MOD((Startit-1), reinit) .EQ. 0 ) THEN
+            CALL ReinitializeData(&
+                &Nr, Nth, Nphi,&
+                &Mr, Lmax, Lgrid,&
+                &GLQWeights, GLQZeros,&
+                &rmaxX, rmaxY, rmaxZ,&
+                &rminX, rminY, rminZ,&
+                &rho, theta, phi,&
+                &c, U, a)
+        END IF
 
     ELSE
 
@@ -373,11 +413,10 @@
        CTemp = 'USp.dat' 
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
        CLOSE(7)
-       CTemp = 'g_rrUsqrdAve.dat'
-       OPEN(7, FILE = CTemp, STATUS = 'NEW')
-       CLOSE(7)
-    ELSE IF( SFLAG .EQ. 1 ) THEN
-        t = t+dt
+!!$       CTemp = 'g_rrUsqrdAve.dat'
+!!$       OPEN(7, FILE = CTemp, STATUS = 'NEW')
+!!$       CLOSE(7)
+
     END IF
 
     !Initializes read metric logics
@@ -411,7 +450,7 @@
                 
         CALL GetMetricAtCurrentTime(&
              &Nr, Nth, Nphi, TP,&
-             &readdata,&
+             &readdata, SFLAG,&
              &t, t_thresh, tdir,&
              &t_data, it_data,&    
              &nchunks,&
@@ -458,8 +497,8 @@
        !--------------------------------------------------------!
 
        IF( MOD(it,WriteUit) .EQ. 0 ) CALL WriteU(Nth, Nphi, U, it)
-       IF( MOD(it,Writeg_rrUsqrdit) .EQ. 0 ) &
-         & CALL WriteGRRUU(Nth, Nphi, g_rrUsqrd, it)
+!!$       IF( MOD(it,Writeg_rrUsqrdit) .EQ. 0 ) &
+!!$         & CALL WriteGRRUU(Nth, Nphi, g_rrUsqrd, it)
        IF( MOD(it,Writeait) .EQ. 0 .OR. (it .EQ. Maxit) ) &
          & CALL Writea(Mr+1, 2, Lmax+1, Lmax+1, a, it)
        
@@ -480,28 +519,11 @@
        END DO
        CLOSE(7)
     
-       CTemp = 'g_rrUsqrdAve.dat'
-       OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
-       WRITE(7,*) g_rrUsqrdAve
-       CLOSE(7)
+!!$       CTemp = 'g_rrUsqrdAve.dat'
+!!$       OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
+!!$       WRITE(7,*) g_rrUsqrdAve
+!!$       CLOSE(7)
     
-       !--------------------------------------------------------!
-       !     SMOOTHING: Reinitializing S                        !
-       !--------------------------------------------------------!
-
-       IF( MOD(it, reinit) .EQ. 0 ) THEN
-           
-           CALL ReinitializeData(&
-                   &Nr, Nth, Nphi,&
-                   &Mr, Lmax, Lgrid,&
-                   &GLQWeights, GLQZeros,&
-                   &rmaxX, rmaxY, rmaxZ,&
-                   &rminX, rminY, rminZ,&
-                   &rho, theta, phi,&
-                   &c, U, a)
-
-       END IF
-
        PRINT *, 'Iteration #:', it
        PRINT *, 'Time= ', t
        PRINT *, 'Average R= ', Uave
@@ -518,6 +540,23 @@
           &((t .GT. tfinal) .AND. (tdir .GT. 0.0D0)) ) THEN
            CALL Writea(Mr+1, 2, Lmax+1, Lmax+1, a, it)
            EXIT
+       END IF
+
+       !--------------------------------------------------------!
+       !     SMOOTHING: Reinitializing S                        !
+       !--------------------------------------------------------!
+
+       IF( MOD(it, reinit) .EQ. 0 ) THEN
+        
+           CALL ReinitializeData(&
+                   &Nr, Nth, Nphi,&
+                   &Mr, Lmax, Lgrid,&
+                   &GLQWeights, GLQZeros,&
+                   &rmaxX, rmaxY, rmaxZ,&
+                   &rminX, rminY, rminZ,&
+                   &rho, theta, phi,&
+                   &c, U, a)
+
        END IF
 
     END DO mainloop

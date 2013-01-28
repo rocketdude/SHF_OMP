@@ -46,6 +46,7 @@
 !      Main Subroutine                                   !
 !--------------------------------------------------------!
 
+        PRINT *, 'Reinitializing!'
         !$OMP PARALLEL DO SHARED(S, U, c) PRIVATE(i, k, rmax, rmin, r)
         DO j = 1, Nth
             DO k = 1, Nphi

@@ -4,7 +4,7 @@
 
     SUBROUTINE GetMetricAtCurrentTime(&
     &Nr, Nth, Nphi, TP,&
-    &readdata,&
+    &readdata, SFLAG,&
     &t, t_thresh, tdir,&
     &t_data, it_data,&    
     &nchunks,&
@@ -32,6 +32,7 @@
     INTEGER*4               Nr, Nth, Nphi, TP
     INTEGER*4               nchunks
     INTEGER*4               readdata
+    INTEGER*4               SFLAG
     REAL*8                  t
     REAL*8                  tdir
     REAL*8                  t_thresh
@@ -107,15 +108,17 @@
 
         IF( tdir .LT. 0.0D0 ) THEN
         
-            t = MAXVAL(t_data)
             t_thresh = MINVAL(t_data) + &
             & (MAXVAL(t_data) - MINVAL(t_data))*DBLE(TP-2)/DBLE(2*(TP-1))
+
+            IF(SFLAG .EQ. 0) t = MAXVAL(t_data)
     
         ELSEIF( tdir .GT. 0.0D0 ) THEN
         
-            t = MINVAL(t_data)
             t_thresh = MAXVAL(t_data) - &
             & (MAXVAL(t_data) - MINVAL(t_data))*DBLE(TP-2)/DBLE(2*(TP-1))
+
+            IF(SFLAG .EQ. 0) t = MINVAL(t_data)
 
         END IF
 
