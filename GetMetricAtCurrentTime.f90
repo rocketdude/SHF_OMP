@@ -180,6 +180,7 @@
 
     ELSE
 
+        !$OMP PARALLEL DO PRIVATE(j,k)
         DO i=1,Nr
           DO j=1,Nth
             DO k=1,Nphi
@@ -227,6 +228,7 @@
             END DO
           END DO
         END DO
+        !$OMP END PARALLEL DO
 
     END IF
 
