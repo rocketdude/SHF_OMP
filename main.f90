@@ -16,7 +16,7 @@
     IMPLICIT           none
 
     INTEGER*4, PARAMETER ::        Mr       = 40
-    INTEGER*4, PARAMETER ::        Lmax     = 16
+    INTEGER*4, PARAMETER ::        Lmax     = 30
     INTEGER*4, PARAMETER ::        Lgrid    = 32
     INTEGER*4, PARAMETER ::        TP       = 4
     INTEGER*4, PARAMETER ::        SpM      = 6
@@ -180,16 +180,16 @@
 !--------------------------------------------------------!
     
     !Parameters related to initial conditions
-    SFLAG = 1                       !If SFLAG = 1, 
+    SFLAG = 0                       !If SFLAG = 1, 
                                     !we are continuing previous run: 
                                     !change t, Startit and aFile
-    t = 180.103138249206D0          !Last time from previous run
+    t = 180.099158876856D0          !Last time from previous run
     Startit = 5001                  !Startit = last iteration + 1
     aFile = 'a5000.dat'
 
     !Termination conditions
-    Maxit = 10000
-    tfinal = 100.0D0
+    Maxit = 5000
+    tfinal = 150.0D0
 
     IF( SFLAG .EQ. 0 ) THEN
        Startit = 1                  !Starting from iteration 1
@@ -233,7 +233,7 @@
     bufsize(1) = 50 !Buffer sizes need to be bigger than datasets
     bufsize(2) = 50
     bufsize(3) = 50
-    it_data_max = 30628
+    it_data_max = 40000
     it_data_min = 0
     delta_it_data = 4
 
