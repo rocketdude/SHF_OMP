@@ -292,7 +292,7 @@
         COMPLEX*16, INTENT(out)   :: dSdrho(Nr,Nth,Nphi)
         
         !Local variables
-        REAL*8                       nder, nn
+        INTEGER*4                    nder, nn
         COMPLEX*16                   ader(Mr+1,2,Lmax+1,Lmax+1)
 
         !Main subroutine
