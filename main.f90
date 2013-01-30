@@ -92,8 +92,7 @@
     REAL*8            rootsign    !Choose the sign of the root (+/-)
 
     REAL*8            rho(Nr)   !Canonical radial coord. for Chebyshev poly.
-    REAL*8            rmaxX, rmaxY, rmaxZ !Used to determine the radial domain
-    REAL*8            rminX, rminY, rminZ !to relate r and rho
+    REAL*8            rmax, rmin !Used to determine the radial domain
 
     REAL*8              theta(Nth)      !The angle theta
     REAL*8              phi(Nphi)        !The angle phi
@@ -184,20 +183,20 @@
                                     !we are continuing previous run: 
                                     !change t, Startit and aFile
     t = 180.099158876856D0          !Last time from previous run
-    Startit = 5001                  !Startit = last iteration + 1
-    aFile = 'a5000.dat'
+    Startit = 6501                  !Startit = last iteration + 1
+    aFile = 'a6500.dat'
 
     !Termination conditions
-    Maxit = 5000
+    Maxit = 6550
     tfinal = 150.0D0
 
     IF( SFLAG .EQ. 0 ) THEN
        Startit = 1                  !Starting from iteration 1
     END IF
 
-    X0 = 0.600D0                    !Initial axes of the spheroids in the
-    Y0 = 0.600D0                    !X, Y, and Z directions
-    Z0 = 0.450D0
+    X0 = 0.590D0                    !Initial axes of the spheroids in the
+    Y0 = 0.590D0                    !X, Y, and Z directions
+    Z0 = 0.485D0
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, 
@@ -215,14 +214,8 @@
     reinit = 15
 
     !Spheroidal grid parameters
-    rmaxX = 1.00D0                   !maximum value of r in the X direction
-    rminX = 0.10D0                   !minimum value of r in the X direction
-
-    rmaxY = 1.10D0                   !maximum value of r in the Y direction
-    rminY = 0.10D0                   !minimum value of r in the Y direction
-
-    rmaxZ = 1.00D0                   !maximum value of r in the Z direction
-    rminZ = 0.10D0                   !minimum value of r in the Z direction
+    rmax = 0.80D0                   !maximum value of r
+    rmin = 0.10D0                   !minimum value of r
 
     !Additional directions we'd like to compute U
     thetaSp = (/ 0.0D0, PI, PI/2.0D0, PI/2.0D0, PI/2.0D0, PI/2.0D0 /)
@@ -245,9 +238,9 @@
 !--------------------------------------------------------!
 
     WriteUit         = 1000
-    Writeg_rrUsqrdit = 1000
+    Writeg_rrUsqrdit = 500
     WriteSit         = 100000
-    Writeait         = 1000
+    Writeait         = 500
 
 !--------------------------------------------------------!
 !     Timer Start                                        !
@@ -312,7 +305,7 @@
     END DO
 
     !then set the value of dt
-    dt = tdir * cfl * drho * 0.5D0 * MIN(rmaxX-rminX,rmaxY-rminY,rmaxZ-rminZ)
+    dt = tdir * cfl * drho * 0.5D0 * (rmax-rmin)
     PRINT *, 'dt = ', dt
     
 !--------------------------------------------------------!
@@ -340,8 +333,8 @@
             &GLQWeights, GLQZeros,&
             &gRR, gThTh, gPhiPhi,&
             &gRTh, gRPhi, gThPhi,&
-            &rmaxX, rmaxY, rmaxZ,&
-            &rminX, rminY, rminZ,&
+            &rmax, rmax, rmax,&
+            &rmin, rmin, rmin,&
             &rho, theta, phi,&
             &a,&
             &(Startit-1), WriteSit,&
@@ -361,8 +354,8 @@
                 &Nr, Nth, Nphi,&
                 &Mr, Lmax, Lgrid,&
                 &GLQWeights, GLQZeros,&
-                &rmaxX, rmaxY, rmaxZ,&
-                &rminX, rminY, rminZ,&
+                &rmax, rmax, rmax,&
+                &rmin, rmin, rmin,&
                 &rho, theta, phi,&
                 &c, U, a)
         END IF
@@ -375,8 +368,8 @@
             & GLQWeights, GLQZeros,&
             & c,&
             & X0, Y0, Z0,&
-            & rmaxX, rmaxY, rmaxZ,&
-            & rminX, rminY, rminZ,&
+            & rmax, rmax, rmax,&
+            & rmin, rmin, rmin,&
             & rho, theta, phi,&
             & a)
     END IF
@@ -455,8 +448,8 @@
              &t_data, it_data,&    
              &nchunks,&
              &bufsize,&
-             &rmaxX, rmaxY, rmaxZ,&
-             &rminX, rminY, rminZ,&
+             &rmax, rmax, rmax,&
+             &rmin, rmin, rmin,&
              &rho, theta, phi,&
              &Balpha, BbetaR, BbetaTh, BbetaPhi,&
              &BgRR, BgThTh, BgPhiPhi,&
@@ -482,8 +475,8 @@
              &GLQWeights, GLQZeros,&
              &gRR, gThTh, gPhiPhi,&
              &gRTh, gRPhi, gThPhi,&
-             &rmaxX, rmaxY, rmaxZ,&
-             &rminX, rminY, rminZ,&
+             &rmax, rmax, rmax,&
+             &rmin, rmin, rmin,&
              &rho, theta, phi,&
              &a,&
              &it, WriteSit,&
@@ -552,8 +545,8 @@
                    &Nr, Nth, Nphi,&
                    &Mr, Lmax, Lgrid,&
                    &GLQWeights, GLQZeros,&
-                   &rmaxX, rmaxY, rmaxZ,&
-                   &rminX, rminY, rminZ,&
+                   &rmax, rmax, rmax,&
+                   &rmin, rmin, rmin,&
                    &rho, theta, phi,&
                    &c, U, a)
 

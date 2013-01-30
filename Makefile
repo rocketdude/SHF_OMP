@@ -11,7 +11,6 @@ OBJS = \
        main.o \
        EvaluateJacobian.o \
        EvaluateMatrixofMetric.o \
-       EvaluateRadialExtent.o \
        EvolveData.o \
        FindU.o \
        Functions.o \
