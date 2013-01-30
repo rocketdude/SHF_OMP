@@ -115,7 +115,7 @@
 
              CALL EvaluateRadialExtent(rmaxX,rmaxY,rmaxZ,theta(j),phi(k),rmax)
              CALL EvaluateRadialExtent(rminX,rminY,rminZ,theta(j),phi(k),rmin)
-             r = 0.5D0*( (rmax-rmin) + (rmax-rmin)*rho )
+             CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
 
              U_r = ABS(S(:,j,k))
 
@@ -234,7 +234,7 @@
                                     &thetaSp(ss),phiSp(ss),rmax)
              CALL EvaluateRadialExtent(rminX,rminY,rminZ,&
                                     &thetaSp(ss),phiSp(ss),rmin)
-             r = 0.5D0*( (rmax-rmin) + (rmax-rmin)*rho )
+             CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
 
              !Calculate the second derivatives and store it into U_r2
              CALL ComputeSpline2ndDeriv(r,SLine(ss,:),Nr,1.0D31,1.0D31,U_r2)

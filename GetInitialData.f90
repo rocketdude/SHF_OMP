@@ -62,9 +62,7 @@
                                          &theta(j),phi(k),rmax)
                 CALL EvaluateRadialExtent(rminX,rminY,rminZ,&
                                          &theta(j),phi(k),rmin)
-
-                r = 0.5D0*( (rmax-rmin) + (rmax-rmin)*rho )
-
+                CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
                 CALL EvaluateRadialExtent(X0,Y0,Z0,theta(j),phi(k),r0)
 
                 DO i = 1, Nr
