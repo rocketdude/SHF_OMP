@@ -9,6 +9,7 @@ OBJS = \
        DynMetricArray.o \
        IO.o \
        main.o \
+       CalculateArea.o \
        EvaluateJacobian.o \
        EvaluateMatrixofMetric.o \
        EvolveData.o \

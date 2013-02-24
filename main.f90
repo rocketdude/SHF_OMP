@@ -80,6 +80,9 @@
     ! Parameters for FFT using Gauss-Legendre Quadrature
     REAL*8            GLQWeights(Lgrid+1)  !Gauss-Legendre Quadrature weights
     REAL*8            GLQZeros(Lgrid+1)    !Gauss-Legendre Quadrature zeros
+
+    REAL*8            GLQRealW(Lgrid+1)
+    REAL*8            GLQRealZ(Lgrid+1)
     
     REAL*8            t           !Current time
     REAL*8            tfinal      !Final time
@@ -107,6 +110,7 @@
     REAL*8              Uave        !Average radial distance of the light cone
     REAL*8              g_rrUsqrd(Nth,Nphi)!g_rr * U^2
     REAL*8              g_rrUsqrdAve  !Average g_rr * U^2
+    REAL*8              Area          !Area of EH
     REAL*8              USp(SpM)      !The values of U in specified directions
 
     INTEGER*4           n           !Degree of Chebyshev polynomial
@@ -262,7 +266,10 @@
         STOP "***ERROR*** Not enough collocation points"
     END IF
 
+    !This is for general spectral transform
     CALL PreCompute(Lgrid, GLQZeros, GLQWeights, NORM=1, CNORM=1)
+    !This if for calculating the area (must be orthonormalized SH)
+    CALL PreCompute(Lgrid, GLQRealZ, GLQRealW, NORM=4)
 
 !--------------------------------------------------------!
 !     Creating mesh & Inquiring Threads                  !
@@ -412,13 +419,16 @@
        CTemp = 'USp.dat' 
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
        CLOSE(7)
+       CTemp = 'Area.dat' 
+       OPEN(7, FILE = CTemp, STATUS = 'NEW')
+       CLOSE(7)
 !!$       CTemp = 'g_rrUsqrdAve.dat'
 !!$       OPEN(7, FILE = CTemp, STATUS = 'NEW')
 !!$       CLOSE(7)
 
     END IF
 
-    !Initializes read metric logics
+    !Initializes read metric and metric data
     DO i = 1, TP
         it_data(i) = it_data_max - (i-1)*delta_it_data
     END DO
@@ -429,11 +439,60 @@
     PRINT *, '==============================='
     PRINT *, 'START MAIN PROGRAM'
 
+    CALL GetMetricAtCurrentTime(&
+        &Nr, Nth, Nphi, TP,&
+        &readdata, SFLAG,&
+        &t, t_thresh, tdir,&
+        &t_data, it_data,&    
+        &nchunks,&
+        &bufsize,&
+        &rmax, rmax, rmax,&
+        &rmin, rmin, rmin,&
+        &rho, theta, phi,&
+        &Balpha, BbetaR, BbetaTh, BbetaPhi,&
+        &BgRR, BgThTh, BgPhiPhi,&
+        &BgRTh, BgRPhi, BgThPhi,&
+        &alpha, betaR, betaTh, betaPhi,&
+        &gRR, gThTh, gPhiPhi,&
+        &gRTh, gRPhi, gThPhi)
+
     mainloop: DO it = Startit, Maxit
        
        !--------------------------------------------------------!
        !     Read Metric and Evolve Data                        !
        !--------------------------------------------------------!
+
+       PRINT *, 'Using metric data: '
+       PRINT *, 'Maximum iteration#:', MAXVAL(it_data)
+       DO i = 1, TP
+           PRINT *, 'Iteration#:', it_data(i)
+       END DO
+
+        CALL EvolveData(&
+             &Nr, Nth, Nphi, Mr, Lmax, Lgrid,&
+             &GLQWeights, GLQZeros,&
+             &rootsign,&
+             &rho, theta, phi,&
+             &alpha,&
+             &betaR, betaTh, betaPhi,&
+             &gRR, gThTh, gPhiPhi,&
+             &gRTh, gRPhi, gThPhi,&
+             &t, dt,&
+             &a)
+ 
+        CALL FindU(&
+             &Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM,&
+             &GLQWeights, GLQZeros,&
+             &gRR, gThTh, gPhiPhi,&
+             &gRTh, gRPhi, gThPhi,&
+             &rmax, rmax, rmax,&
+             &rmin, rmin, rmin,&
+             &rho, theta, phi,&
+             &a,&
+             &it, WriteSit,&
+             &U, Uave, USp,&
+             &thetaSp, phiSp,&
+             &g_rrUsqrd, g_rrUsqrdAve)
 
         IF ( ((tdir .LT. 0.0D0) .AND. (t .LT. t_thresh)) .OR. &
             &((tdir .GT. 0.0D0) .AND. (t .GT. t_thresh)) ) THEN
@@ -464,32 +523,15 @@
              &gRR, gThTh, gPhiPhi,&
              &gRTh, gRPhi, gThPhi)
 
-        CALL EvolveData(&
-             &Nr, Nth, Nphi, Mr, Lmax, Lgrid,&
-             &GLQWeights, GLQZeros,&
-             &rootsign,&
-             &rho, theta, phi,&
-             &alpha,&
-             &betaR, betaTh, betaPhi,&
-             &gRR, gThTh, gPhiPhi,&
-             &gRTh, gRPhi, gThPhi,&
-             &t, dt,&
-             &a)
- 
-        CALL FindU(&
-             &Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM,&
-             &GLQWeights, GLQZeros,&
-             &gRR, gThTh, gPhiPhi,&
-             &gRTh, gRPhi, gThPhi,&
-             &rmax, rmax, rmax,&
-             &rmin, rmin, rmin,&
-             &rho, theta, phi,&
-             &a,&
-             &it, WriteSit,&
-             &U, Uave, USp,&
-             &thetaSp, phiSp,&
-             &g_rrUsqrd, g_rrUsqrdAve)
-
+        CALL CalculateArea(&
+             &Nr,Nth,Nphi,&
+             &Lmax,Lgrid,&
+             &rho,theta,phi,&
+             &rmax,rmin,&
+             &GLQRealZ,GLQRealW,&
+             &gRR,gThTh,gPhiPhi,&
+             &gRTh,gRPhi,gThPhi,&
+             &U,Area)
 
        !--------------------------------------------------------!
        !     Writing OUTPUTS into files                         !
@@ -518,6 +560,11 @@
        END DO
        CLOSE(7)
     
+       CTemp = 'Area.dat'
+       OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
+       WRITE(7,*) Area
+       CLOSE(7)
+
 !!$       CTemp = 'g_rrUsqrdAve.dat'
 !!$       OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
 !!$       WRITE(7,*) g_rrUsqrdAve
@@ -526,14 +573,10 @@
        PRINT *, 'Iteration #:', it
        PRINT *, 'Time= ', t
        PRINT *, 'Average R= ', Uave
+       PRINT *, 'Area=', Area
        PRINT *, 'X = ', USp(3), USp(5)
        PRINT *, 'Y = ', USp(4), USp(6)
        PRINT *, 'Z = ', USp(1), USp(2)
-       PRINT *, 'Metric data used: '
-       PRINT *, 'Maximum iteration#:', MAXVAL(it_data)
-       DO i = 1, TP
-           PRINT *, 'Iteration#:', it_data(i)
-       END DO
        PRINT *, '------------------'
 
        IF( ((t .LT. tfinal) .AND. (tdir .LT. 0.0D0)) .OR.&
