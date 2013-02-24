@@ -19,7 +19,7 @@
     INTEGER*4, PARAMETER ::        Lmax     = 30
     INTEGER*4, PARAMETER ::        Lgrid    = 32
     INTEGER*4, PARAMETER ::        TP       = 4
-    INTEGER*4, PARAMETER ::        SpM      = 6
+    INTEGER*4, PARAMETER ::        SpM      = 18
 
     INTEGER*4, PARAMETER ::        Nr       = Mr+1
     INTEGER*4, PARAMETER ::        Nth      = Lgrid+1
@@ -182,21 +182,21 @@
     SFLAG = 0                       !If SFLAG = 1, 
                                     !we are continuing previous run: 
                                     !change t, Startit and aFile
-    t = 180.099158876856D0          !Last time from previous run
-    Startit = 6501                  !Startit = last iteration + 1
-    aFile = 'a6500.dat'
+    t = 8.99012719203705D0          !Last time from previous run
+    Startit = 54001                 !Startit = last iteration + 1
+    aFile = 'a54000.dat'
 
     !Termination conditions
-    Maxit = 6550
-    tfinal = 150.0D0
+    Maxit = 60005
+    tfinal = 0.0D0
 
     IF( SFLAG .EQ. 0 ) THEN
        Startit = 1                  !Starting from iteration 1
     END IF
 
-    X0 = 0.590D0                    !Initial axes of the spheroids in the
-    Y0 = 0.590D0                    !X, Y, and Z directions
-    Z0 = 0.485D0
+    X0 = 0.695D0                    !Initial axes of the spheroids in the
+    Y0 = 0.690D0                    !X, Y, and Z directions
+    Z0 = 0.570D0
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, 
@@ -214,12 +214,18 @@
     reinit = 15
 
     !Spheroidal grid parameters
-    rmax = 0.80D0                   !maximum value of r
+    rmax = 0.90D0                   !maximum value of r
     rmin = 0.10D0                   !minimum value of r
 
     !Additional directions we'd like to compute U
-    thetaSp = (/ 0.0D0, PI, PI/2.0D0, PI/2.0D0, PI/2.0D0, PI/2.0D0 /)
-    phiSp = (/ 0.0D0, 0.0D0, 0.0D0, PI/2.0D0, PI, 1.5D0*PI /)
+    thetaSp = (/ 0.0D0, PI, 0.50D0*PI, 0.5D00*PI, 0.50D0*PI, 0.50D0*PI,&
+               & 0.50D0*PI, 0.50D0*PI, 0.50D0*PI, 0.50D0*PI,&
+               & 0.25D0*PI, 0.25D0*PI, 0.25D0*PI, 0.25D0*PI,&
+               & 0.75D0*PI, 0.75D0*PI, 0.75D0*PI, 0.75D0*PI /)
+    phiSp = (/ 0.0D0, 0.0D0, 0.0D0, 0.5D0*PI, PI, 1.5D0*PI,&
+             & 0.25D0*PI, 0.75D0*PI, 1.25D0*PI, 1.75D0*PI,&
+             & 0.0D0, 0.5D0*PI, PI, 1.5D0*PI,&
+             & 0.0D0, 0.5D0*PI, PI, 1.5D0*PI /)
     
     !Parameters related to reading HDF5 files--do h5dump to check these
     nchunks = 64
@@ -237,8 +243,8 @@
 !     Output Parameters                                  !
 !--------------------------------------------------------!
 
-    WriteUit         = 1000
-    Writeg_rrUsqrdit = 500
+    WriteUit         = 50
+    Writeg_rrUsqrdit = 100000
     WriteSit         = 100000
     Writeait         = 500
 
@@ -524,6 +530,7 @@
        PRINT *, 'Y = ', USp(4), USp(6)
        PRINT *, 'Z = ', USp(1), USp(2)
        PRINT *, 'Metric data used: '
+       PRINT *, 'Maximum iteration#:', MAXVAL(it_data)
        DO i = 1, TP
            PRINT *, 'Iteration#:', it_data(i)
        END DO
