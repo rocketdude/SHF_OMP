@@ -40,12 +40,9 @@
 !       Declare local variables                             !
 !-----------------------------------------------------------!
 
-    INTEGER*4               Nmax
-    PARAMETER               (Nmax=4)
     REAL*8                  PI
     PARAMETER               (PI=3.141592653589793238462643383279502884197D0)
-    REAL*8                  r(Nr), rr(Nmax)
-    REAL*8                  G(Nmax)
+    REAL*8                  r(Nr), g2D(Nr)
     REAL*8                  gu11,gu22,gu33
     REAL*8                  gu12,gu13,gu23
     REAL*8                  gd11,gd22,gd33
@@ -54,6 +51,7 @@
     REAL*8                  blm(2,Lmax+1,Lmax+1)
 
     INTEGER*4               i,j,k,il,iu
+    INTEGER*4               error
 
 !-----------------------------------------------------------!
 !       Main Subroutine                                     !
@@ -62,44 +60,66 @@
     CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
 
     !$OMP PARALLEL DO &
-    !$OMP & PRIVATE(j,k,i,il,iu,rr,G,gu11,gu22,gu33,gu12,gu13,gu23,&
+    !$OMP & PRIVATE(j,k,i,il,iu,g2D,gu11,gu22,gu33,gu12,gu13,gu23,&
     !$OMP & gd11,gd22,gd33,gd12,gd13,gd23)
     DO j=1,Nth
         DO k=1,Nphi
 
             !First we have to find where the U is located
             CALL Locate(r,Nr,U(j,k),i)
+ 
+            !Perform cubic spline interpolation
+            CALL ComputeSpline2ndDeriv(r,gRR(:,j,k),Nr,1.0D31,1.0D31,g2D)
+            CALL CubicSplineInterpolation(r,gRR(:,j,k),g2D,i,Nr,U(j,k),gu11)
 
-            IF((i.EQ.0) .OR. (i.EQ.Nr)) THEN
-                STOP "***Cannot find U in r***"
-            ELSE IF(i .LE. 2) THEN
-                il = 1
-            ELSE IF(i .GE. (Nr-2)) THEN
-                il = Nr-3
-            ELSE
-                il = i-1
-            END IF
+            CALL ComputeSpline2ndDeriv(r,gThTh(:,j,k),Nr,1.0D31,1.0D31,g2D)
+            CALL CubicSplineInterpolation(r,gThTh(:,j,k),g2D,i,Nr,U(j,k),gu22)
 
-            iu = il+Nmax-1
-            rr(:) = r(il:iu)
+            CALL ComputeSpline2ndDeriv(r,gPhiPhi(:,j,k),Nr,1.0D31,1.0D31,g2D)
+            CALL CubicSplineInterpolation(r,gPhiPhi(:,j,k),g2D,i,Nr,&
+                                        &U(j,k),gu33)
 
-            !Now perform polynomial interpolation
-            G(:) = gRR(il:iu,j,k)
-            CALL PolynomialInterpolation(rr,G,Nmax,U(j,k),gu11)
-            G(:) = gThTh(il:iu,j,k)
-            CALL PolynomialInterpolation(rr,G,Nmax,U(j,k),gu22)
-            G(:) = gPhiPhi(il:iu,j,k)
-            CALL PolynomialInterpolation(rr,G,Nmax,U(j,k),gu33)
-            G(:) = gRTh(il:iu,j,k)
-            CALL PolynomialInterpolation(rr,G,Nmax,U(j,k),gu12)
-            G(:) = gRPhi(il:iu,j,k)
-            CALL PolynomialInterpolation(rr,G,Nmax,U(j,k),gu13)
-            G(:) = gThPhi(il:iu,j,k)
-            CALL PolynomialInterpolation(rr,G,Nmax,U(j,k),gu23)
+            CALL ComputeSpline2ndDeriv(r,gRTh(:,j,k),Nr,1.0D31,1.0D31,g2D)
+            CALL CubicSplineInterpolation(r,gRTh(:,j,k),g2D,i,Nr,U(j,k),gu12)
+
+            CALL ComputeSpline2ndDeriv(r,gRPhi(:,j,k),Nr,1.0D31,1.0D31,g2D)
+            CALL CubicSplineInterpolation(r,gRPhi(:,j,k),g2D,i,Nr,U(j,k),gu13)
+
+            CALL ComputeSpline2ndDeriv(r,gThPhi(:,j,k),Nr,1.0D31,1.0D31,g2D)
+            CALL CubicSplineInterpolation(r,gThPhi(:,j,k),g2D,i,Nr,U(j,k),gu23)
+
+!!!            IF((i.EQ.0) .OR. (i.EQ.Nr)) THEN
+!!!                PRINT *, 'Cannot find U in between r'
+!!!                PRINT *, 'i =', i, ' and U(',j,',k',k,') =', U(j,k)
+!!!                PRINT *, 'rmax = ', r(Nr), ',rmin = ', r(1)
+!!!                STOP
+!!!            ELSE IF(i .LE. 2) THEN
+!!!                il = 1
+!!!            ELSE IF(i .GE. (Nr-2)) THEN
+!!!                il = Nr-3
+!!!            ELSE
+!!!                il = i-1
+!!!            END IF
+!!!            iu = il+Nmax-1
+!!!            rr(:) = r(il:iu)
+!!!            !Now perform polynomial interpolation
+!!!            G(:) = gRR(il:iu,j,k)
+!!!            CALL PolynomialInterpolation(rr,G,Nmax,U(j,k),gu11)
+!!!            G(:) = gThTh(il:iu,j,k)
+!!!            CALL PolynomialInterpolation(rr,G,Nmax,U(j,k),gu22)
+!!!            G(:) = gPhiPhi(il:iu,j,k)
+!!!            CALL PolynomialInterpolation(rr,G,Nmax,U(j,k),gu33)
+!!!            G(:) = gRTh(il:iu,j,k)
+!!!            CALL PolynomialInterpolation(rr,G,Nmax,U(j,k),gu12)
+!!!            G(:) = gRPhi(il:iu,j,k)
+!!!            CALL PolynomialInterpolation(rr,G,Nmax,U(j,k),gu13)
+!!!            G(:) = gThPhi(il:iu,j,k)
+!!!            CALL PolynomialInterpolation(rr,G,Nmax,U(j,k),gu23)
 
             !Invert to get the lower index 3-metric
             CALL Invert3Metric(gu11,gu22,gu33,gu12,gu13,gu23,&
-                              &gd11,gd22,gd33,gd12,gd13,gd23)
+                              &gd11,gd22,gd33,gd12,gd13,gd23,&
+                              &error)
 
             !detGFunc = sqrt( det(g) )/sin(theta) for theta,phi
             detGFunc(j,k) = SQRT(ABS(gd22*gd33-gd23*gd23))/SIN(theta(j))
@@ -111,7 +131,7 @@
     !Calculate area with Gauss-Legendre quadrature (FFT)
     CALL SHExpandGLQ(blm,Lgrid,detGFunc,GLQRealW,&
                     &ZERO=GLQRealZ,NORM=4,LMAX_CALC=Lmax)
-    Area = blm(1,1,1)*SQRT(4*PI)
+    Area = blm(1,1,1)*SQRT(4.0D0*PI)
 
     RETURN
     END SUBROUTINE CalculateArea

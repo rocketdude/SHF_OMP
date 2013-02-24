@@ -48,10 +48,9 @@
 
         CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
 
-        !$OMP PARALLEL DO SHARED(S, U, c) PRIVATE(i, k, rmax, rmin, r)
+        !$OMP PARALLEL DO SHARED(S, U, c) PRIVATE(i, k)
         DO j = 1, Nth
             DO k = 1, Nphi
-
                 DO i = 1, Nr
 
                     S(i,j,k) = DCMPLX(100.0D0*(1+TANH(( r(i) - U(j,k))/c ) ),&

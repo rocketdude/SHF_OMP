@@ -107,7 +107,8 @@
 
        !$OMP PARALLEL DO &
        !$OMP &PRIVATE(k, i, iindex, jkindex, U_r, U_r2, flag, gDD, gUU,&
-       !$OMP &       g_r, rPolyInt, gPolyInt, jj, dii, ilow, ilow2)
+       !$OMP &       g_r, rPolyInt, gPolyInt, jj, dii, ilow, ilow2,&
+       !$OMP &       deltar, rr, UU)
        DO j = 1, Nth
           DO k = 1, Nphi
 
