@@ -7,7 +7,7 @@
                 &Lmax,Lgrid,&
                 &rho,theta,phi,&
                 &rmax,rmin,&
-                &Zeros,Weights,&
+                &GLQRealZ,GLQRealW,&
                 &gRR,gThTh,gPhiPhi,&
                 &gRTh,gRPhi,gThPhi,&
                 &U,Area)
@@ -25,7 +25,7 @@
 
     INTEGER*4               Nr,Nth,Nphi,Lmax,Lgrid
     REAL*8                  rho(Nr),theta(Nth),phi(Nphi),rmax,rmin
-    REAL*8                  Zeros(Lgrid+1),Weights(Lgrid+1)
+    REAL*8                  GLQRealZ(Lgrid+1),GLQRealW(Lgrid+1)
     REAL*8                  gRR(Nr,Nth,Nphi)
     REAL*8                  gThTh(Nr,Nth,Nphi)
     REAL*8                  gPhiPhi(Nr,Nth,Nphi)
@@ -51,7 +51,7 @@
     REAL*8                  gd11,gd22,gd33
     REAL*8                  gd12,gd13,gd23
     REAL*8                  detGFunc(Nth,Nphi)
-    INTEGER*4               blm(2,Lmax+1,Lmax+1)
+    REAL*8                  blm(2,Lmax+1,Lmax+1)
 
     INTEGER*4               i,j,k,il,iu
 
@@ -109,7 +109,8 @@
     !$OMP END PARALLEL DO
 
     !Calculate area with Gauss-Legendre quadrature (FFT)
-    CALL SHExpandGLQ(blm,Lgrid,detGFunc,Weights,Zeros,NORM=4,LMAX_CALC=Lmax)
+    CALL SHExpandGLQ(blm,Lgrid,detGFunc,GLQRealW,&
+                    &ZERO=GLQRealZ,NORM=4,LMAX_CALC=Lmax)
     Area = blm(1,1,1)*SQRT(4*PI)
 
     RETURN

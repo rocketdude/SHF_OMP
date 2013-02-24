@@ -346,8 +346,7 @@
             &GLQWeights, GLQZeros,&
             &gRR, gThTh, gPhiPhi,&
             &gRTh, gRPhi, gThPhi,&
-            &rmax, rmax, rmax,&
-            &rmin, rmin, rmin,&
+            &rmax, rmin,&
             &rho, theta, phi,&
             &a,&
             &(Startit-1), WriteSit,&
@@ -367,8 +366,7 @@
                 &Nr, Nth, Nphi,&
                 &Mr, Lmax, Lgrid,&
                 &GLQWeights, GLQZeros,&
-                &rmax, rmax, rmax,&
-                &rmin, rmin, rmin,&
+                &rmax, rmin,&
                 &rho, theta, phi,&
                 &c, U, a)
         END IF
@@ -381,8 +379,7 @@
             & GLQWeights, GLQZeros,&
             & c,&
             & X0, Y0, Z0,&
-            & rmax, rmax, rmax,&
-            & rmin, rmin, rmin,&
+            & rmax, rmin,&
             & rho, theta, phi,&
             & a)
     END IF
@@ -446,8 +443,7 @@
         &t_data, it_data,&    
         &nchunks,&
         &bufsize,&
-        &rmax, rmax, rmax,&
-        &rmin, rmin, rmin,&
+        &rmax, rmin,&
         &rho, theta, phi,&
         &Balpha, BbetaR, BbetaTh, BbetaPhi,&
         &BgRR, BgThTh, BgPhiPhi,&
@@ -485,8 +481,7 @@
              &GLQWeights, GLQZeros,&
              &gRR, gThTh, gPhiPhi,&
              &gRTh, gRPhi, gThPhi,&
-             &rmax, rmax, rmax,&
-             &rmin, rmin, rmin,&
+             &rmax, rmin,&
              &rho, theta, phi,&
              &a,&
              &it, WriteSit,&
@@ -513,8 +508,7 @@
              &t_data, it_data,&    
              &nchunks,&
              &bufsize,&
-             &rmax, rmax, rmax,&
-             &rmin, rmin, rmin,&
+             &rmax, rmin,&
              &rho, theta, phi,&
              &Balpha, BbetaR, BbetaTh, BbetaPhi,&
              &BgRR, BgThTh, BgPhiPhi,&
@@ -595,8 +589,7 @@
                    &Nr, Nth, Nphi,&
                    &Mr, Lmax, Lgrid,&
                    &GLQWeights, GLQZeros,&
-                   &rmax, rmax, rmax,&
-                   &rmin, rmin, rmin,&
+                   &rmax, rmin,&
                    &rho, theta, phi,&
                    &c, U, a)
 

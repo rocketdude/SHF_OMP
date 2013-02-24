@@ -9,7 +9,8 @@
     &iter, nchunks,&
     &DATASETFLAG,&
     &Filename,&
-    &r, theta, phi,&
+    &rmax, rmin,&
+    &rho, theta, phi,&
     &MetricData)
 
         !We read in the metric data from the HDF5 file for a single iteration,
@@ -47,6 +48,7 @@
 
         INTEGER(HSIZE_T)            :: bufsize(3)        
 
+        REAL*8                      :: rmax, rmin
         REAL*8                      :: r(Nr)
         REAL*8                      :: theta(Nth)
         REAL*8                      :: phi(Nphi)
@@ -98,6 +100,7 @@
         LOGICAL                     Inside10
         LOGICAL                     Inside9
         LOGICAL                     Inside8
+        REAL*8                      r(Nr)
         REAL*8                      x, y, z
         REAL*8                      x0, y0, z0
         REAL*8                      dx, dy, dz
@@ -322,7 +325,9 @@
         !      Interpolate metric using                            !
         !      Lekien-Marsden tricubic interpolation routine       !
         !----------------------------------------------------------!
-        
+       
+        CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
+
         IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) &
                 &.AND. ALLOCATED(metric8) ) THEN
         !$OMP PARALLEL DO &

@@ -7,8 +7,7 @@
 &iter, nchunks,&
 &bufsize,&
 &time,&
-&rmaxX, rmaxY, rmaxZ,&
-&rminX, rminY, rminZ,&
+&rmax, rmin,&
 &rho, theta, phi,&
 &alpha,&
 &betaR, betaTh, betaPhi,&
@@ -29,8 +28,7 @@
 
         INTEGER(HSIZE_T)        :: bufsize(3)        
 
-        REAL*8                  :: rmaxX, rmaxY, rmaxZ
-        REAL*8                  :: rminX, rminY, rminZ
+        REAL*8                  :: rmax, rmin
         REAL*8                  :: rho(Nr)
         REAL*8                  :: theta(Nth)
         REAL*8                  :: phi(Nphi)
@@ -80,9 +78,6 @@
         REAL*8                  gXZ(Nr,Nth,Nphi)
         REAL*8                  gYZ(Nr,Nth,Nphi)
 
-        REAL*8                  rmax, rmin
-        REAL*8                  drmaxdth, drmindth
-        REAL*8                  drmaxdphi, drmindphi
         REAL*8                  JMatrix(4,4)
         REAL*8                  gcart(4,4)
         REAL*8                  gsph(4,4)
@@ -166,8 +161,7 @@
             &iter, nchunks,&
             &0,&
             &alphafilename,&
-            &rmaxX, rmaxY, rmaxZ,&
-            &rminX, rminY, rminZ,&
+            &rmax, rmin,&
             &rho, theta, phi,&
             &alphaXYZ)
 
@@ -179,8 +173,7 @@
             &iter, nchunks,&
             &1,&
             &beta1filename,&
-            &rmaxX, rmaxY, rmaxZ,&
-            &rminX, rminY, rminZ,&
+            &rmax, rmin,&
             &rho, theta, phi,&
             &betaX)
 
@@ -192,8 +185,7 @@
             &iter, nchunks,&
             &2,&
             &beta2filename,&
-            &rmaxX, rmaxY, rmaxZ,&
-            &rminX, rminY, rminZ,&
+            &rmax, rmin,&
             &rho, theta, phi,&
             &betaY)
 
@@ -205,8 +197,7 @@
             &iter, nchunks,&
             &3,&
             &beta3filename,&
-            &rmaxX, rmaxY, rmaxZ,&
-            &rminX, rminY, rminZ,&
+            &rmax, rmin,&
             &rho, theta, phi,&
             &betaZ)
 
@@ -218,8 +209,7 @@
             &iter, nchunks,&
             &4,&
             &gxxfilename,&
-            &rmaxX, rmaxY, rmaxZ,&
-            &rminX, rminY, rminZ,&
+            &rmax, rmin,&
             &rho, theta, phi,&
             &gXX)
 
@@ -231,8 +221,7 @@
             &iter, nchunks,&
             &5,&
             &gyyfilename,&
-            &rmaxX, rmaxY, rmaxZ,&
-            &rminX, rminY, rminZ,&
+            &rmax, rmin,&
             &rho, theta, phi,&
             &gYY)
 
@@ -244,8 +233,7 @@
             &iter, nchunks,&
             &6,&
             &gzzfilename,&
-            &rmaxX, rmaxY, rmaxZ,&
-            &rminX, rminY, rminZ,&
+            &rmax, rmin,&
             &rho, theta, phi,&
             &gZZ)
 
@@ -257,8 +245,7 @@
             &iter, nchunks,&
             &7,&
             &gxyfilename,&
-            &rmaxX, rmaxY, rmaxZ,&
-            &rminX, rminY, rminZ,&
+            &rmax, rmin,&
             &rho, theta, phi,&
             &gXY)
 
@@ -270,8 +257,7 @@
             &iter, nchunks,&
             &8,&
             &gxzfilename,&
-            &rmaxX, rmaxY, rmaxZ,&
-            &rminX, rminY, rminZ,&
+            &rmax, rmin,&
             &rho, theta, phi,&
             &gXZ)
 
@@ -283,8 +269,7 @@
             &iter, nchunks,&
             &9,&
             &gyzfilename,&
-            &rmaxX, rmaxY, rmaxZ,&
-            &rminX, rminY, rminZ,&
+            &rmax, rmin,&
             &rho, theta, phi,&
             &gYZ)
 
@@ -300,46 +285,14 @@
         !from (t,x,y,z) to (t,rho,th,phi)
         !Both g_sph and g_cart are of down indices
  
-        !$OMP PARALLEL DO PRIVATE(i, k, rmax, rmin, &
-        !$OMP & drmaxdth, drmindth, drmaxdphi, drmindphi, &
+        !$OMP PARALLEL DO PRIVATE(i, k, &
         !$OMP & JMatrix, gcart, gsph, error)
         DO j = 1, Nth
             DO k = 1, Nphi
-            
-                CALL EvaluateRadialExtent(rmaxX,rmaxY,rmaxZ,&
-                                         &theta(j),phi(k),rmax)
-                CALL EvaluateRadialExtent(rminX,rminY,rminZ,&
-                                         &theta(j),phi(k),rmin)
-
-                IF( rmax .EQ. 0.0D0 ) THEN
-                    drmaxdth = 0.0D0
-                    drmaxdphi = 0.0D0
-                ELSE
-                    drmaxdth = ( ( rmaxX*COS(phi(k)) )**2 +&
-                                &( rmaxY*SIN(phi(k)) )**2 -&
-                                &  rmaxZ**2 ) * &
-                                & SIN(theta(j))*COS(theta(j)) / rmax
-                    drmaxdphi = ( rmaxY**2 - rmaxX**2 )*SIN(theta(j))**2 *&
-                                & SIN(phi(k))*COS(phi(k)) / rmax 
-                END IF
-
-                IF( rmin .EQ. 0.0D0 ) THEN
-                    drmindth = 0.0D0
-                    drmindphi = 0.0D0
-                ELSE
-                    drmindth = ( ( rminX*COS(phi(k)) )**2 +&
-                                &( rminY*SIN(phi(k)) )**2 -&
-                                &  rminZ**2 ) * &
-                                & SIN(theta(j))*COS(theta(j)) / rmin
-                    drmindphi = ( rminY**2 - rminX**2 )*SIN(theta(j))**2 *&
-                                & SIN(phi(k))*COS(phi(k)) / rmin
-                END IF
-
                 DO i = 1, Nr
 
                     !Build the Jacobian matrix JMatrix
                     CALL EvaluateJacobian(rmax,rmin,&
-                                        &drmaxdth,drmindth,drmaxdphi,drmindphi,&
                                         &rho(i),theta(j),phi(k),&
                                         &JMatrix)
  

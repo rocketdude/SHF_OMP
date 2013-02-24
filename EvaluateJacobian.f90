@@ -4,7 +4,6 @@
 
       SUBROUTINE EvaluateJacobian(&
                     &rmax,rmin,&
-                    &drmaxdth,drmindth,drmaxdphi,drmindphi,&
                     &rho,theta,phi,&
                     &JMatrix)
                 
@@ -20,8 +19,6 @@
 !--------------------------------------------------------!
 
         REAL*8               :: rmax, rmin
-        REAL*8               :: drmaxdth, drmindth
-        REAL*8               :: drmaxdphi, drmindphi
         REAL*8               :: rho
         REAL*8               :: theta
         REAL*8               :: phi
@@ -39,8 +36,6 @@
 
         R = 0.5D0*( (rmax+rmin)+(rmax-rmin)*rho )
         dR = 0.5D0*( rmax-rmin )
-        dTHETA = 0.5D0*( (1.0D0+rho)*drmaxdth + (1.0D0-rho)*drmindth )
-        dPHI = 0.5D0*( (1.0D0+rho)*drmaxdphi + (1.0D0-rho)*drmindphi )
 
         JMatrix(1,1) = 1.0D0
         JMatrix(1,2) = 0.0D0
@@ -49,18 +44,18 @@
 
         JMatrix(2,1) = 0.0D0
         JMatrix(2,2) = dR*SIN(theta)*COS(phi)
-        JMatrix(2,3) = dTHETA*SIN(theta)*COS(phi)+R*COS(theta)*COS(phi)
-        JMatrix(2,4) = dPHI*SIN(theta)*COS(phi)-R*SIN(theta)*SIN(phi)
+        JMatrix(2,3) = R*COS(theta)*COS(phi)
+        JMatrix(2,4) = -1.0D0*R*SIN(theta)*SIN(phi)
 
         JMatrix(3,1) = 0.0D0
         JMatrix(3,2) = dR*SIN(theta)*SIN(phi)
-        JMatrix(3,3) = dTHETA*SIN(theta)*SIN(phi)+R*COS(theta)*SIN(phi)
-        JMatrix(3,4) = dPHI*SIN(theta)*SIN(phi)+R*SIN(theta)*COS(phi)
+        JMatrix(3,3) = R*COS(theta)*SIN(phi)
+        JMatrix(3,4) = R*SIN(theta)*COS(phi)
 
         JMatrix(4,1) = 0.0D0
         JMatrix(4,2) = dR*COS(theta)
-        JMatrix(4,3) = dTHETA*COS(theta)-R*SIN(theta)
-        JMatrix(4,4) = dPHI*COS(theta)
+        JMatrix(4,3) = -1.0D0*R*SIN(theta)
+        JMatrix(4,4) = 0.0D0
 
         RETURN
       END SUBROUTINE EvaluateJacobian

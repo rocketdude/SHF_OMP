@@ -9,8 +9,7 @@
     &iter, nchunks,&
     &DATASETFLAG,&
     &Filename,&
-    &rmaxX, rmaxY, rmaxZ,&
-    &rminX, rminY, rminZ,&
+    &rmax, rmin,&
     &rho, theta, phi,&
     &MetricData)
 
@@ -48,8 +47,7 @@
 
         INTEGER(HSIZE_T)            :: bufsize(3)        
 
-        REAL*8                      :: rmaxX, rmaxY, rmaxZ
-        REAL*8                      :: rminX, rminY, rminZ
+        REAL*8                      :: rmax, rmin
         REAL*8                      :: rho(Nr)
         REAL*8                      :: theta(Nth)
         REAL*8                      :: phi(Nphi)
@@ -105,8 +103,6 @@
         LOGICAL                     Inside8
 !!!        LOGICAL                     Inside7
         REAL*8                      r(Nr)
-        REAL*8                      rX, rY, rZ
-        REAL*8                      rmax, rmin
         REAL*8                      x, y, z
         REAL*8                      x0, y0, z0
         REAL*8                      dx, dy, dz
@@ -408,29 +404,22 @@
         !      Lekien-Marsden tricubic interpolation routine       !
         !----------------------------------------------------------!
 
+        CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
+
         IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) &
                 &  .AND. ALLOCATED(metric8) ) THEN
         !$OMP PARALLEL DO &
         !$OMP &PRIVATE(i, k, x, y, z, Inside10, Inside9, Inside8, &
         !$OMP & dx, dy, dz, &
-        !$OMP & ni, nj, nk, x0, y0, z0, cube, fatxyz, &
-        !$OMP & rmax, rmin, r)
+        !$OMP & ni, nj, nk, x0, y0, z0, cube, fatxyz)
 !!!        IF( ALLOCATED(metric10) .AND. ALLOCATED(metric9) &
 !!!                &  .AND. ALLOCATED(metric8) .AND. ALLOCATED(metric7) ) THEN
 !!!        !$OMP PARALLEL DO &
 !!!        !$OMP &PRIVATE(i, k, x, y, z, Inside10, Inside9, Inside8, Inside7,&
 !!!        !$OMP & dx, dy, dz, &
-!!!        !$OMP & ni, nj, nk, x0, y0, z0, cube, fatxyz, &
-!!!        !$OMP & rmax, rmin, r)
+!!!        !$OMP & ni, nj, nk, x0, y0, z0, cube, fatxyz)
         DO j = 1, Nth
             DO k = 1, Nphi
-           
-                CALL EvaluateRadialExtent(rmaxX,rmaxY,rmaxZ,&
-                                        &theta(j),phi(k),rmax)
-                CALL EvaluateRadialExtent(rminX,rminY,rminZ,&
-                                        &theta(j),phi(k),rmin)
-                CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
-
                 DO i = 1, Nr
 
                     x = r(i) * SIN( theta(j) ) * COS( phi(k) )

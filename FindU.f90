@@ -7,8 +7,7 @@
 &GLQWeights, GLQZeros,&
 &gRR, gThTh, gPhiPhi,&
 &gRTh, gRPhi, gThPhi,&
-&rmaxX, rmaxY, rmaxZ,&
-&rminX, rminY, rminZ,&
+&rmax, rmin,&
 &rho, theta, phi,&
 &a,&
 &it, WriteSit,&
@@ -28,8 +27,7 @@
 
        INTEGER*4            :: Nr, Nth, Nphi, Mr, Lmax, Lgrid, SpM, it, WriteSit
 
-       REAL*8               :: rmaxX, rmaxY, rmaxZ
-       REAL*8               :: rminX, rminY, rminZ
+       REAL*8               :: rmax,rmin
        REAL*8               :: rho(Nr), theta(Nth), phi(Nphi)
        REAL*8               :: GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
 
@@ -71,7 +69,6 @@
        COMPLEX*16             S(Nr,Nth,Nphi)
        COMPLEX*16             TnYlm
     
-       REAL*8                 rmax, rmin
        REAL*8                 r(Nr)
        REAL*8                 SLine(SpM,Nr)
        REAL*8                 U_r(Nr) 
@@ -106,16 +103,13 @@
        !Writing S into file (only at certain iterations)
        IF( MOD(it, WriteSit) .EQ. 0 ) CALL WriteS(Nr, Nth, Nphi, ABS(S), it)
 
+       CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
+
        !$OMP PARALLEL DO &
        !$OMP &PRIVATE(k, i, iindex, jkindex, U_r, U_r2, flag, gDD, gUU,&
-       !$OMP &       g_r, rPolyInt, gPolyInt, jj, dii, ilow, ilow2,&
-       !$OMP &       deltar, rr, UU, rmax, rmin, r)
+       !$OMP &       g_r, rPolyInt, gPolyInt, jj, dii, ilow, ilow2)
        DO j = 1, Nth
           DO k = 1, Nphi
-
-             CALL EvaluateRadialExtent(rmaxX,rmaxY,rmaxZ,theta(j),phi(k),rmax)
-             CALL EvaluateRadialExtent(rminX,rminY,rminZ,theta(j),phi(k),rmin)
-             CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
 
              U_r = ABS(S(:,j,k))
 
@@ -226,16 +220,9 @@
        !Calculate the values of U at the requested directions
        !$OMP PARALLEL DO &
        !$OMP &PRIVATE(i, n, l, ml, U_r2, flag,&
-       !$OMP &        ilow, ilow2, deltar, rr, UU, crow, TnYlm,&
-       !$OMP &        rmax, rmin, r)
+       !$OMP &        ilow, ilow2, deltar, rr, UU, crow, TnYlm)
        DO ss = 1, SpM
   
-             CALL EvaluateRadialExtent(rmaxX,rmaxY,rmaxZ,&
-                                    &thetaSp(ss),phiSp(ss),rmax)
-             CALL EvaluateRadialExtent(rminX,rminY,rminZ,&
-                                    &thetaSp(ss),phiSp(ss),rmin)
-             CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
-
              !Calculate the second derivatives and store it into U_r2
              CALL ComputeSpline2ndDeriv(r,SLine(ss,:),Nr,1.0D31,1.0D31,U_r2)
 

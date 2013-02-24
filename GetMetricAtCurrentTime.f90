@@ -9,8 +9,7 @@
     &t_data, it_data,&    
     &nchunks,&
     &bufsize,&
-    &rmaxX, rmaxY, rmaxZ,&
-    &rminX, rminY, rminZ,&
+    &rmax, rmin,&
     &rho, theta, phi,&
     &Balpha, BbetaR, BbetaTh, BbetaPhi,&
     &BgRR, BgThTh, BgPhiPhi,&
@@ -41,8 +40,7 @@
 
     INTEGER(HSIZE_T)        bufsize(3)
 
-    REAL*8                  rmaxX, rmaxY, rmaxZ
-    REAL*8                  rminX, rminY, rminZ
+    REAL*8                  rmax, rmin
     REAL*8                  rho(Nr), theta(Nth), phi(Nphi)
 
     !Stored metric data
@@ -96,8 +94,7 @@
             &it_data(i), nchunks,&
             &bufsize,&
             &t_data(i),&
-            &rmaxX, rmaxY, rmaxZ,&
-            &rminX, rminY, rminZ,&
+            &rmax, rmin,&
             &rho, theta, phi,&
             &Balpha(i,:,:,:),&
             &BbetaR(i,:,:,:), BbetaTh(i,:,:,:), BbetaPhi(i,:,:,:),&
@@ -131,8 +128,7 @@
         &it_data(i), nchunks,&
         &bufsize,&
         &t_data(i),&
-        &rmaxX, rmaxY, rmaxZ,&
-        &rminX, rminY, rminZ,&
+        &rmax, rmin,&
         &rho, theta, phi,&
         &Balpha(i,:,:,:),&
         &BbetaR(i,:,:,:), BbetaTh(i,:,:,:), BbetaPhi(i,:,:,:),&
