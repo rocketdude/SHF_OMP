@@ -282,7 +282,7 @@
         time = timeofdata(10)
 
         !Now we need to perform coordinate transformation 
-        !from (t,x,y,z) to (t,rho,th,phi)
+        !from (t,x,y,z) to (t,r,th,phi)
         !Both g_sph and g_cart are of down indices
  
         !$OMP PARALLEL DO PRIVATE(i, k, &

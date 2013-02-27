@@ -468,6 +468,7 @@
              &Nr, Nth, Nphi, Mr, Lmax, Lgrid,&
              &GLQWeights, GLQZeros,&
              &rootsign,&
+             &rmax, rmin,&
              &rho, theta, phi,&
              &alpha,&
              &betaR, betaTh, betaPhi,&

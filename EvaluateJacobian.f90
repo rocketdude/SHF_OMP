@@ -28,14 +28,13 @@
 !     Declare local variables                            !
 !--------------------------------------------------------!
 
-        REAL*8               :: R,dR,dTHETA,dPHI
+        REAL*8               :: R
 
 !--------------------------------------------------------!
 !      Main Subroutine                                   !
 !--------------------------------------------------------!
 
         R = 0.5D0*( (rmax+rmin)+(rmax-rmin)*rho )
-        dR = 0.5D0*( rmax-rmin )
 
         JMatrix(1,1) = 1.0D0
         JMatrix(1,2) = 0.0D0
@@ -43,17 +42,17 @@
         JMatrix(1,4) = 0.0D0
 
         JMatrix(2,1) = 0.0D0
-        JMatrix(2,2) = dR*SIN(theta)*COS(phi)
+        JMatrix(2,2) = SIN(theta)*COS(phi)
         JMatrix(2,3) = R*COS(theta)*COS(phi)
         JMatrix(2,4) = -1.0D0*R*SIN(theta)*SIN(phi)
 
         JMatrix(3,1) = 0.0D0
-        JMatrix(3,2) = dR*SIN(theta)*SIN(phi)
+        JMatrix(3,2) = SIN(theta)*SIN(phi)
         JMatrix(3,3) = R*COS(theta)*SIN(phi)
         JMatrix(3,4) = R*SIN(theta)*COS(phi)
 
         JMatrix(4,1) = 0.0D0
-        JMatrix(4,2) = dR*COS(theta)
+        JMatrix(4,2) = COS(theta)
         JMatrix(4,3) = -1.0D0*R*SIN(theta)
         JMatrix(4,4) = 0.0D0
 

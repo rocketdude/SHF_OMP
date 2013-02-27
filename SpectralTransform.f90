@@ -275,11 +275,12 @@
         RETURN
     END SUBROUTINE
 !===========================================================!
-    SUBROUTINE EvaluatedSdrho(&
+    SUBROUTINE EvaluatedSdr(&
             & Nr, Nth, Nphi,&
             & Mr, Lmax, Lgrid,&
             & GLQWeights, GLQZeros,&            
             & rho, theta, phi,&
+            & rmax, rmin,&
             & a, dSdrho)
 
         IMPLICIT none
@@ -287,15 +288,19 @@
         !Calling variables
         INTEGER*4                    Nr,Nth,Nphi,Mr,Lmax,Lgrid
         REAL*8                       GLQWeights(Lgrid+1),GLQZeros(Lgrid+1)
+        REAL*8                       rmax, rmin
         REAL*8                       rho(Nr), theta(Nth), phi(Nphi)
         COMPLEX*16                   a(Mr+1,2,Lmax+1,Lmax+1)
         COMPLEX*16, INTENT(out)   :: dSdrho(Nr,Nth,Nphi)
         
         !Local variables
+        REAL*8                       const
         INTEGER*4                    nder, nn
         COMPLEX*16                   ader(Mr+1,2,Lmax+1,Lmax+1)
 
         !Main subroutine
+
+        const = 2.0D0/(rmax-rmin)
 
         !Find derivatives by using recursion relations
         !This is similar to chder from Numerical Recipes
@@ -306,6 +311,7 @@
             ader(nn-1,:,:,:) = ader(nn+1,:,:,:) + &
                          & DCMPLX(2.0D0*DBLE(nn-1),0.0D0)*a(nn,:,:,:)
         END DO
+        ader = const * ader
 
         CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
                                        &GLQWeights,GLQZeros,&
