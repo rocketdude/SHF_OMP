@@ -29,7 +29,7 @@
         !Use SHTOOLS to find spectral coefficients at different r
         DO i=1,Nr
             CALL SHExpandGLQC(f(i,:,:,:), Lgrid, &
-                    &S(i,:,:), GLQWeights, ZERO=GLQZeros,NORM=1,LMAX_CALC=Lmax)
+                    &S(i,:,:), GLQWeights, ZERO=GLQZeros,NORM=4,LMAX_CALC=Lmax)
         END DO
         !But now: f_lm(r) = Sum(over n) a_nlm T_n(r)
         !Transform to spectral coefficients a
@@ -116,7 +116,7 @@
         !Use SHTOOLS to find get the spatial values
         DO i=1,Nr
             CALL MakeGridGLQC(S(i,:,:), f(i,:,:,:), Lgrid, &
-                    &ZERO=GLQZeros, NORM=1, LMAX_CALC=Lmax)
+                    &ZERO=GLQZeros, NORM=4, LMAX_CALC=Lmax)
         END DO
 
         RETURN
@@ -160,14 +160,14 @@
         !Get the real spherical harmonic coefficients
         DO i=1,Nr
             CALL SHExpandGLQ(f(i,:,:,:), Lgrid, SReal(i,:,:), W, &
-                    &ZERO=Zeros, NORM=1, LMAX_CALC=Lmax)
+                    &ZERO=Zeros, NORM=4, LMAX_CALC=Lmax)
         END DO
 
         DO j=1,SpM
             DO i=1,Nr
                 !Use these coefficients f to find the value of S 
                 S(j,i) = MakeGridPoint(f(i,:,:,:), Lmax, &
-                        & th0Degrees(j), phi0Degrees(j), NORM=1 )
+                        & th0Degrees(j), phi0Degrees(j), NORM=4 )
             END DO
         END DO
 
@@ -400,6 +400,227 @@
           END DO
         END DO
         !$OMP END PARALLEL DO
+
+        RETURN
+    END SUBROUTINE
+!===========================================================!
+    SUBROUTINE Evaluate2DdSdtheta(&
+            & Nth, Nphi,&
+            & Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&            
+            & theta, phi,&
+            & a, dSdth)
+
+        USE          omp_lib
+        USE          SHTOOLS
+        IMPLICIT     none 
+
+        !Calling variables
+        INTEGER*4                    Nth,Nphi,Lmax,Lgrid
+        REAL*8                       GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
+        REAL*8                       theta(Nth), phi(Nphi)
+        COMPLEX*16                   a(2,Lmax+1,Lmax+1)
+        COMPLEX*16, INTENT(out)   :: dSdth(Nth,Nphi)
+
+        !Local variables
+        INTEGER*4                    j, k
+        INTEGER*4                    ml, l, mlp1, mlp2
+        REAL*8                       const1, const2
+        COMPLEX*16                   ader1(2,Lmax+1,Lmax+1)
+        COMPLEX*16                   ader2(2,Lmax+1,Lmax+1)
+        COMPLEX*16                   Term1(Nth,Nphi)
+        COMPLEX*16                   Term2(Nth,Nphi)
+
+        !Main subroutine
+
+        ader1(:,:,:) = DCMPLX(0.0D0,0.0D0)
+        ader2(:,:,:) = DCMPLX(0.0D0,0.0D0)
+        
+        DO l=0,Lmax
+            DO ml=0,l
+
+            IF( ml .EQ. 0 ) THEN
+                ader1(1,l+1,ml+1) = DBLE(ml)*a(1,l+1,ml+1)
+            ELSE
+                ader1(1,l+1,ml+1) = DBLE(ml)*a(1,l+1,ml+1)
+                ader1(2,l+1,ml+1) = -1.0D0*DBLE(ml)*a(2,l+1,ml+2)
+            END IF
+            
+            const1 = SQRT(DBLE((l-ml)*(l+ml+1)))
+            const2 = SQRT(DBLE((l+ml)*(l-ml+1)))
+            mlp1 = ml + 1
+            IF( ml .LT. l ) THEN
+                ader2(1,l+1,mlp1+1) = const1*a(1,l+1,ml+1)
+            END IF
+
+            mlp2 = ABS(-1*ml + 1)
+            IF( mlp2 .EQ. 0 ) THEN
+                ader2(1,l+1,mlp2+1) = const2*a(2,l+1,ml+1)
+            ELSE
+                ader2(2,l+1,mlp2+1) = const2*a(2,l+1,ml+1)
+            END IF
+
+            END DO
+        END DO
+
+        CALL SpectralToAngularTransform(Nth,Nphi,Lmax,Lgrid,&
+                                &GLQWeights,GLQZeros,theta,phi,ader1,Term1)
+        CALL SpectralToAngularTransform(Nth,Nphi,Lmax,Lgrid,&
+                                &GLQWeights,GLQZeros,theta,phi,ader2,Term2)
+        
+        !$OMP PARALLEL DO PRIVATE(j,k)
+        DO j=1,Nth
+            DO k=1,Nphi
+            
+              dSdth(j,k) = Term1(j,k)/TAN(theta(j)) +&
+                           & EXP(DCMPLX(0.0D0, -1.0D0*phi(k)))*Term2(j,k)
+            END DO
+        END DO
+        !$OMP END PARALLEL DO
+
+        RETURN
+    END SUBROUTINE
+!===========================================================!
+    SUBROUTINE Evaluate2DdSdphi(&
+            & Nth, Nphi,&
+            & Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&            
+            & theta, phi,&
+            & a, dSdphi)
+
+        USE omp_lib
+        USE SHTOOLS
+        IMPLICIT     none 
+
+        !Calling variables
+        INTEGER*4                    Nth,Nphi,Lmax,Lgrid
+        REAL*8                       GLQWeights(Lgrid+1),GLQZeros(Lgrid+1)
+        REAL*8                       theta(Nth), phi(Nphi)
+        COMPLEX*16                   a(2,Lmax+1,Lmax+1)
+        COMPLEX*16, INTENT(out)   :: dSdphi(Nth,Nphi)
+
+        !Local variables
+        INTEGER*4                    l,ml
+        COMPLEX*16                   ader(2,Lmax+1,Lmax+1)
+
+        ader(:,:,:) = DCMPLX(0.0D0,0.0D0)
+
+        !Main subroutine
+        !$OMP PARALLEL DO PRIVATE(l,ml)
+        DO l=0,Lmax
+            DO ml=0,l
+            
+            IF( ml .EQ. 0 ) THEN
+                ader(1,l+1,ml+1) = DCMPLX(0.0D0,0.0D0)*DBLE(ml)*a(1,l+1,ml+1)
+            ELSE
+                ader(1,l+1,ml+1) = DCMPLX(0.0D0,1.0D0)*DBLE(ml)*a(1,l+1,ml+1)
+                ader(2,l+1,ml+1) = DCMPLX(0.0D0,-1.0D0)*DBLE(ml)*a(2,l+1,ml+1)
+            END IF
+            
+            END DO
+        END DO
+        !$OMP END PARALLEL DO
+
+        CALL SpectralToAngularTransform(Nth,Nphi,Lmax,Lgrid,&
+                                    &GLQWeights,GLQZeros,theta,phi,ader,dSdphi)
+        
+        RETURN
+    END SUBROUTINE
+!===========================================================!
+    SUBROUTINE AngularToSpectralTransform(&
+            & Nth, Nphi,&
+            & Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&
+            & theta, phi,&
+            & S, a)
+
+        USE SHTOOLS
+        IMPLICIT    none
+
+        !Calling variables
+        INTEGER*4                   Nth,Nphi,Lmax,Lgrid
+        REAL*8                      theta(Nth), phi(Nphi)
+        REAL*8                      GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
+        COMPLEX*16                  S(Nth,Nphi)
+        COMPLEX*16, INTENT(out) ::  a(2,Lmax+1,Lmax+1)
+ 
+        !Main subroutine
+        CALL SHExpandGLQC(a,Lgrid,S,GLQWeights,&
+                        &ZERO=GLQZeros,NORM=4,LMAX_CALC=Lmax)
+
+        RETURN
+    END SUBROUTINE
+!===========================================================!
+    SUBROUTINE SpectralToAngularTransform(&
+            & Nth, Nphi,&
+            & Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&
+            & theta, phi,&
+            & a, S)
+
+        USE SHTOOLS
+        IMPLICIT    none
+
+        !Calling variables
+        INTEGER*4                   Nth, Nphi, Lmax, Lgrid
+        REAL*8                      GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
+        REAL*8                      theta(Nth), phi(Nphi)
+        COMPLEX*16                  a(2,Lmax+1,Lmax+1)
+        COMPLEX*16, INTENT(OUT) ::  S(Nth,Nphi)
+
+        !Main subroutine
+
+        CALL MakeGridGLQC(S, a, Lgrid, &
+                &ZERO=GLQZeros, NORM=4, LMAX_CALC=Lmax)
+
+        RETURN
+    END SUBROUTINE
+!===========================================================!
+    SUBROUTINE RealAngularToSpectralTransform(&
+            & Nth, Nphi,&
+            & Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&
+            & theta, phi,&
+            & S, a)
+
+        USE SHTOOLS
+        IMPLICIT    none
+
+        !Calling variables
+        INTEGER*4                   Nth,Nphi,Lmax,Lgrid
+        REAL*8                      theta(Nth), phi(Nphi)
+        REAL*8                      GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
+        REAL*8                      S(Nth,Nphi)
+        REAL*8, INTENT(out)     ::  a(2,Lmax+1,Lmax+1)
+ 
+        !Main subroutine
+        CALL SHExpandGLQ(a,Lgrid,S,GLQWeights,&
+                        &ZERO=GLQZeros,NORM=4,LMAX_CALC=Lmax)
+
+        RETURN
+    END SUBROUTINE
+!===========================================================!
+    SUBROUTINE RealSpectralToAngularTransform(&
+            & Nth, Nphi,&
+            & Lmax, Lgrid,&
+            & GLQWeights, GLQZeros,&
+            & theta, phi,&
+            & a, S)
+
+        USE SHTOOLS
+        IMPLICIT    none
+
+        !Calling variables
+        INTEGER*4                   Nth, Nphi, Lmax, Lgrid
+        REAL*8                      GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
+        REAL*8                      theta(Nth), phi(Nphi)
+        REAL*8                      a(2,Lmax+1,Lmax+1)
+        REAL*8, INTENT(OUT) ::      S(Nth,Nphi)
+
+        !Main subroutine
+
+        CALL MakeGridGLQ(S, a, Lgrid, &
+                &ZERO=GLQZeros, NORM=4, LMAX_CALC=Lmax)
 
         RETURN
     END SUBROUTINE

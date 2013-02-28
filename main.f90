@@ -266,8 +266,8 @@
         STOP "***ERROR*** Not enough collocation points"
     END IF
 
-    !This is for general spectral transform
-    CALL PreCompute(Lgrid, GLQZeros, GLQWeights, NORM=1, CNORM=1)
+    !This is for general spectral transform (NORM must match)
+    CALL PreCompute(Lgrid, GLQZeros, GLQWeights, NORM=4, CNORM=1)
     !This if for calculating the area (must be orthonormalized SH)
     CALL PreCompute(Lgrid, GLQRealZ, GLQRealW, NORM=4)
 
