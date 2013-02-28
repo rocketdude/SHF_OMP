@@ -7,6 +7,7 @@
                 &Lmax,Lgrid,&
                 &rho,theta,phi,&
                 &rmax,rmin,&
+                &GLQZeros,GLQWeights,&
                 &GLQRealZ,GLQRealW,&
                 &gRR,gThTh,gPhiPhi,&
                 &gRTh,gRPhi,gThPhi,&
@@ -25,6 +26,7 @@
 
     INTEGER*4               Nr,Nth,Nphi,Lmax,Lgrid
     REAL*8                  rho(Nr),theta(Nth),phi(Nphi),rmax,rmin
+    REAL*8                  GLQZeros(Lgrid+1),GLQWeights(Lgrid+1)
     REAL*8                  GLQRealZ(Lgrid+1),GLQRealW(Lgrid+1)
     REAL*8                  gRR(Nr,Nth,Nphi)
     REAL*8                  gThTh(Nr,Nth,Nphi)
@@ -42,6 +44,11 @@
 
     REAL*8                  PI
     PARAMETER               (PI=3.141592653589793238462643383279502884197D0)
+
+    COMPLEX*16              ulm(2,Lmax+1,Lmax+1)
+    COMPLEX*16              dUdth(Nth,Nphi)
+    COMPLEX*16              dUdphi(Nth,Nphi)
+    COMPLEX*16              ththTerm,thphiTerm,phiphiTerm
     REAL*8                  r(Nr), g2D(Nr)
     REAL*8                  gu11,gu22,gu33
     REAL*8                  gu12,gu13,gu23
@@ -59,9 +66,17 @@
 
     CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
 
+    CALL AngularToSpectralTransform(Nth,Nphi,Lmax,Lgrid,&
+                &GLQWeights,GLQZeros,theta,phi,DCMPLX(U(:,:),0.0D0),ulm)
+    CALL Evaluate2DdSdtheta(Nth,Nphi,Lmax,Lgrid,&
+                            &GLQWeights,GLQZeros,theta,phi,ulm,dUdth)
+    CALL Evaluate2DdSdphi(Nth,Nphi,Lmax,Lgrid,&
+                            &GLQWeights,GLQZeros,theta,phi,ulm,dUdphi)
+
     !$OMP PARALLEL DO &
     !$OMP & PRIVATE(j,k,i,il,iu,g2D,gu11,gu22,gu33,gu12,gu13,gu23,&
-    !$OMP & gd11,gd22,gd33,gd12,gd13,gd23)
+    !$OMP & gd11,gd22,gd33,gd12,gd13,gd23,&
+    !$OMP & ththTerm, thphiTerm, phiphiTerm)
     DO j=1,Nth
         DO k=1,Nphi
 
@@ -121,16 +136,22 @@
                               &gd11,gd22,gd33,gd12,gd13,gd23,&
                               &error)
 
+            ththTerm = gd22 + gd11*rdUdth*rdUdth + 2.0D0*gd12*rdUdth
+            thphiTerm = gd23 + gd11*rdUdth*rdUdphi +&
+                      & gd12*rdUdth + gd13*rdUdphi
+            phiphiTerm = gd33 + gd11*rdUdphi*rdUdphi + 2.0D0*gd13*rdUdphi
+
             !detGFunc = sqrt( det(g) )/sin(theta) for theta,phi
-            detGFunc(j,k) = SQRT(ABS(gd22*gd33-gd23*gd23))/SIN(theta(j))
+            detGFunc(j,k) = SQRT(ABS(ththTerm*phiphiTerm-thphiTerm*thphiTerm))&
+                            &/SIN(theta(j))
 
         END DO
     END DO
     !$OMP END PARALLEL DO
 
     !Calculate area with Gauss-Legendre quadrature (FFT)
-    CALL SHExpandGLQ(blm,Lgrid,detGFunc,GLQRealW,&
-                    &ZERO=GLQRealZ,NORM=4,LMAX_CALC=Lmax)
+    CALL RealAngularToSpectralTransform(Nth,Nphi,Lmax,Lgrid,&
+                    &GLQRealW,GLQRealZ,theta,phi,detGFunc,blm)
     Area = blm(1,1,1)*SQRT(4.0D0*PI)
 
     RETURN
