@@ -136,10 +136,11 @@
                               &gd11,gd22,gd33,gd12,gd13,gd23,&
                               &error)
 
-            ththTerm = gd22 + gd11*rdUdth*rdUdth + 2.0D0*gd12*rdUdth
-            thphiTerm = gd23 + gd11*rdUdth*rdUdphi +&
-                      & gd12*rdUdth + gd13*rdUdphi
-            phiphiTerm = gd33 + gd11*rdUdphi*rdUdphi + 2.0D0*gd13*rdUdphi
+            ththTerm = gd22 + gd11*dUdth(j,k)*dUdth(j,k) + 2.0D0*gd12*dUdth(j,k)
+            thphiTerm = gd23 + gd11*dUdth(j,k)*dUdphi(j,k) +&
+                      & gd12*dUdth(j,k) + gd13*dUdphi(j,k)
+            phiphiTerm = gd33 + gd11*dUdphi(j,k)*dUdphi(j,k) +&
+                      & 2.0D0*gd13*dUdphi(j,k)
 
             !detGFunc = sqrt( det(g) )/sin(theta) for theta,phi
             detGFunc(j,k) = SQRT(ABS(ththTerm*phiphiTerm-thphiTerm*thphiTerm))&
