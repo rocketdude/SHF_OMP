@@ -191,16 +191,16 @@
     aFile = 'a54000.dat'
 
     !Termination conditions
-    Maxit = 60005
+    Maxit = 80000
     tfinal = 0.0D0
 
     IF( SFLAG .EQ. 0 ) THEN
        Startit = 1                  !Starting from iteration 1
     END IF
 
-    X0 = 0.695D0                    !Initial axes of the spheroids in the
-    Y0 = 0.690D0                    !X, Y, and Z directions
-    Z0 = 0.570D0
+    X0 = 0.650D0                    !Initial axes of the spheroids in the
+    Y0 = 0.650D0                    !X, Y, and Z directions
+    Z0 = 0.550D0
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, 
@@ -218,7 +218,7 @@
     reinit = 15
 
     !Spheroidal grid parameters
-    rmax = 0.90D0                   !maximum value of r
+    rmax = 0.80D0                   !maximum value of r
     rmin = 0.10D0                   !minimum value of r
 
     !Additional directions we'd like to compute U
@@ -232,11 +232,11 @@
              & 0.0D0, 0.5D0*PI, PI, 1.5D0*PI /)
     
     !Parameters related to reading HDF5 files--do h5dump to check these
-    nchunks = 64
+    nchunks = 16
     bufsize(1) = 50 !Buffer sizes need to be bigger than datasets
     bufsize(2) = 50
     bufsize(3) = 50
-    it_data_max = 40000
+    it_data_max = 12000
     it_data_min = 0
     delta_it_data = 4
 
@@ -459,9 +459,9 @@
        !--------------------------------------------------------!
 
        PRINT *, 'Using metric data: '
-       PRINT *, 'Maximum iteration#:', MAXVAL(it_data)
+       PRINT *, 'Maximum Cactus it#:', MAXVAL(it_data)
        DO i = 1, TP
-           PRINT *, 'Iteration#:', it_data(i)
+           PRINT *, 'Cactus it#:', it_data(i)
        END DO
 
         CALL EvolveData(&
@@ -523,6 +523,7 @@
              &Lmax,Lgrid,&
              &rho,theta,phi,&
              &rmax,rmin,&
+             &GLQZeros,GLQWeights,&
              &GLQRealZ,GLQRealW,&
              &gRR,gThTh,gPhiPhi,&
              &gRTh,gRPhi,gThPhi,&
