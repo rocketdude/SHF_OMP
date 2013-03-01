@@ -138,7 +138,7 @@
 
             ththTerm = gd22 + gd11*dUdth(j,k)*dUdth(j,k) + 2.0D0*gd12*dUdth(j,k)
             thphiTerm = gd23 + gd11*dUdth(j,k)*dUdphi(j,k) +&
-                      & gd12*dUdth(j,k) + gd13*dUdphi(j,k)
+                      & gd12*dUdphi(j,k) + gd13*dUdth(j,k)
             phiphiTerm = gd33 + gd11*dUdphi(j,k)*dUdphi(j,k) +&
                       & 2.0D0*gd13*dUdphi(j,k)
 
