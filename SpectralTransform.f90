@@ -408,6 +408,7 @@
             & Nth, Nphi,&
             & Lmax, Lgrid,&
             & GLQWeights, GLQZeros,&            
+            & filterO, &
             & theta, phi,&
             & a, dSdth)
 
@@ -417,6 +418,7 @@
 
         !Calling variables
         INTEGER*4                    Nth,Nphi,Lmax,Lgrid
+        INTEGER*4                    filterO
         REAL*8                       GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
         REAL*8                       theta(Nth), phi(Nphi)
         COMPLEX*16                   a(2,Lmax+1,Lmax+1)
@@ -426,6 +428,7 @@
         INTEGER*4                    j, k
         INTEGER*4                    ml, l, mlp1, mlp2
         REAL*8                       const1, const2
+        COMPLEX*16                   ader(2,Lmax+1,Lmax+1)
         COMPLEX*16                   ader1(2,Lmax+1,Lmax+1)
         COMPLEX*16                   ader2(2,Lmax+1,Lmax+1)
         COMPLEX*16                   Term1(Nth,Nphi)
@@ -478,6 +481,12 @@
         END DO
         !$OMP END PARALLEL DO
 
+        CALL AngularToSpectralTransform(Nth,Nphi,Lmax,Lgrid,&
+                                &GLQWeights,GLQZeros,theta,phi,dSdth,ader)
+        CALL ApplyAngularFilter(Lmax,filterO,ader)
+        CALL SpectralToAngularTransform(Nth,Nphi,Lmax,Lgrid,&
+                                &GLQWeights,GLQZeros,theta,phi,ader,dSdth)
+
         RETURN
     END SUBROUTINE
 !===========================================================!
@@ -485,6 +494,7 @@
             & Nth, Nphi,&
             & Lmax, Lgrid,&
             & GLQWeights, GLQZeros,&            
+            & filterO, &
             & theta, phi,&
             & a, dSdphi)
 
@@ -494,6 +504,7 @@
 
         !Calling variables
         INTEGER*4                    Nth,Nphi,Lmax,Lgrid
+        INTEGER*4                    filterO
         REAL*8                       GLQWeights(Lgrid+1),GLQZeros(Lgrid+1)
         REAL*8                       theta(Nth), phi(Nphi)
         COMPLEX*16                   a(2,Lmax+1,Lmax+1)
@@ -521,6 +532,7 @@
         END DO
         !$OMP END PARALLEL DO
 
+        CALL ApplyAngularFilter(Lmax,filterO,ader)
         CALL SpectralToAngularTransform(Nth,Nphi,Lmax,Lgrid,&
                                     &GLQWeights,GLQZeros,theta,phi,ader,dSdphi)
         
@@ -650,4 +662,55 @@
         theta = ABS( latitude - 90D0 )*PI/180.0D0
         phi = longitude*PI/180.0D0
 
+        RETURN
+    END SUBROUTINE
+!===========================================================!
+    SUBROUTINE ApplySphericalHarmonicFilter(Mr,Lmax,filterO,a)
+
+        USE omp_lib
+        IMPLICIT none
+
+        !Calling variables
+        INTEGER*4   Mr,Lmax,filterO
+        COMPLEX*16  a(Mr+1,2,Lmax+1,Lmax+1)
+
+        !Local variables
+        INTEGER*4   l,ml
+        REAL*8      eps
+
+        !Main subroutine
+        eps = 2.22044604925031308D-016 !Machine epsilon
+        DO l=0,Lmax
+            DO ml=0,l
+                a(:,1,l+1,ml+1)=a(:,1,l+1,ml+1)*&
+                                &EXP(LOG(eps)*(l/Lmax)**(2*filterO))
+                a(:,2,l+1,ml+1)=a(:,2,l+1,ml+1)*&
+                                &EXP(LOG(eps)*(l/Lmax)**(2*filterO))
+            END DO
+        END DO
+
+        RETURN
+    END SUBROUTINE
+!===========================================================!
+    SUBROUTINE ApplyAngularFilter(Lmax,filterO,a)
+
+        USE omp_lib
+        IMPLICIT none
+
+        !Calling variables
+        INTEGER*4   Lmax,filterO
+        COMPLEX*16  a(2,Lmax+1,Lmax+1)
+
+        !Local variables
+        INTEGER*4   l
+        REAL*8      eps
+
+        !Main subroutine
+        eps = 2.22044604925031308D-016 !Machine epsilon
+        DO l= 0,Lmax
+            a(1,l+1,:) = a(1,l+1,:)*EXP( LOG(eps)*(l/Lmax)**(2*filterO) )
+            a(2,l+1,:) = a(2,l+1,:)*EXP( LOG(eps)*(l/Lmax)**(2*filterO) )
+        END DO
+
+        RETURN
     END SUBROUTINE

@@ -5,6 +5,7 @@
     SUBROUTINE CalculateArea(&
                 &Nr,Nth,Nphi,&
                 &Lmax,Lgrid,&
+                &filterO,&
                 &rho,theta,phi,&
                 &rmax,rmin,&
                 &GLQZeros,GLQWeights,&
@@ -24,7 +25,7 @@
 !       Declare calling variables                           !
 !-----------------------------------------------------------!
 
-    INTEGER*4               Nr,Nth,Nphi,Lmax,Lgrid
+    INTEGER*4               Nr,Nth,Nphi,Lmax,Lgrid,filterO
     REAL*8                  rho(Nr),theta(Nth),phi(Nphi),rmax,rmin
     REAL*8                  GLQZeros(Lgrid+1),GLQWeights(Lgrid+1)
     REAL*8                  GLQRealZ(Lgrid+1),GLQRealW(Lgrid+1)
@@ -69,9 +70,9 @@
     CALL AngularToSpectralTransform(Nth,Nphi,Lmax,Lgrid,&
                 &GLQWeights,GLQZeros,theta,phi,DCMPLX(U(:,:),0.0D0),ulm)
     CALL Evaluate2DdSdtheta(Nth,Nphi,Lmax,Lgrid,&
-                            &GLQWeights,GLQZeros,theta,phi,ulm,dUdth)
+                            &GLQWeights,GLQZeros,filterO,theta,phi,ulm,dUdth)
     CALL Evaluate2DdSdphi(Nth,Nphi,Lmax,Lgrid,&
-                            &GLQWeights,GLQZeros,theta,phi,ulm,dUdphi)
+                            &GLQWeights,GLQZeros,filterO,theta,phi,ulm,dUdphi)
 
     !$OMP PARALLEL DO &
     !$OMP & PRIVATE(j,k,i,il,iu,g2D,gu11,gu22,gu33,gu12,gu13,gu23,&

@@ -113,6 +113,7 @@
     REAL*8              Area          !Area of EH
     REAL*8              USp(SpM)      !The values of U in specified directions
 
+    INTEGER*4           areaFilterO !Degree of SH Filter for the area routine
     INTEGER*4           n           !Degree of Chebyshev polynomial
     INTEGER*4           l, ml       !Degree of spherical harmonics
     INTEGER*4           reinit      !Iteration at which we reinitialize
@@ -201,6 +202,9 @@
     X0 = 0.650D0                    !Initial axes of the spheroids in the
     Y0 = 0.650D0                    !X, Y, and Z directions
     Z0 = 0.550D0
+
+    !Filter order (weak ~ 32 and strong ~ 2)
+    areaFilterO = 2                 !Order of SH filter for calculating area
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, 
@@ -521,6 +525,7 @@
         CALL CalculateArea(&
              &Nr,Nth,Nphi,&
              &Lmax,Lgrid,&
+             &areaFilterO,&
              &rho,theta,phi,&
              &rmax,rmin,&
              &GLQZeros,GLQWeights,&
