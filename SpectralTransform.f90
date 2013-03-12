@@ -522,7 +522,7 @@
             DO ml=0,l
             
             IF( ml .EQ. 0 ) THEN
-                ader(1,l+1,ml+1) = DCMPLX(0.0D0,0.0D0)*DBLE(ml)*a(1,l+1,ml+1)
+                ader(1,l+1,ml+1) = DCMPLX(0.0D0,1.0D0)*DBLE(ml)*a(1,l+1,ml+1)
             ELSE
                 ader(1,l+1,ml+1) = DCMPLX(0.0D0,1.0D0)*DBLE(ml)*a(1,l+1,ml+1)
                 ader(2,l+1,ml+1) = DCMPLX(0.0D0,-1.0D0)*DBLE(ml)*a(2,l+1,ml+1)
