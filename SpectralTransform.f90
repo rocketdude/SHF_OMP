@@ -532,7 +532,6 @@
         END DO
         !$OMP END PARALLEL DO
 
-        CALL ApplyAngularFilter(Lmax,filterO,ader)
         CALL SpectralToAngularTransform(Nth,Nphi,Lmax,Lgrid,&
                                     &GLQWeights,GLQZeros,theta,phi,ader,dSdphi)
         
