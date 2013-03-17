@@ -101,7 +101,7 @@
            DO j = 1,Nth
               DO k = 1,Nphi
                  
-                 IF( i .EQ. (Mr+1) ) THEN
+                 IF( (i .EQ. 1) .OR. (i .EQ. Nr) ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
                     sqrtterm = SQRT(&
                          &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
@@ -174,7 +174,7 @@
            DO j = 1,Nth
               DO k = 1,Nphi
                  
-                 IF( i .EQ. (Mr+1) ) THEN
+                 IF( (i .EQ. 1) .OR. (i .EQ. Nr) ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
                     sqrtterm = SQRT(&
                          &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
@@ -248,7 +248,7 @@
            DO j = 1,Nth
               DO k = 1,Nphi
                  
-                 IF( i .EQ. (Mr+1) ) THEN
+                 IF( (i .EQ. 1) .OR. (i .EQ. Nr) ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
                     sqrtterm = SQRT(&
                          &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
@@ -322,7 +322,7 @@
            DO j = 1,Nth
               DO k = 1,Nphi
                  
-                 IF( i .EQ. (Mr+1) ) THEN
+                 IF( (i .EQ. 1) .OR. (i .EQ. Nr) ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
                     sqrtterm = SQRT(&
                          &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&
@@ -396,7 +396,7 @@
            DO j = 1,Nth
               DO k = 1,Nphi
                  
-                 IF( i .EQ. (Mr+1) ) THEN
+                 IF( (i .EQ. 1) .OR. (i .EQ. Nr) ) THEN
                     !BOUNDARIES (APPLY BOUNDARY CONDITIONS)
                     sqrtterm = SQRT(&
                          &gThTh(i,j,k)*dSdth(i,j,k)*dSdth(i,j,k) +&

@@ -204,7 +204,7 @@
     Z0 = 0.550D0
 
     !Filter order (weak ~ 32 and strong ~ 2)
-    areaFilterO = 2                 !Order of SH filter for calculating area
+    areaFilterO = 16                 !Order of SH filter for calculating area
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, 
@@ -286,10 +286,10 @@
     nthreads = omp_get_max_threads()
     WRITE(*,*) 'No. of threads = ', nthreads
 
-    !Set up Chebyshev roots and DH collocation points
+    !Chebyshev Gauss Lobatto collocations
     !$OMP PARALLEL DO
     DO i = 0, Mr
-       rho(i+1) = -COS(PI*DBLE(2*i + 1) / DBLE(2*(Mr+1)) )
+       rho(i+1) = -COS(PI*i/Mr)
     END DO
     !$OMP END PARALLEL DO
 

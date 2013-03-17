@@ -43,7 +43,7 @@
             & rho,&
             & f, a)
 
-        !Using Chebyshev-Gauss quadrature assuming that rho is a grid
+        !Using Chebyshev-Gauss-Lobatto quadrature assuming that rho is a grid
         !of Chebyshev roots
 
         USE         omp_lib
@@ -61,13 +61,16 @@
         REAL*8                  wi
 
         !Main subroutine
-        !Build wi (weight in the Chebyshev-Gauss quadrature*2/PI)
-        wi = 2.0D0/DBLE(Mr+1)
 
         !$OMP PARALLEL 
-        !$OMP DO PRIVATE(i)
+        !$OMP DO PRIVATE(i,wi)
         DO n=0,Mr
             DO i=1,Nr
+                IF( (i.EQ.1) .OR. (i.EQ.Nr) ) THEN
+                    wi = 1.0D0 / DBLE(Mr)
+                ELSE
+                    wi = 2.0D0 / DBLE(Mr)
+                END IF
                 Spec2Spat(n+1,i) = wi*COS( DBLE(n)*ACOS(rho(i)) )
             END DO
         END DO
@@ -179,7 +182,7 @@
             & rho,&
             & a, f)
 
-        !Using Chebyshev-Gauss quadrature assuming that rho is a grid
+        !Using Chebyshev-Gauss-Lobatto quadrature assuming that rho is a grid
         !of Chebyshev roots
 
         USE         omp_lib
