@@ -176,7 +176,7 @@
 
     INTEGER*4           i,j,k       !Counters for DO loops
     INTEGER*4           nthreads    !Number of threads
- of Kerr-Schild black hole (for testing)
+
 !========================================================!
 !     MAIN PROGRAM                                       !
 !========================================================!
