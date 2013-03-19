@@ -114,6 +114,7 @@
     REAL*8              USp(SpM)      !The values of U in specified directions
 
     INTEGER*4           areaFilterO !Degree of SH Filter for the area routine
+    INTEGER*4           evoFilterO  !Degree of SH Filter for the evo. routine
     INTEGER*4           n           !Degree of Chebyshev polynomial
     INTEGER*4           l, ml       !Degree of spherical harmonics
     INTEGER*4           reinit      !Iteration at which we reinitialize
@@ -205,6 +206,7 @@
 
     !Filter order (weak ~ 32 and strong ~ 2)
     areaFilterO = 16                 !Order of SH filter for calculating area
+    evoFilterO  = 16                 !Order of SH filter for evolution
 
     !Simulation parameters                              
     !Note: negative rootsign, positive lapse & shift functions, 
@@ -470,6 +472,7 @@
 
         CALL EvolveData(&
              &Nr, Nth, Nphi, Mr, Lmax, Lgrid,&
+             &evoFilterO,&
              &GLQWeights, GLQZeros,&
              &rootsign,&
              &rmax, rmin,&

@@ -328,6 +328,7 @@
             & Nr, Nth, Nphi,&
             & Mr, Lmax, Lgrid,&
             & GLQWeights, GLQZeros,&            
+            & filterO,&
             & rho, theta, phi,&
             & a, dSdth)
 
@@ -337,6 +338,7 @@
 
         !Calling variables
         INTEGER*4                    Nr,Nth,Nphi,Mr,Lmax,Lgrid
+        INTEGER*4                    FilterO
         REAL*8                       GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
         REAL*8                       rho(Nr), theta(Nth), phi(Nphi)
         COMPLEX*16                   a(Mr+1,2,Lmax+1,Lmax+1)
@@ -346,6 +348,7 @@
         INTEGER*4                    i, j, k
         INTEGER*4                    n, ml, l, mlp1, mlp2
         REAL*8                       const1, const2
+        COMPLEX*16                   ader(Mr+1,2,Lmax+1,Lmax+1)
         COMPLEX*16                   ader1(Mr+1,2,Lmax+1,Lmax+1)
         COMPLEX*16                   ader2(Mr+1,2,Lmax+1,Lmax+1)
         COMPLEX*16                   Term1(Nr,Nth,Nphi)
@@ -404,6 +407,16 @@
         END DO
         !$OMP END PARALLEL DO
 
+        CALL SpatialToSpectralTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
+                                       &dSdth,ader)
+        CALL ApplySphericalHarmonicFilter(Mr,Lmax,filterO,ader)
+        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
+                                       &GLQWeights,GLQZeros,&
+                                       &rho,theta,phi,&
+                                       &ader,dSdth)
+        
         RETURN
     END SUBROUTINE
 !===========================================================!

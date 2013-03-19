@@ -4,6 +4,7 @@
 
       SUBROUTINE EvolveData(&
 &Nr, Nth, Nphi, Mr, Lmax, Lgrid,&
+&filterO,&
 &GLQWeights, GLQZeros,&
 &rootsign,&
 &rmax, rmin,&
@@ -28,7 +29,7 @@
 !     Declare calling variables                          !
 !--------------------------------------------------------!
 
-        INTEGER*4               :: Nr,Nth,Nphi,Mr,Lmax,Lgrid
+        INTEGER*4               :: Nr,Nth,Nphi,Mr,Lmax,Lgrid,filterO
 
         REAL*8                  :: rootsign
         REAL*8                  :: GLQWeights(Lgrid+1), GLQZeros(Lgrid+1)
@@ -94,7 +95,7 @@
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdth)
+                &filterO,rho,theta,phi,a,dSdth)
         
         !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
         DO i = 1,Nr
@@ -167,7 +168,7 @@
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdth)
+                &filterO,rho,theta,phi,a,dSdth)
 
         !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
         DO i = 1,Nr
@@ -241,7 +242,7 @@
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdth)
+                &filterO,rho,theta,phi,a,dSdth)
 
         !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
         DO i = 1,Nr
@@ -315,7 +316,7 @@
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdth)
+                &filterO,rho,theta,phi,a,dSdth)
 
         !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
         DO i = 1,Nr
@@ -389,7 +390,7 @@
         CALL EvaluatedSdphi(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
                 &rho,theta,phi,a,dSdphi)
         CALL EvaluatedSdtheta(Nr,Nth,Nphi,Mr,Lmax,Lgrid,GLQWeights,GLQZeros,&
-                &rho,theta,phi,a,dSdth)
+                &filterO,rho,theta,phi,a,dSdth)
 
         !$OMP PARALLEL DO PRIVATE(j, k, sqrtterm)
         DO i = 1,Nr
