@@ -27,28 +27,26 @@ OBJS = \
        SpectralTransform.o \
        TricubicInterpolation.o
 
-F90 = mpif90
-CC = mpicc
+F90 = gfortran-mp-4.7
+CC =
 
 #F90 DEPENDENCIES
-SWITCH = -O3 -mkl -xhost -mcmodel=large -openmp
-INC = \
-   -I$$MKLROOT/include \
-   -I$$TACC_HDF5_INC \
-   -I$$TACC_FFTW3_INC 
+SWITCH = \
+   -O3 -fopenmp
 LIBS = \
-   -free -ISHTOOLS/modules \
+   -I/usr/local/include -L/usr/local/lib -framework veclib \
+   -fexternal-blas -fblas-matmul-limit=2 \
+   -ISHTOOLS/modules \
    -LSHTOOLS/lib \
    -lSHTOOLS2.7 \
-   -mkl=parallel \
-   -Wl,-rpath,$$TACC_HDF5_LIB -L$$TACC_HDF5_LIB \
-   -lhdf5_fortran -lhdf5 -lz \
-   -L$$TACC_FFTW3_LIB -lfftw3 -lm
-FLAGS = -fpp
+   -I/opt/local/include -L/opt/local/lib \
+   -lfftw3 -lm -m64 \
+   -L/usr/local/hdf5/lib -I/usr/local/hdf5/include \
+   -lhdf5_fortran -lhdf5
+FLAGS =
 
 #C++ DEPENDENCIES
 CCSWITCH =
-CCINC =
 CCLIBS =
 CCFLAGS =
 
@@ -58,11 +56,11 @@ $(PROG) : $(OBJS)
 	$(F90) -o $(PROG) $(SWITCH) $(OBJS) $(LIBS)
 
 %.mod: %.o $.f90
-	$(F90) -c $(FLAGS) $(SWITCH) $(INC) $< $(LIBS)
+	$(F90) -c $(FLAGS) $(SWITCH) $(LIBS) $<
 %.o: %.f90
-	$(F90) -c $(FLAGS) $(SWITCH) $(INC) $< $(LIBS)
+	$(F90) -c $(FLAGS) $(SWITCH) $(LIBS) $<
 %.o: %.cpp
-	$(CC) -c $(CCFLAGS) $(CCSWITCH) $(CCINC) $< $(CCLIBS)
+	$(CC) -c $(CCFLAGS) $(CCSWITCH) $(CCLIBS) $<
 
 # Cleaning everything
 clean:
