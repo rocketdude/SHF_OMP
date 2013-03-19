@@ -152,8 +152,9 @@
     REAL*8              BbetaTh(TP,Nr,Nth,Nphi)
     REAL*8              BbetaPhi(TP,Nr,Nth,Nphi)
 
-    ! Schwarzschild metric parameters
-    REAL*8            Mass   !Mass of Schwarzschild black hole (for testing)
+    ! Kerr-Schild metric parameters
+    REAL*8            Mass   !Mass of Kerr-Schild black hole (for testing)
+    REAL*8            Spin   !Spin of Kerr-Schild black hole (for testing) 
 
     ! Parameters to read metric from HDF5 files
     INTEGER(HSIZE_T)  bufsize(3)    !Buffer size to read the metric from HDF5
@@ -175,7 +176,7 @@
 
     INTEGER*4           i,j,k       !Counters for DO loops
     INTEGER*4           nthreads    !Number of threads
-
+ of Kerr-Schild black hole (for testing)
 !========================================================!
 !     MAIN PROGRAM                                       !
 !========================================================!
@@ -246,8 +247,9 @@
     it_data_min = 0
     delta_it_data = 4
 
-    !Schwarzschild metric parameter (preliminary tests only)
-!!$    Mass = 0.45D0                   !Only used with Schwarzschild metric
+    !Kerr-Schild parameters
+!!$    Mass = 0.45D0
+!!$    Spin = 0.45D0
 
 !--------------------------------------------------------!
 !     Output Parameters                                  !
@@ -393,10 +395,10 @@
 !--------------------------------------------------------!
 !     Evaluate Metric                                    !
 !--------------------------------------------------------!
-    !This Schwarzschild metric is only for preliminary calculations
+    !This Kerr-Schild metric is only for preliminary calculations
     !purposes only
-!!$    CALL GetSchwarzschildMetric(&
-!!$         &Mass,&
+!!$    CALL GetKerrSchildchildMetric(&
+!!$         &Mass, Spin,&
 !!$         &M, Mr, NP,&
 !!$         &r, theta, phi,&
 !!$         &alpha,&
