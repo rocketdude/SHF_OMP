@@ -397,10 +397,11 @@
 !--------------------------------------------------------!
     !This Kerr-Schild metric is only for preliminary calculations
     !purposes only
-!!$    CALL GetKerrSchildchildMetric(&
+!!$    CALL GetKerrSchildMetric(&
 !!$         &Mass, Spin,&
-!!$         &M, Mr, NP,&
-!!$         &r, theta, phi,&
+!!$         &Nr, Nth, Nphi,&
+!!$         &rmax, rmin,&
+!!$         &rho, theta, phi,&
 !!$         &alpha,&
 !!$         &betaR, betaTh, betaPhi,&
 !!$         &gRR, gThTh, gPhiPhi,&
