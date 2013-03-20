@@ -575,7 +575,7 @@
        WRITE(7,*) Area
        CLOSE(7)
 
-!!$       drRMS(:,:) = SQRT( (U(:,:) - rKerr(:,:))**2 )
+!!$       drRMS(:,:) = SQRT( (U(:,:) - rKerr(:,:))**2 )/(Nth*Nphi)
 !!$       CTemp = 'drRMS.dat'
 !!$       OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
 !!$       WRITE(7,*) SUM(drRMS)
