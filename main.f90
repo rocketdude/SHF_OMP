@@ -155,6 +155,8 @@
     ! Kerr-Schild metric parameters
     REAL*8            Mass   !Mass of Kerr-Schild black hole (for testing)
     REAL*8            Spin   !Spin of Kerr-Schild black hole (for testing) 
+    REAL*8            rKerr(Nth,Nphi)
+    REAL*8            drRMS(Nth,Nphi)
 
     ! Parameters to read metric from HDF5 files
     INTEGER(HSIZE_T)  bufsize(3)    !Buffer size to read the metric from HDF5
@@ -402,6 +404,7 @@
 !!$         &Nr, Nth, Nphi,&
 !!$         &rmax, rmin,&
 !!$         &rho, theta, phi,&
+!!$         &rKerr,&
 !!$         &alpha,&
 !!$         &betaR, betaTh, betaPhi,&
 !!$         &gRR, gThTh, gPhiPhi,&
@@ -428,9 +431,9 @@
        CTemp = 'Area.dat' 
        OPEN(7, FILE = CTemp, STATUS = 'NEW')
        CLOSE(7)
-!!$       CTemp = 'g_rrUsqrdAve.dat'
-!!$       OPEN(7, FILE = CTemp, STATUS = 'NEW')
-!!$       CLOSE(7)
+       CTemp = 'drRMS.dat'
+       OPEN(7, FILE = CTemp, STATUS = 'NEW')
+       CLOSE(7)
 
     END IF
 
@@ -572,9 +575,10 @@
        WRITE(7,*) Area
        CLOSE(7)
 
-!!$       CTemp = 'g_rrUsqrdAve.dat'
+!!$       drRMS(:,:) = SQRT( (U(:,:) - rKerr(:,:))**2 )
+!!$       CTemp = 'drRMS.dat'
 !!$       OPEN(7, FILE = CTemp, ACCESS = 'APPEND', STATUS = 'OLD')
-!!$       WRITE(7,*) g_rrUsqrdAve
+!!$       WRITE(7,*) SUM(drRMS)
 !!$       CLOSE(7)
     
        PRINT *, 'Iteration #:', it

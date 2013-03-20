@@ -7,6 +7,7 @@
 &Nr, Nth, Nphi,&
 &rmax, rmin,&
 &rho, theta, phi,&
+&rKerr,&
 &alpha,&
 &betaR, betaTh, betaPhi,&
 &gRR, gThTh, gPhiPhi,&
@@ -31,6 +32,7 @@
         REAL*8               :: theta(Nth)
         REAL*8               :: phi(Nphi)
 
+        REAL*8, INTENT(out)  :: rKerr(Nth,Nphi)
         REAL*8, INTENT(out)  :: alpha(Nr,Nth,Nphi)
         REAL*8, INTENT(out)  :: betaR(Nr,Nth,Nphi)
         REAL*8, INTENT(out)  :: betaTh(Nr,Nth,Nphi)
@@ -54,6 +56,7 @@
         REAL*8                    JMatrix(4,4),gcart(4,4),gsph(4,4)
         REAL*8                    l1,l2,l3
         REAL*8                    alp,bx,by,bz,gxx,gyy,gzz,gxy,gxz,gyz
+        REAL*8                    rPlus
         INTEGER*4                 error
 
 !----------------------------------------------------------!
@@ -62,6 +65,8 @@
 
         PRINT *, 'Evaluating Metric'
         CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
+
+        rPlus = Mass + SQRT( Mass*Mass - Spin*Spin )
 
         !$OMP PARALLEL DO SHARED(Nr, Nth, Nphi, Mass, Spin, r, theta, phi)&
         !$OMP &PRIVATE(j,k,l1,l2,l3,gxx,gyy,gzz,gxy,gxz,gyz,alp,bx,by,bz,&
@@ -127,6 +132,14 @@
            END DO
         END DO
         !$OMP END PARALLEL DO
+
+        !$OMP PARALLEL DO PRIVATE(j,k)
+        DO j = 1,Nth
+            DO k = 1,Nphi
+                rKerr(j,k) = SQRT( (rPlus**4 + (rPlus*Spin)**2) /&
+                                  &(rPlus**2 + (Spin*COS(theta(j)))**2) )
+            END DO
+        END DO
 
         PRINT *, 'DONE!'
 
