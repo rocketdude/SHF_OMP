@@ -61,8 +61,8 @@
 
                 DO i = 1, Nr
 
-                   S(i,j,k) = DCMPLX( 100.0D0 *( 1 + TANH( ( r(i) - r0 )/c ) ),&
-                                 & 0.0D0 )
+                   S(i,j,k) = DCMPLX( 100.0D0 *&
+                                &(1.0D0+TANH( ( r(i) - r0 )/c ) ), 0.0D0 )
 
               END DO
            END DO
