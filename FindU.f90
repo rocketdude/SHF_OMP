@@ -55,44 +55,26 @@
 
        CHARACTER*32      CTemp
 
-       INTEGER*4, PARAMETER ::  SP=1000 
-       !Number of points to be calculated on the spline
-       INTEGER*4, PARAMETER ::  PolyInterpOrder=6 
-       !Number of points for poly. interp.
+       INTEGER*4, PARAMETER ::  Ncut=4
+       REAL*8,PARAMETER ::    TargetedSValue=100.0D0
        INTEGER*4                i, j, k, ii, dii, jj, ss
-       INTEGER*4                n, l, ml
-       INTEGER*4                crow
-       INTEGER*4                iindex, jkindex
-       INTEGER*4                ilow, ilow2, flag
-       INTEGER*4                error
 
        COMPLEX*16             S(Nr,Nth,Nphi)
-       COMPLEX*16             TnYlm
     
        REAL*8                 r(Nr)
        REAL*8                 SLine(SpM,Nr)
        REAL*8                 U_r(Nr) 
-       REAL*8                 U_r2(Nr) 
-                              !Second derivatives of U_r at points along r
-
-       REAL*8                 g_r(6,Nr)
-       REAL*8                 gUU(6)
-       REAL*8                 gDD(6)
-       REAL*8                 gPolyInt(6,PolyInterpOrder)
-       REAL*8                 rPolyInt(PolyInterpOrder)
-
-       REAL*8                 rr(SP)
-       REAL*8                 UU(SP)
-       REAL*8                 Temp
-       
-       REAL*8                 TargetedSValue
-       REAL*8                 deltar
+       REAL*8                 U_r2(Nr-Ncut-Ncut)
+       REAL*8                 r2(Nr-Ncut-Ncut)
+ 
 
 !--------------------------------------------------------!
 !      Main Subroutine                                   !
 !--------------------------------------------------------!
 
-       TargetedSValue = 100.0D0
+       !not used
+       gRRUSqrd = 0.0D0
+       gRRUsqrdAve = 0.0D0
 
        !Evaluate the eikonal data S
        CALL SpectralToSpatialTransform(Nr,Nth,Nphi,Mr,Lmax,Lgrid,&
@@ -101,109 +83,24 @@
                                       &a,S)
 
        !Writing S into file (only at certain iterations)
-       IF( MOD(it, WriteSit) .EQ. 0 ) CALL WriteS(Nr, Nth, Nphi, ABS(S), it)
+       IF( MOD(it, WriteSit) .EQ. 0 ) CALL WriteS(Nr, Nth, Nphi, DBLE(S),it)
 
        CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
 
        !$OMP PARALLEL DO &
-       !$OMP &PRIVATE(k, i, iindex, jkindex, U_r, U_r2, flag, gDD, gUU,&
-       !$OMP &       g_r, rPolyInt, gPolyInt, jj, dii, ilow, ilow2,&
-       !$OMP &       deltar, rr, UU)
+       !$OMP &PRIVATE(j,k,U_r,U_r2,r2)
        DO j = 1, Nth
           DO k = 1, Nphi
 
-             U_r = ABS(S(:,j,k))
+            U_r = DBLE(S(:,j,k)) - TargetedSValue
+            U_r2(:) = U_r((1+Ncut):(Nr-Ncut))
+            r2(:) = r((1+Ncut):(Nr-Ncut))
 
-             !To find the radial distance of the light cone,
-             !we fit cubic splines and then perform linear interpolation
-             
-             !Calculate the second derivatives and store it into U_r2
+            !Now perform bisection
+            !CALL Bisect(U_r2,r2,(Nr-2*Ncut),U(j,k))
+            CALL Bisect2(U_r,rho,Nr,U(j,k))
+            CALL GetRadialCoordinates(1,rmax,rmin,U(j,k),U(j,k))
 
-             CALL ComputeSpline2ndDeriv(r, U_r, Nr, 1.0D31, 1.0D31, U_r2)
-                    !Using natural cubic spline
-
-             !Find ilow and ilow+1 which are 
-             !the indices that bound where TargetedSValue is located
-             flag = 0
-             DO i=(1+(Nr/10)), (Nr-(Nr/10))
-                IF( U_r(i) .GE. TargetedSValue ) THEN
-                   ilow = i-1
-                   flag = 1
-                   EXIT
-                END IF
-             END DO
-
-             IF( flag .EQ. 0) THEN           
-                WRITE(*,*) 'Error in hunting 1'
-                !READ(*, '()')
-                STOP
-             END IF
-
-             !Calculate the equispaced points rr--between r(ilow) and r(ilow+1)
-             !and, calculate the values of ABS(S) at those points
-             deltar = (r(ilow+1) - r(ilow))/DBLE(SP-1)
-             DO i = 1, SP
-                rr(i) = r(ilow) + DBLE(i-1)*deltar
-                CALL CubicSplineInterpolation(r, U_r, U_r2, ilow, Nr,&
-                                             &rr(i), UU(i))
-
-             END DO
-
-             !Perform HUNT again,finding ilow2 and ilow2+1 which are 
-             !the indices that bound where TargetedSValue is located
-             flag = 0
-             DO i=1, SP
-                IF( UU(i) .GE. TargetedSValue ) THEN
-                   ilow2 = i-1
-                   flag = 1
-                   EXIT
-                END IF
-             END DO
-
-             IF( flag .EQ. 0) THEN           
-                WRITE(*,*) 'Error in hunting 2'
-                !READ(*, '()')
-                STOP
-             END IF
-
-             !Find the value of r where TargetedSValue is located by interp.
-             U(j,k) = rr(ilow2) + &
-                  &( rr(ilow2+1) - rr(ilow2) )/( UU(ilow2+1) - UU(ilow2) ) *&
-                  &(TargetedSValue - UU(ilow2) )
-    
-             g_r(1,:) = gRR(:,j,k)
-             g_r(2,:) = gThTh(:,j,k)
-             g_r(3,:) = gPhiPhi(:,j,k)
-             g_r(4,:) = gRTh(:,j,k)
-             g_r(5,:) = gRPhi(:,j,k)
-             g_r(6,:) = gThPhi(:,j,k)
-            
-             !Interpolate to find the three metric at U(j,k)
-             dii = PolyInterpOrder/2 !This is floored
-             DO ii = 1, PolyInterpOrder
-                rPolyInt(ii) = r(ilow - dii + ii)
-
-                DO jj = 1, 6 !there are only 6 independent 3-metric components
-                    gPolyInt(jj,ii) = g_r(jj,ilow - dii + ii)
-                END DO
-                
-             END DO
-             
-             DO jj = 1,6
-                CALL PolynomialInterpolation(rPolyInt, gPolyInt(jj,:),&
-                                            &PolyInterpOrder, U(j,k), gUU(jj))
-             END DO
-
-             !Invert to get the lower index 3-metric
-             CALL Invert3Metric(gUU(1), gUU(2), gUU(3),&
-                               &gUU(4), gUU(5), gUU(6),&
-                               &gDD(1), gDD(2), gDD(3),&
-                               &gDD(4), gDD(5), gDD(6),&
-                               &error) 
-             
-             !Now calculate g_rr * U^2
-             gRRUsqrd(j,k) = gDD(1) * U(j,k) * U(j,k) !Don't think this is right
-             
           END DO
        END DO
        !$OMP END PARALLEL DO
@@ -211,8 +108,6 @@
        !Calculate the average U: Uave 
        !(only applies if there's obvious spherical symmetry)
        Uave = SUM( U )/ (Nth*Nphi)
-       !Calculate the average g_rr*U^2 (the above premise applies here as well)
-       gRRUsqrdAve = SUM( gRRUsqrd ) / (Nth*Nphi)
 
        CALL GetRealSpatialValueOnRadialLine(Nr,Nth,Nphi,Mr,SpM,Lmax,Lgrid,&
                                            &rho,theta,phi,thetaSp,phiSp,&
@@ -220,66 +115,18 @@
 
        !Calculate the values of U at the requested directions
        !$OMP PARALLEL DO &
-       !$OMP &PRIVATE(i, n, l, ml, U_r2, flag,&
-       !$OMP &        ilow, ilow2, deltar, rr, UU, crow, TnYlm)
+       !$OMP &PRIVATE(ss,U_r,U_r2,r2)
        DO ss = 1, SpM
-  
-             !Calculate the second derivatives and store it into U_r2
-             CALL ComputeSpline2ndDeriv(r,SLine(ss,:),Nr,1.0D31,1.0D31,U_r2)
+            U_r = SLine(ss,:) - TargetedSValue
+            U_r2(:) = U_r((1+Ncut):(Nr-Ncut))
+            r2(:) = r((1+Ncut):(Nr-Ncut))
 
-             !Find ilow and ilow+1 which are the indices that 
-             !bound where TargetedSValue is located
-             flag = 0
-             DO i=(1+(Nr/10)), (Nr-(Nr/10))
-                IF( SLine(ss,i) .GE. TargetedSValue ) THEN
-                   ilow = i-1
-                   flag = 1
-                   EXIT
-                END IF
-             END DO
-
-             IF( flag .EQ. 0) THEN           
-                WRITE(*,*) 'Error in hunting for special points'
-                !READ(*, '()')
-                STOP
-             END IF
-
-             !Calculate the equispaced points rr--between r(ilow) and r(ilow+1)
-             !and, calculate the values of ABS(S) at those points
-             deltar = (r(ilow+1) - r(ilow))/DBLE(SP-1)
-             DO i = 1, SP
-                rr(i) = r(ilow) + DBLE(i-1)*deltar
-                CALL CubicSplineInterpolation(r, SLine(ss,:), U_r2, ilow, Nr, &
-                                             &rr(i), UU(i))
-
-             END DO
-
-             !Perform HUNT again, finding ilow2 and ilow2+1 which are 
-             !the indices that bound
-             !where TargetedSValue is located
-             flag = 0
-             DO i=1, SP
-                IF( UU(i) .GE. TargetedSValue ) THEN
-                   ilow2 = i-1
-                   flag = 1
-                   EXIT
-                END IF
-             END DO
-
-             IF( flag .EQ. 0) THEN           
-                WRITE(*,*) 'Error in hunting for special points'
-                !READ(*, '()')
-                STOP
-             END IF
-
-             !Find the value of r where TargetedSValue is located 
-             !by performing linear interpolation
-             USp(ss) = rr(ilow2) + &
-                  &( rr(ilow2+1) - rr(ilow2) )/( UU(ilow2+1) - UU(ilow2) ) *&
-                  &(TargetedSValue - UU(ilow2) )
-
+            !Now perform bisection
+            !CALL Bisect(U_r2,r2,(Nr-2*Ncut),USp(ss)) 
+            CALL Bisect2(U_r,rho,Nr,USp(ss))
+            CALL GetRadialCoordinates(1,rmax,rmin,USp(ss),USp(ss))
        END DO
        !$OMP END PARALLEL DO 
-    
+      
        RETURN
      END SUBROUTINE FindU

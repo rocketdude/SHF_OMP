@@ -114,3 +114,30 @@
 
         RETURN
       END SUBROUTINE GetRadialCoordinates
+!========================================================!
+!--------------------------------------------------------!
+!    Get canonical radial coordinates                    !
+!--------------------------------------------------------!
+
+      SUBROUTINE GetRho(Nr,rmax,rmin,r,rho)
+
+        USE             omp_lib
+        IMPLICIT        none
+
+!--------------------------------------------------------!
+!     Declare calling variables                          !
+!--------------------------------------------------------!
+
+        INTEGER*4            :: Nr
+        REAL*8               :: rmax,rmin
+        REAL*8               :: r(Nr)
+        REAL*8, INTENT(out)  :: rho(Nr)
+
+!--------------------------------------------------------!
+!      Main Subroutine                                   !
+!--------------------------------------------------------!
+
+        rho(:) = (2.0D0*r(:) - (rmax+rmin))/(rmax-rmin)
+
+        RETURN
+      END SUBROUTINE GetRho
