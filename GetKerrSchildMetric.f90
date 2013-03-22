@@ -79,9 +79,9 @@
                 y = r(i)*SIN(theta(j))*SIN(phi(k))
                 z = r(i)*COS(theta(j))
 
-                rBL = SQRT( r(i)*r(i)-Spin*Spin +&
-                        & SQRT((2.0D0*Spin*z)**2 + (Spin*Spin-r(i)*r(i))**2))&
-                        / SQRT(2.0D0)
+                rBL = 0.5D0*(r(i)*r(i)-Spin*Spin) +&
+                    & SQRT( 0.25D0*(r(i)*r(i)-Spin*Spin)**2 + (Spin*z)**2 )
+                rBL = SQRT(rBL)
 
                 H = Mass*(rBL**3)/(rBL**4 + Spin*Spin*z*z)
                 l1 = (rBL*x+Spin*y)/(rBL*rBL+Spin*Spin)
