@@ -308,7 +308,7 @@
         !Find derivatives by using recursion relations
         !This is similar to chder from Numerical Recipes
         ader(Mr+1,:,:,:) = DCMPLX(0.0D0, 0.0D0)
-        ader(Mr,:,:,:) = DCMPLX(2.0D0*DBLE(Mr), 0.0D0)*a(Mr,:,:,:)
+        ader(Mr,:,:,:) = DCMPLX(2.0D0*DBLE(Mr), 0.0D0)*a(Mr+1,:,:,:)
         DO nder = 1,(Mr-1)
             nn = Mr-nder+1
             ader(nn-1,:,:,:) = ader(nn+1,:,:,:) + &
