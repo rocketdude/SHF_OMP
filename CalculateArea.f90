@@ -63,7 +63,7 @@
     REAL*8                  blm(2,Lmax+1,Lmax+1)
     REAL*8                  gN(Nr)
     REAL*8                  Urho
-    REAL*8                  rdUdth,rdUdphi
+    REAL*8                  rdUdth,rdUdphi,denom
 
     REAL*8                  G(Nmax)
     REAL*8                  rr(Nmax)
@@ -87,7 +87,7 @@
     !$OMP PARALLEL DO &
     !$OMP & PRIVATE(j,k,i,il,iu,g2D,gu11,gu22,gu33,gu12,gu13,gu23,&
     !$OMP & gd11,gd22,gd33,gd12,gd13,gd23,&
-    !$OMP & G,rr,gN,Urho,rdUdth,rdUdphi,&
+    !$OMP & G,rr,gN,Urho,rdUdth,rdUdphi, denom,&
     !$OMP & ththTerm, thphiTerm, phiphiTerm)
     DO j=1,Nth
         DO k=1,Nphi
@@ -177,9 +177,10 @@
                       & 2.0D0*gd13*rdUdphi
 
             !detGFunc = sqrt( det(g) )/sin(theta) for theta,phi
+            denom = 1.0D0/SIN(theta(j))
+            IF(denom .LT. 1.0D-12) denom = 1.0D-12
             detGFunc(j,k) = &
-                  &SQRT(ABS(ththTerm*phiphiTerm-thphiTerm*thphiTerm))&
-                            &/SIN(theta(j))
+                  &SQRT(ABS(ththTerm*phiphiTerm-thphiTerm*thphiTerm))*denom
 
         END DO
     END DO
