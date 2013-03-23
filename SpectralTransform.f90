@@ -347,7 +347,7 @@
         !Local variables
         INTEGER*4                    i, j, k
         INTEGER*4                    n, ml, l, mlp1, mlp2
-        REAL*8                       const1, const2
+        REAL*8                       const1, const2, denom
         COMPLEX*16                   ader(Mr+1,2,Lmax+1,Lmax+1)
         COMPLEX*16                   ader1(Mr+1,2,Lmax+1,Lmax+1)
         COMPLEX*16                   ader2(Mr+1,2,Lmax+1,Lmax+1)
@@ -395,12 +395,14 @@
                                        &rho,theta,phi,&
                                        &ader2,Term2)
 
-        !$OMP PARALLEL DO PRIVATE(j,k)
+        !$OMP PARALLEL DO PRIVATE(j,k,denom)
         DO i=1,Nr
           DO j=1,Nth
             DO k=1,Nphi
             
-              dSdth(i,j,k) = Term1(i,j,k)/TAN(theta(j)) +&
+              denom = 1.0D0/TAN(theta(j))
+              IF( denom .LT. 1.0D-12 ) denom = 1.0D-12
+              dSdth(i,j,k) = Term1(i,j,k)*denom +&
                            & EXP(DCMPLX(0.0D0, -1.0D0*phi(k)))*Term2(i,j,k)
             END DO
           END DO
@@ -443,7 +445,7 @@
         !Local variables
         INTEGER*4                    j, k
         INTEGER*4                    ml, l, mlp1, mlp2
-        REAL*8                       const1, const2
+        REAL*8                       const1, const2, denom
         COMPLEX*16                   ader(2,Lmax+1,Lmax+1)
         COMPLEX*16                   ader1(2,Lmax+1,Lmax+1)
         COMPLEX*16                   ader2(2,Lmax+1,Lmax+1)
@@ -487,11 +489,13 @@
         CALL SpectralToAngularTransform(Nth,Nphi,Lmax,Lgrid,&
                                 &GLQWeights,GLQZeros,theta,phi,ader2,Term2)
         
-        !$OMP PARALLEL DO PRIVATE(j,k)
+        !$OMP PARALLEL DO PRIVATE(j,k,denom)
         DO j=1,Nth
             DO k=1,Nphi
-            
-              dSdth(j,k) = Term1(j,k)/TAN(theta(j)) +&
+           
+              denom = 1.0D0/TAN(theta(j))
+              IF( denom .LT. 1.0D-12 ) denom = 1.0D-12
+              dSdth(j,k) = Term1(j,k)*denom +&
                            & EXP(DCMPLX(0.0D0, -1.0D0*phi(k)))*Term2(j,k)
             END DO
         END DO
