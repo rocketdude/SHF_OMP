@@ -83,7 +83,7 @@
                                       &a,S)
 
        !Writing S into file (only at certain iterations)
-       IF( MOD(it, WriteSit) .EQ. 0 ) CALL WriteS(Nr, Nth, Nphi, DBLE(S),it)
+       IF( MOD(it, WriteSit) .EQ. 0 ) CALL WriteS(Nr, Nth, Nphi, ABS(S),it)
 
        CALL GetRadialCoordinates(Nr,rmax,rmin,rho,r)
 
@@ -92,7 +92,7 @@
        DO j = 1, Nth
           DO k = 1, Nphi
 
-            U_r = DBLE(S(:,j,k)) - TargetedSValue
+            U_r = ABS(S(:,j,k)) - TargetedSValue
             U_r2(:) = U_r((1+Ncut):(Nr-Ncut))
             r2(:) = r((1+Ncut):(Nr-Ncut))
 

@@ -167,8 +167,8 @@
             CALL Invert3Metric(gu11,gu22,gu33,gu12,gu13,gu23,&
                               &gd11,gd22,gd33,gd12,gd13,gd23,&
                               &error)
-            rdUdth = DBLE(dUdth(j,k))
-            rdUdphi = DBLE(dUdphi(j,k))
+            rdUdth = ABS(dUdth(j,k))
+            rdUdphi = ABS(dUdphi(j,k))
 
             ththTerm = gd22 + gd11*rdUdth*rdUdth + 2.0D0*gd12*rdUdth
             thphiTerm = gd23 + gd11*rdUdth*rdUdphi +&
