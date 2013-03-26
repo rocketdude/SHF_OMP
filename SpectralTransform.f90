@@ -401,7 +401,6 @@
             DO k=1,Nphi
             
               denom = 1.0D0/TAN(theta(j))
-              IF( denom .LT. 1.0D-12 ) denom = 1.0D-12
               dSdth(i,j,k) = Term1(i,j,k)*denom +&
                            & EXP(DCMPLX(0.0D0, -1.0D0*phi(k)))*Term2(i,j,k)
             END DO
@@ -494,7 +493,6 @@
             DO k=1,Nphi
            
               denom = 1.0D0/TAN(theta(j))
-              IF( denom .LT. 1.0D-12 ) denom = 1.0D-12
               dSdth(j,k) = Term1(j,k)*denom +&
                            & EXP(DCMPLX(0.0D0, -1.0D0*phi(k)))*Term2(j,k)
             END DO

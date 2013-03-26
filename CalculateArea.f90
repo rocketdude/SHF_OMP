@@ -178,7 +178,6 @@
 
             !detGFunc = sqrt( det(g) )/sin(theta) for theta,phi
             denom = 1.0D0/SIN(theta(j))
-            IF(denom .LT. 1.0D-12) denom = 1.0D-12
             detGFunc(j,k) = &
                   &SQRT(ABS(ththTerm*phiphiTerm-thphiTerm*thphiTerm))*denom
 
