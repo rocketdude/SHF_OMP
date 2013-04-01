@@ -46,6 +46,8 @@
 
     INTEGER*4           WriteUit    
     !iteration at which we output U into file
+    INTEGER*4           WriteMetric
+    !iteration at which we output all the metric data into file
     INTEGER*4           Writeg_rrUsqrdit 
     !Iteration at which we output gRR*U^2
     INTEGER*4           WriteSit        
@@ -258,6 +260,7 @@
 !--------------------------------------------------------!
 
     WriteUit         = 50
+    WriteMetric      = 10000
     Writeg_rrUsqrdit = 100000
     WriteSit         = 100000
     Writeait         = 500
@@ -548,8 +551,20 @@
        !--------------------------------------------------------!
 
        IF( MOD(it,WriteUit) .EQ. 0 ) CALL WriteU(Nth, Nphi, U, it)
-!!$       IF( MOD(it,Writeg_rrUsqrdit) .EQ. 0 ) &
-!!$         & CALL WriteGRRUU(Nth, Nphi, g_rrUsqrd, it)
+
+       IF( MOD(it,WriteMetric) .EQ. 0 ) THEN
+         CALL OutputSphMetric(Nr,Nth,Nphi,alpha,it,0)
+         CALL OutputSphMetric(Nr,Nth,Nphi,betaR,it,1)
+         CALL OutputSphMetric(Nr,Nth,Nphi,betaTh,it,2)
+         CALL OutputSphMetric(Nr,Nth,Nphi,betaPhi,it,3)
+         CALL OutputSphMetric(Nr,Nth,Nphi,gRR,it,4)
+         CALL OutputSphMetric(Nr,Nth,Nphi,gThTh,it,5)
+         CALL OutputSphMetric(Nr,Nth,Nphi,gPhiPhi,it,6)
+         CALL OutputSphMetric(Nr,Nth,Nphi,gRTh,it,7)
+         CALL OutputSphMetric(Nr,Nth,Nphi,gRPhi,it,8)
+         CALL OutputSphMetric(Nr,Nth,Nphi,gThPhi,it,9)
+       END IF
+
        IF( MOD(it,Writeait) .EQ. 0 .OR. (it .EQ. Maxit) ) &
          & CALL Writea(Mr+1, 2, Lmax+1, Lmax+1, a, it)
        
