@@ -971,6 +971,9 @@
         return
       end subroutine Read1dC
 
+!========================================================!
+!       END OF BASIC SUBROUTINES                         !
+!========================================================!
 
 !========================================================!
 !    Write S Array Subroutine                            !
@@ -1006,8 +1009,10 @@
            format_string = '(A1,I3,A4)'
         ELSE IF (i .ge. 1000 .and. i < 10000) THEN
            format_string = '(A1,I4,A4)'
-        ELSE
+        ELSE IF (i .ge. 10000 .and. i < 100000) THEN
            format_string = '(A1,I5,A4)'
+        ELSE
+           format_string = '(A1,I6,A4)'
         END IF
 
         WRITE(TestFile, format_string) 'S',i,'.dat'
@@ -1052,8 +1057,10 @@
            format_string = '(A1,I3,A4)'
         ELSE IF (i .ge. 1000 .and. i < 10000) THEN
            format_string = '(A1,I4,A4)'
-        ELSE
+        ELSE IF (i .ge. 10000 .and. i < 100000) THEN
            format_string = '(A1,I5,A4)'
+        ELSE
+           format_string = '(A1,I6,A4)'
         END IF
 
         WRITE(TestFile, format_string) 'U',i,'.dat'
@@ -1062,52 +1069,7 @@
 
         RETURN
       END SUBROUTINE WriteU
-
-!========================================================!
-!    Write gRR*U^2 Array Subroutine                      !
-!========================================================!
-
-      SUBROUTINE WriteGRRUU(nx, ny, Array, i)
-
-        IMPLICIT none
-
-!-----------------------------------------------------------!
-!     Declare passed variables                              !
-!-----------------------------------------------------------!
-
-        INTEGER*4, INTENT(IN)::   nx, ny, i
-        REAL*8, INTENT(IN)::    Array(nx,ny)
-
-!-----------------------------------------------------------!
-!     Declare local variables                               !
-!-----------------------------------------------------------!
-        
-        CHARACTER*32            format_string
-        CHARACTER*32            TestFile
-
-!-----------------------------------------------------------!
-!     Write                                                 !
-!-----------------------------------------------------------!
-
-        IF (i < 10) THEN
-           format_string = '(A8,I1,A4)'
-        ELSE IF (i .ge. 10 .and. i < 100) THEN
-           format_string = '(A8,I2,A4)'
-        ELSE IF (i < 1000 .and. i .ge. 100) THEN
-           format_string = '(A8,I3,A4)'
-        ELSE IF (i .ge. 1000 .and. i < 10000) THEN
-           format_string = '(A8,I4,A4)'
-        ELSE
-           format_string = '(A8,I5,A4)'
-        END IF
-
-        WRITE(TestFile, format_string) 'gRRUsqrd',i,'.dat'
-
-        CALL WRITE2d(nx, ny, Array, TestFile)
-
-        RETURN
-      END SUBROUTINE WriteGRRUU
-      
+ 
 !========================================================!
 !    Write a_nlm Array Subroutine                        !
 !========================================================!
@@ -1142,8 +1104,10 @@
            format_string = '(A1,I3,A4)'
         ELSE IF (i .ge. 1000 .and. i < 10000) THEN
            format_string = '(A1,I4,A4)'
-        ELSE
+        ELSE IF (i .ge. 10000 .and. i < 100000) THEN
            format_string = '(A1,I5,A4)'
+        ELSE
+           format_string = '(A1,I6,A4)'
         END IF
 
         WRITE(TestFile, format_string) 'a',i,'.dat'
@@ -1166,7 +1130,7 @@
 !-----------------------------------------------------------!
 
         INTEGER*4, INTENT(IN)::   nx, ny, nz, i, METRICFLAG
-        REAL*8, INTENT(IN)::    Array(nx)
+        REAL*8, INTENT(IN)::    Array(nx,ny,nz)
 
 !-----------------------------------------------------------!
 !     Declare local variables                               !
@@ -1192,8 +1156,10 @@
                 format_string = '(A5,I3,A4)'
             ELSE IF (i .ge. 1000 .and. i < 10000) THEN
                 format_string = '(A5,I4,A4)'
-            ELSE
+            ELSE IF (i .ge. 10000 .and. i < 100000) THEN
                 format_string = '(A5,I5,A4)'
+            ELSE
+                format_string = '(A5,I6,A4)'
             END IF
 
             IF( METRICFLAG .EQ. 0 ) THEN
@@ -1215,8 +1181,10 @@
                 format_string = '(A3,I3,A4)'
             ELSE IF (i .ge. 1000 .and. i < 10000) THEN
                 format_string = '(A3,I4,A4)'
-            ELSE
+            ELSE IF (i .ge. 10000 .and. i < 100000) THEN
                 format_string = '(A3,I5,A4)'
+            ELSE
+                format_string = '(A3,I6,A4)'
             END IF
 
             IF( METRICFLAG .EQ. 4 ) THEN
@@ -1238,3 +1206,89 @@
 
         RETURN
       END SUBROUTINE OutputMetric
+
+!========================================================!
+!    Write Spherical Metric data Array Subroutine        !
+!========================================================!
+
+      SUBROUTINE OutputSphMetric(Nr, Nth, Nphi, Array, i, METRICFLAG)
+
+        IMPLICIT none
+
+!-----------------------------------------------------------!
+!     Declare passed variables                              !
+!-----------------------------------------------------------!
+
+        INTEGER*4, INTENT(IN)::   Nr,Nth,Nphi,i, METRICFLAG
+        REAL*8, INTENT(IN)::    Array(Nr,Nth,Nphi)
+
+!-----------------------------------------------------------!
+!     Declare local variables                               !
+!-----------------------------------------------------------!
+        
+        CHARACTER*32            format_string
+        CHARACTER*32            TestFile
+
+!-----------------------------------------------------------!
+!     Write                                                 !
+!-----------------------------------------------------------!
+
+        IF( METRICFLAG .GE. 0 .AND. METRICFLAG .LE. 3 ) THEN
+            IF (i < 10) THEN
+                format_string = '(A5,I1,A4)'
+            ELSE IF (i .ge. 10 .and. i < 100) THEN
+                format_string = '(A5,I2,A4)'
+            ELSE IF (i < 1000 .and. i .ge. 100) THEN
+                format_string = '(A5,I3,A4)'
+            ELSE IF (i .ge. 1000 .and. i < 10000) THEN
+                format_string = '(A5,I4,A4)'
+            ELSE IF (i .ge. 10000 .and. i < 100000) THEN
+                format_string = '(A5,I5,A4)'
+            ELSE
+                format_string = '(A5,I6,A4)'
+            END IF
+
+            IF( METRICFLAG .EQ. 0 ) THEN
+                WRITE(TestFile, format_string) 'alpha',i,'.dat'
+            ELSEIF( METRICFLAG .EQ. 1 ) THEN
+                WRITE(TestFile, format_string) 'betaR',i,'.dat'
+            ELSEIF( METRICFLAG .EQ. 2 ) THEN
+                WRITE(TestFile, format_string) 'betaT',i,'.dat'
+            ELSEIF( METRICFLAG .EQ. 3 ) THEN
+                WRITE(TestFile, format_string) 'betaP',i,'.dat'
+            END IF
+
+        ELSE
+            IF (i < 10) THEN
+                format_string = '(A3,I1,A4)'
+            ELSE IF (i .ge. 10 .and. i < 100) THEN
+                format_string = '(A3,I2,A4)'
+            ELSE IF (i < 1000 .and. i .ge. 100) THEN
+                format_string = '(A3,I3,A4)'
+            ELSE IF (i .ge. 1000 .and. i < 10000) THEN
+                format_string = '(A3,I4,A4)'
+            ELSE IF (i .ge. 10000 .and. i < 100000) THEN
+                format_string = '(A3,I5,A4)'
+            ELSE
+                format_string = '(A3,I6,A4)'
+            END IF
+
+            IF( METRICFLAG .EQ. 4 ) THEN
+                WRITE(TestFile, format_string) 'gRR',i,'.dat' !gRR
+            ELSEIF( METRICFLAG .EQ. 5 ) THEN
+                WRITE(TestFile, format_string) 'gTT',i,'.dat' !gThTh
+            ELSEIF( METRICFLAG .EQ. 6 ) THEN
+                WRITE(TestFile, format_string) 'gPP',i,'.dat' !gPhiPhi
+            ELSEIF( METRICFLAG .EQ. 7 ) THEN
+                WRITE(TestFile, format_string) 'gRT',i,'.dat' !gRTh
+            ELSEIF( METRICFLAG .EQ. 8 ) THEN
+                WRITE(TestFile, format_string) 'gRP',i,'.dat' !gRPhi
+            ELSEIF( METRICFLAG .EQ. 9 ) THEN
+                WRITE(TestFile, format_string) 'gTP',i,'.dat' !gThPhi
+            END IF
+        END IF
+
+        CALL WRITE3d(Nr, Nth, Nphi, Array, TestFile)
+
+        RETURN
+      END SUBROUTINE OutputSphMetric
